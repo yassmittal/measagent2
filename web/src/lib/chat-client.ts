@@ -3,35 +3,16 @@ import type {
   LoadThreadResponse,
   SendMessageRequest,
 } from '@measagent/shared';
-import { readDeviceId } from './device-id';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3010';
-
-export class ChatRequestError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-    this.name = 'ChatRequestError';
-  }
-}
-
-function requestHeaders(): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    'x-device-id': readDeviceId(),
-  };
-}
+import { API_BASE_URL, ApiRequestError, apiRequestHeaders } from './api-client';
 
 export async function loadThread(chatId: string): Promise<LoadThreadResponse | null> {
   const response = await fetch(`${API_BASE_URL}/v1/chats/${chatId}`, {
-    headers: requestHeaders(),
+    headers: apiRequestHeaders(),
   });
 
   if (response.status === 404) return null;
   if (!response.ok) {
-    throw new ChatRequestError('Could not load the conversation', response.status);
+    throw new ApiRequestError('Could not load the conversation', response.status);
   }
 
   return (await response.json()) as LoadThreadResponse;
@@ -47,13 +28,13 @@ export async function sendMessage(options: SendMessageOptions): Promise<void> {
 
   const response = await fetch(`${API_BASE_URL}/v1/chats`, {
     method: 'POST',
-    headers: requestHeaders(),
+    headers: apiRequestHeaders(),
     body: JSON.stringify(body),
     signal,
   });
 
   if (!response.ok || response.body === null) {
-    throw new ChatRequestError('Could not reach the avatar', response.status);
+    throw new ApiRequestError('Could not reach the avatar', response.status);
   }
 
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();

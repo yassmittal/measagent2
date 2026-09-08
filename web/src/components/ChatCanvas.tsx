@@ -7,7 +7,7 @@ import { ConversationThread } from './ConversationThread';
 import { MessageComposer } from './MessageComposer';
 
 export function ChatCanvas() {
-  const { messages, turn, isLoading } = useConversation();
+  const { messages, turn, isLoading, queuedText } = useConversation();
   const [composerHeight, setComposerHeight] = useState<number | null>(null);
 
   const onHeightChange = useCallback((height: number) => {
@@ -24,7 +24,12 @@ export function ChatCanvas() {
     <div className="chat-canvas">
       <AvatarPanel />
       <main className="thread-pane" style={paneStyle}>
-        <ConversationThread messages={messages} turn={turn} isLoading={isLoading} />
+        <ConversationThread
+          messages={messages}
+          turn={turn}
+          isLoading={isLoading}
+          queuedText={queuedText}
+        />
         <MessageComposer onHeightChange={onHeightChange} />
       </main>
     </div>

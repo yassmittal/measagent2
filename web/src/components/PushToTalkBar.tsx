@@ -1,21 +1,24 @@
 'use client';
 
-import { Mic, Square } from 'lucide-react';
-import { useLiveVoice } from '@/hooks/useLiveVoice';
-import { useConversation } from '@/state/ConversationProvider';
+import { Mic } from 'lucide-react';
+import type { SpeechCapture } from '@/hooks/useSpeechCapture';
+import type { SpeechCaptureFailure } from '@/lib/voice/speech-capture';
+import { ListeningWaveform } from './ListeningWaveform';
 
-export function PushToTalkBar() {
-  const { chat, refreshThread } = useConversation();
-  const { status, liveTranscript, error, isAvailable, startSession, stopSession } =
-    useLiveVoice({
-      threadId: chat?.id ?? null,
-      onTurnCompleted: () => void refreshThread(),
-    });
+const UNAVAILABLE_LABELS: Record<SpeechCaptureFailure, string> = {
+  mic_denied: 'Microphone access is blocked — check your browser permissions',
+  not_configured: 'Voice input is not switched on yet',
+  unreachable: 'Voice input is not available right now',
+};
 
-  const isActive = status !== 'idle' && status !== 'error';
+const HOLD_LABEL = 'Hold to speak (spacebar)';
+const LISTENING_LABEL = 'Listening… release to send';
 
-  if (!isAvailable) {
-    const label = 'Voice input is not available yet';
+export function PushToTalkBar({ capture }: { capture: SpeechCapture }) {
+  const { unavailableReason, isCapturing, isListening } = capture;
+
+  if (unavailableReason !== null) {
+    const label = UNAVAILABLE_LABELS[unavailableReason];
     return (
       <button type="button" className="ptt-bar" aria-label={label} title={label} disabled>
         <Mic size={18} strokeWidth={1.8} aria-hidden="true" />
@@ -23,52 +26,26 @@ export function PushToTalkBar() {
       </button>
     );
   }
-
-  if (chat === null) {
-    const label = 'Send a message first, then you can talk';
-    return (
-      <button type="button" className="ptt-bar" aria-label={label} title={label} disabled>
-        <Mic size={18} strokeWidth={1.8} aria-hidden="true" />
-        <span className="ptt-bar-label">{label}</span>
-      </button>
-    );
-  }
-
-  const label = error ?? describeSession(status, liveTranscript);
 
   return (
     <button
       type="button"
-      className="ptt-bar"
-      data-status={status}
-      aria-label={isActive ? 'End the voice conversation' : 'Start a voice conversation'}
-      aria-pressed={isActive}
-      onClick={() => (isActive ? stopSession() : void startSession())}
+      className={`ptt-bar${isListening ? ' is-listening' : ''}`}
+      aria-label={isCapturing ? 'Recording — release to send' : 'Hold to speak'}
+      aria-pressed={isCapturing}
+      title={HOLD_LABEL}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        capture.startCapture();
+      }}
+      onPointerUp={capture.finishCapture}
+      onPointerCancel={capture.cancelCapture}
+      onContextMenu={(event) => event.preventDefault()}
     >
-      {isActive ? (
-        <Square size={18} strokeWidth={1.8} aria-hidden="true" />
-      ) : (
-        <Mic size={18} strokeWidth={1.8} aria-hidden="true" />
-      )}
-      <span className="ptt-bar-label">{label}</span>
+      <Mic size={18} strokeWidth={1.8} aria-hidden="true" />
+      <span className="ptt-bar-label">{isCapturing ? LISTENING_LABEL : HOLD_LABEL}</span>
+      {isListening ? <ListeningWaveform active={true} /> : null}
     </button>
   );
-}
-
-function describeSession(
-  status: ReturnType<typeof useLiveVoice>['status'],
-  liveTranscript: string,
-): string {
-  switch (status) {
-    case 'connecting':
-      return 'Connecting…';
-    case 'listening':
-      return liveTranscript === '' ? 'Listening — just talk' : liveTranscript;
-    case 'speaking':
-      return liveTranscript === '' ? 'Speaking…' : liveTranscript;
-    case 'error':
-      return 'Voice session ended';
-    default:
-      return 'Talk to Yash';
-  }
 }

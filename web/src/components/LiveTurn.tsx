@@ -1,10 +1,14 @@
 'use client';
 
+import { Square } from 'lucide-react';
 import { useThinkingPhrase } from '@/hooks/useThinkingPhrase';
+import { useConversation } from '@/state/ConversationProvider';
 import type { TurnState } from '@/state/conversation-reducer';
 import { PhraseCrossfade } from './PhraseCrossfade';
 
 export function LiveTurn({ turn }: { turn: TurnState }) {
+  const { cancelActiveTurn } = useConversation();
+
   const isThinking = turn.text === '';
   const { phrase, tick } = useThinkingPhrase(isThinking);
 
@@ -19,7 +23,7 @@ export function LiveTurn({ turn }: { turn: TurnState }) {
             <PhraseCrossfade text={label} textKey={labelKey} shimmering={true} />
           </p>
           {turn.text !== '' ? (
-            // biome-ignore lint/a11y/useSemanticElements: journey markup is lifted verbatim from the reference, whose CSS selects on div nesting.
+            // biome-ignore lint/a11y/useSemanticElements: the journey is a nested div structure the stylesheet selects on directly.
             <div className="journey" role="list" aria-label="What the avatar is doing">
               {/* biome-ignore lint/a11y/useSemanticElements: see the parent .journey */}
               <div
@@ -39,6 +43,18 @@ export function LiveTurn({ turn }: { turn: TurnState }) {
           ) : null}
         </div>
       </div>
+
+      {turn.turnId !== null ? (
+        <button
+          type="button"
+          className="live-turn-stop"
+          aria-label="Stop responding"
+          onClick={cancelActiveTurn}
+        >
+          <Square size={12} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+          Stop
+        </button>
+      ) : null}
     </div>
   );
 }

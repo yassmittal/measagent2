@@ -11,7 +11,7 @@ export function Avatar({ size, label }: AvatarProps) {
       ? ({ '--avatar-size': `${size}px` } as React.CSSProperties)
       : undefined;
 
-  // biome-ignore lint/performance/noImgElement: static SVG — next/image cannot optimise SVG and its wrapper would break the reference's `.avatar > img` sizing.
+  // biome-ignore lint/performance/noImgElement: static SVG — next/image cannot optimise SVG, and the wrapper element it adds would sit between `.avatar` and the image, breaking the `.avatar > img` sizing rule.
   const portrait = <img src={AVATAR_PORTRAIT_SRC} alt="" />;
 
   if (label === undefined) {

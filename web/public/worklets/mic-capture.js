@@ -1,13 +1,17 @@
-const TARGET_SAMPLE_RATE = 16000;
+const DEFAULT_TARGET_SAMPLE_RATE = 16000;
 const DEFAULT_CHUNK_MS = 40;
 
 class MicCaptureProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const chunkMs = options?.processorOptions?.chunkMs ?? DEFAULT_CHUNK_MS;
+    // The rate is the transcription provider's, passed in rather than fixed
+    // here so a provider that wants different audio needs no worklet change.
+    const targetSampleRate =
+      options?.processorOptions?.targetSampleRate ?? DEFAULT_TARGET_SAMPLE_RATE;
 
-    this.resampleRatio = sampleRate / TARGET_SAMPLE_RATE;
-    this.samplesPerChunk = Math.round((TARGET_SAMPLE_RATE * chunkMs) / 1000);
+    this.resampleRatio = sampleRate / targetSampleRate;
+    this.samplesPerChunk = Math.round((targetSampleRate * chunkMs) / 1000);
     this.pending = new Float32Array(0);
     this.resampled = new Float32Array(this.samplesPerChunk);
     this.capturing = true;

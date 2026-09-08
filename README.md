@@ -1,8 +1,7 @@
 # meAsAgent
 
 A personal AI avatar — a chat surface where visitors talk to an agent that
-answers as Yash. The UI is a faithful rebuild of `avatar.andrewng.org` (v2):
-its stylesheet and DOM were recovered from the live bundle, not re-designed.
+answers as Yash. Text chat, spoken replies, and hold-to-speak voice input.
 
 Deployed at **meAsAgent.vercel.app**.
 
@@ -18,7 +17,6 @@ it running.
 web/       Next.js 16 + React 19, deployed to Vercel
 api/       Fastify 5 on Bun, deployed anywhere that runs Bun
 shared/    TypeScript types imported by both, no build or publish step
-reference/ the original site's html/css/js — read-only, gitignored
 scripts/   project-local MongoDB helper
 ```
 
@@ -162,40 +160,37 @@ spans are interleaved with the text and closed by `audio_done`.
 
 ---
 
-## Live voice
+## Voice input
 
-Talking to the avatar is a separate pipeline from the typed one. A standalone
-speech-to-speech service owns the microphone, voice activity detection,
-transcription and synthesis; our API is only its language model, reached at
-`POST /v1/chat/completions`:
+Holding the mic button dictates a message. It is not a live call: the browser
+opens the microphone, streams audio straight to the transcription provider, and
+on release sends the finished transcript as an ordinary message. A spoken turn
+and a typed turn are the same turn from `POST /v1/chats` onward, so they share
+one thread, one persona prompt and one set of stream events.
 
 ```
-browser ──ws──► s2s service ──POST /v1/chat/completions──► this API
-        mic in,     VAD·STT·TTS      Bearer MA_S2S_API_KEY    persona,
-        audio out                                             history, Mongo
+browser ──POST /v1/transcription/sessions──► this API ──► provider (mint token)
+        ──ws (16kHz PCM16)────────────────► provider  ──► transcript
+        ──POST /v1/chats (transcript)─────► this API
 ```
 
-The s2s service has one process-global backend URL and no per-session routing
-channel, so the browser smuggles `ma-route: {"threadId","userId","sessionId"}`
-through the realtime session `instructions`, and the gateway reads that line to
-decide which conversation a request belongs to. Nothing else in the incoming
-`messages` is trusted — the persona prompt is rebuilt server-side every turn.
-Spoken and typed turns therefore land in the same thread.
+Audio never passes through the API — it only mints a short-lived, single-use
+websocket url so the provider credential stays on the server. The seam is
+`api/services/transcription/`; swapping providers is an edit there and nowhere
+else. Set `ASSEMBLYAI_API_KEY` to switch it on; leave it unset and the mic bar
+renders disabled with a reason rather than breaking.
 
-Run it locally (Apple Silicon; models are cached after the first run):
+Browser-side, `lib/voice/speech-capture.ts` owns transport only, and
+`public/worklets/mic-capture.js` resamples from the AudioContext rate down to
+the 16kHz PCM16 the provider expects. The hold gesture — pointer or spacebar —
+lives in `hooks/useSpeechCapture.ts`, and the partial transcript is displayed
+in the composer input, so speech and typing land in the same place.
 
-```bash
-cd ~/projects/sui/sui-sentinal/speech-to-speech
-.venv/bin/speech-to-speech serve   --port 8766   --stt mlx-audio-whisper   --mlx_audio_whisper_model_name mlx-community/whisper-large-v3-turbo-4bit   --tts facebookMMS --facebook_mms_device cpu   --llm_backend chat-completions --model_name measagent   --responses_api_base_url "http://127.0.0.1:3010/v1"   --responses_api_api_key "$MA_S2S_API_KEY"   --responses_api_stream
-```
+`POST /v1/chat/completions` is an unrelated seam that lets an external
+speech-to-speech service use this API as its language model, routed by the
+`ma-route:` marker. The browser does not call it.
 
-Set `NEXT_PUBLIC_SPEECH_TO_SPEECH_URL` to that endpoint. Unset it and the
-control renders disabled rather than breaking.
-
-Browser-side, `lib/voice/realtime-client.ts` owns transport only: two audio
-worklets in `public/worklets/` resample between the AudioContext rate and the
-service's 16kHz PCM16, and `input_audio_buffer.speech_started` clears the
-playback queue so talking over the avatar interrupts it.
+---
 
 ## Spoken replies in typed chat
 
@@ -224,18 +219,15 @@ text exactly as it would have.
 
 ## Frontend
 
-The stylesheet is lifted from `reference/` with **class names kept verbatim**,
-split into layers under `web/src/styles/` and imported in order by
-`app/globals.css`. That is what lets the DOM be reconstructed 1:1 — so when
-changing anything visual, check it against the reference rather than redesigning.
+The stylesheet is split into layers under `web/src/styles/`, imported in order
+by `app/globals.css`, and written flat — no nesting, one class per element.
+Each component is named after the class it owns (`.composer-row` →
+`MessageComposer`, `.thread` → `ConversationThread`), so grepping a class name
+finds both the rule and the markup.
 
-To recover the markup for a component, prettify the bundle and grep the class
-name; the JSX survives minification:
-
-```bash
-bunx prettier@3 --parser babel reference/aiandrew.bundle.js > /tmp/ref.js
-grep -n '"composer-row"' /tmp/ref.js
-```
+The styles cover more UI than is built: message actions, settings, feedback and
+auth all have rules waiting. When you build one, render the DOM those rules
+already expect instead of writing new CSS.
 
 All streaming state lives in one reducer (`state/conversation-reducer.ts`)
 rather than several `useState`s that could disagree about the same turn.
@@ -256,11 +248,11 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 - **Import specifiers in `api/` keep the `.js` extension** (`from './foo.js'` for
   `foo.ts`) — required by `moduleResolution: nodenext`. `web/` is the opposite:
   bundler resolution, extensionless.
-- **Never ship the trial fonts.** The reference's `ABCDiatype-*-Trial.woff2` are
-  Dinamo trial licences. Geist Sans is substituted via `next/font`, keeping the
-  reference's own `size-adjust` fallback metrics.
-- **Never use Andrew Ng's name, likeness, bio or portrait.** The persona is
-  Yash, and all of it lives in `web/src/lib/persona.ts`.
+- **Never ship the trial fonts.** `ABCDiatype-*-Trial.woff2` are Dinamo trial
+  licences and must not enter the repo. Geist Sans is loaded via `next/font`
+  with a `size-adjust` local fallback so the metrics stay stable.
+- **The persona is Yash, and only Yash.** Name, likeness, bio and portrait all
+  live in `web/src/lib/persona.ts`.
 - **Do not run git commands here.** Leave changes in the working tree; Yash
   handles version control.
 
@@ -284,9 +276,9 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 
 | Stage | Delivers | Auth | Voice |
 |---|---|---|---|
-| **1** ✅ | replica shell + text chat | none | none |
+| **1** ✅ | chat shell + text chat | none | none |
 | **2** ✅ | voice out — the avatar speaks | none | TTS |
-| **3** 🔨 | voice in — live conversation in the browser | none | STT + TTS |
+| **3** ✅ | voice in — hold-to-speak dictation | none | STT + TTS |
 | **4** | Google sign-in, per-user threads, consent | Google | both |
 | **5** | long-term memory and return reminders | Google | both |
 | **6** | RAG over Yash's corpus, web search, feedback | Google | both |

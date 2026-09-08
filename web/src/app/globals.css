@@ -1,7 +1,8 @@
 /*
  * Layer order is load-bearing: tokens define the variables everything else
  * reads, base sets the document, and the component layers below it are written
- * flat (no nesting, original class names) so the reference DOM maps 1:1.
+ * flat — no nesting, one class per element — so a rule can be traced to the
+ * markup that uses it by grepping for its class name alone.
  */
 @import "../styles/tokens.css";
 @import "../styles/base.css";

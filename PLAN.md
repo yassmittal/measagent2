@@ -1,78 +1,53 @@
 # meAsAgent — End-to-End Build Plan
 
-A replica of **avatar.andrewng.org** ("AI Andrew"), rebuilt as a personal AI
-avatar. Written 2026-09-08.
+A personal AI avatar: a chat surface where visitors talk to an agent that
+answers as Yash. Written 2026-09-08.
 
 **Named `meAsAgent`.** Deployed at `meAsAgent.vercel.app`; `meAsAgent.com` is the
 eventual domain but is not owned yet, so every URL in code and metadata uses the
 Vercel domain. The placeholder folder `ai-avatar/` has been renamed `meAsAgent/`.
 
-**Status: Stage 1 is built** (2026-09-08). Stages 2-6 are still plan only.
+**Status: Stages 1-3 are built.** Stages 4-6 are still plan only.
 Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
 
 ---
 
-## 0. What we are actually cloning (verified, not guessed)
+## 0. The shape of the product
 
-The live site was inspected directly: the HTML, the JS bundle
-(`/assets/index-Bfd73B-M.js`, 690 KB) and the stylesheet
-(`/assets/index-Bm80L3u1.css`, 41 KB). All three are saved in `reference/`.
+A single chat surface, no landing page. A still portrait and a short bio sit in
+a left panel; the conversation fills the rest. There is no video avatar — the
+"avatar" is the portrait plus a voice.
 
-There are two generations of the product:
+Three decisions set the architecture, and everything else follows from them:
 
-| | v1 (`v1.avatar.andrewng.org`) | v2 (`avatar.andrewng.org`, current) |
-|---|---|---|
-| Framework | Next.js on Vercel | **Vite + React SPA** |
-| Modality | video talking-head avatar | **text + voice, no video** |
-| Built by | RealAvatar x DeepLearning.AI | in-house rewrite |
-
-We are cloning **v2**. There is no video avatar in it — the "avatar" is a
-still portrait plus voice.
-
-### v2's stack, as read from its own bundle
-
-| Concern | What they use | Evidence in bundle |
-|---|---|---|
-| Auth | Google Identity Services | `accounts.google.com/gsi/client`, `VITE_GOOGLE_CLIENT_ID` |
-| STT | **AssemblyAI Universal-Streaming v3** | browser opens `wss://streaming.assemblyai.com/v3/ws` directly |
-| STT auth | ephemeral token from own API | `GET /v1/stt/token` |
-| TTS | **ElevenLabs**, streamed | `audio/mpeg` chunks fed to `MediaSource` |
-| Web search tool | **Tavily** | privacy-policy subprocessor list |
-| Analytics / errors | PostHog, Sentry | `us.i.posthog.com`, `sentry.io` |
-| Backend | own REST API | `/v1/chats`, `/v1/relationship`, `/v1/consent`, `/v1/feedback`, `/v1/reminders/return` |
-| Hosting | AWS + GCP, CloudFront | subprocessor list, `d2vdd2rz5r85rm.cloudfront.net` |
-
-Two design decisions there are worth copying outright:
-
-1. **Audio never round-trips through their server.** The browser holds the
-   AssemblyAI socket itself; the backend only mints a short-lived token. This
-   is the single biggest latency win in the whole product.
-2. **TTS is streamed through MediaSource Extensions**, so the avatar starts
-   speaking before the sentence has finished generating.
-
-And one that is the actual product, not the plumbing: `/v1/relationship` and
-`/v1/reminders/return`. Persistent per-user memory, plus a background job that
-prepares a follow-up thought before you come back. "Remembers your story,
-keeps thinking between your conversations." That is the differentiator; the
-voice is table stakes.
+1. **Audio never round-trips through our server.** The browser holds the
+   transcription socket itself and the api only mints a short-lived token. This
+   is the single biggest latency win available in a product like this.
+2. **Speech is streamed, not batched.** Reply audio is synthesised sentence by
+   sentence and interleaved into the turn's own event stream, so the avatar
+   starts speaking before the answer has finished generating.
+3. **Memory is the actual product; voice is table stakes.** Per-user memory
+   (`relationship`) plus a background job that prepares a follow-up before the
+   visitor returns (`returnReminders`) is the differentiator — "remembers your
+   story, keeps thinking between your conversations."
 
 ---
 
 ## 1. Stage plan
 
-Each stage is shippable on its own. Stage 1 is the near-pixel replica with no
+Each stage is shippable on its own. Stage 1 is the full chat shell with no
 auth, as requested.
 
 | Stage | Delivers | Auth | Voice | Memory |
 |---|---|---|---|---|
-| **1** ✅ | Pixel replica shell + working text chat against a local persona | none | none | in-thread only |
+| **1** ✅ | Chat shell + working text chat against a local persona | none | none | in-thread only |
 | **2** ✅ | Voice out (avatar speaks) | none | TTS | in-thread |
-| **3** | Voice in (push-to-talk + live mode) | none | STT + TTS | in-thread |
+| **3** ✅ | Voice in (hold-to-speak dictation) | none | STT + TTS | in-thread |
 | **4** | Google sign-in, per-user threads, consent screen | Google | both | per-user threads |
 | **5** | Long-term memory (`relationship`) + return reminders | Google | both | cross-thread |
 | **6** | RAG over your own corpus, Tavily search, feedback/analytics | Google | both | full |
 
-Do not start Stage 2 until Stage 1's DOM matches the reference. Retrofitting
+Stage 1's layout was settled before Stage 2 began, on purpose: retrofitting
 layout under a working voice pipeline is much harder than the reverse.
 
 ---
@@ -102,8 +77,7 @@ sui-sentinal already uses Pinecone, so that path is covered too.
 with no publishing step, since the message shapes are most of the coupling:
 
 ```
-ai-avatar/
-  reference/          # the real site's css/js/html — read-only source of truth
+meAsAgent/
   web/                # Next.js frontend
   api/                # Fastify backend
   shared/             # types shared by web + api (message shapes, DTOs)
@@ -111,82 +85,63 @@ ai-avatar/
 
 ---
 
-## 3. Taking the real UI (not screenshots)
+## 3. The design system
 
-This is the core of Stage 1. The method:
+The stylesheet is the spine of the frontend, and it is deliberately larger than
+the markup: layers exist for UI that later stages will build, so a new feature
+renders into rules that are already written rather than inventing new ones.
 
-### 3.1 Recover the stylesheet
-`reference/aiandrew.min.css` is 41 KB on a single line. Prettify it
-(`bunx prettier --parser css`) and split it into a layered structure, keeping
-**their class names verbatim** so markup can be reconstructed 1:1:
+### 3.1 Layers
+
+Split under `web/src/styles/` and imported in order by `app/globals.css`. Order
+is load-bearing — tokens define the variables every later layer reads:
 
 ```
 web/src/styles/
-  tokens.css      # :root custom properties (see below)
+  tokens.css      # :root custom properties — colour, spacing, easing, radii
   base.css        # reset, typography, layout primitives
-  thread.css      # .thread, .msg-*, .date-*
+  thread.css      # .thread, .msg-*, .date-divider
+  journey.css     # .journey-*, .live-progress, .live-turn-stop
   composer.css    # .composer-row, .composer-input, .composer-send, .composer-voice
   avatar.css      # .avatar-panel, .avatar-panel-bio, .avatar-panel-name
-  voice.css       # .ptt-bar, .live-progress, .live-turn-stop
+  voice.css       # .ptt-bar, .wave
   settings.css    # .settings-*, .profile-*
+  feedback.css    # .feedback-*, .msg-actions
   ...
 ```
 
-The design system is entirely token-driven, which makes it clean to lift:
+### 3.2 One class, one component
 
-```css
---bg:#fbfbfb;  --accent:#1877f2;  --accent-hover:#1568d8;
---bubble:#d8efff;  --bubble-ink:#0c3d63;
---n100..--n900       /* neutral ramp */
---e1..--e5           /* elevation ramp */
---r-xs..--r-xl, --r-pill   /* radii */
---col:720px; --col-narrow:640px; --col-wide:960px; --measure:33em;
---ease:cubic-bezier(.22,.61,.36,1);
---avatar-size:clamp(180px,32vh,320px);
---composer-stack-height:114px;
---relationship-gold:#DAA520;
-```
+Rules are written flat — no nesting, one class per element — and every
+component is named after the class it owns: `.thread` → `ConversationThread`,
+`.composer-row` → `MessageComposer`, `.ptt-bar` → `PushToTalkBar`. So a class
+name is a two-way index: grep it and you find the rule and the markup that
+uses it.
 
-Copy that block first and build everything on top of it — it is the whole
-visual identity in ~60 lines.
-
-### 3.2 Recover the DOM structure
-The bundle is minified but **not** obfuscated at the JSX level. Compiled
-elements look like:
-
-```js
-w.jsx("div", { className: "composer-row", children: ... })
-```
-
-So grepping `reference/aiandrew.bundle.js` for a class name recovers the exact
-element tree, tag names, attribute order and conditional class logic for that
-component. That is how we get a faithful replica without ever screenshotting.
-Work component by component, in this order — it matches the CSS class families
-present, roughly by weight:
+Build order, roughly by weight of the class families present:
 
 `thread` / `msg` → `composer` → `avatar` panel → `ptt` / `live` →
 `feedback` → `settings` / `profile` → `journey` → `relationship` →
-`consent` → `auth` → `legal` → `migration` (skip; it is their v1→v2 upgrade path)
+`consent` → `auth` → `legal`
 
-### 3.3 Fonts — must be replaced
-The site ships `ABCDiatype-Regular-Trial.woff2` and `-Medium-Trial.woff2`.
-Those are **Dinamo trial licences**, which do not permit deployment. Two
-options: buy ABC Diatype, or substitute. Closest free grotesk substitutes are
-**Geist Sans** or **Inter**, with a `size-adjust` tuned fallback exactly as
-they already do:
+### 3.3 Fonts
+
+`ABCDiatype-*-Trial.woff2` are **Dinamo trial licences**, which do not permit
+deployment — they must never enter the repo. Geist Sans is loaded via
+`next/font` with a `size-adjust` tuned local fallback, so swapping the face
+does not shift the metrics the layout was tuned against:
 
 ```css
 @font-face { font-family:"Diatype Fallback"; src:local("Helvetica Neue"); size-adjust:97%; }
 ```
 
-Nothing else in the CSS references an external asset — no images, no icon font.
-The icons are inline SVG in the bundle.
+Nothing in the CSS pulls an external asset — no images, no icon font. Icons are
+`lucide-react`, sized at the call site.
 
-### 3.4 One honest note
-We are lifting a stylesheet from someone's product. For a personal, clearly
-non-impersonating avatar of yourself that is your call to make, and the plan
-proceeds on it. Two things to actually not do: ship the trial fonts, and use
-Andrew's name, likeness or portrait anywhere in it.
+### 3.4 The persona
+
+The persona is Yash, and only Yash: name, likeness, bio and portrait all live
+in `web/src/lib/persona.ts`. Never borrow another person's identity for it.
 
 ---
 
@@ -270,12 +225,13 @@ feel we want the streaming variant (`streamSpeech`) feeding MediaSource in the
 browser. Kokoro-via-HF has no streaming endpoint, so Stage 2 accepts
 play-after-generate and Stage 2.5 adds streaming with ElevenLabs.
 
-### 6.2 STT — new, modelled on the original
+### 6.2 STT — built fresh
 sui-sentinal has no browser STT (its s2s service owns it), so this is the one
-piece we build fresh. Follow AI Andrew exactly:
-`GET /v1/stt/token` mints a short-lived AssemblyAI token, the browser opens
-`wss://streaming.assemblyai.com/v3/ws` itself, mic audio goes through an
-`AudioWorklet` at a fixed sample rate. Never proxy audio through Fastify.
+piece with no prior art to lift. `POST /v1/transcription/sessions` mints a
+short-lived, single-use AssemblyAI url, the browser opens
+`wss://streaming.assemblyai.com/v3/ws` itself, and mic audio goes through an
+`AudioWorklet` resampling to 16kHz PCM16. **Never proxy audio through Fastify** —
+the round trip is what would make dictation feel laggy.
 
 ### 6.3 Live (speech-to-speech) mode — reuse the gateway pattern
 This is the genuinely clever bit in sui-sentinal and worth copying wholesale.
@@ -338,8 +294,8 @@ testable and is already how sui-sentinal is structured.
 - One concern per hook. The composer should not know how audio is decoded.
 - No `useEffect` for derived state — derive during render.
 - Streaming state lives in one reducer, not five `useState`s that can disagree.
-- Colocate: `components/composer/MessageComposer.tsx` next to its own CSS module
-  import; global lifted CSS stays in `styles/` since we are keeping their class names.
+- Colocate a component with anything only it uses; the global stylesheet stays
+  in `styles/`, since a class name is the index that ties a rule to its markup.
 
 ### Fastify specifics
 - Every route gets a JSON schema. Response schemas too — they are the serializer.
@@ -379,9 +335,9 @@ Check current pricing before committing — these change.
 
 Stage 6 is where this becomes *your* avatar rather than a chatbot with your
 name on it. It needs a corpus: your writing, project READMEs, notes, and
-transcripts of you actually talking. Andrew's own comment on the project was
-that codifying how he really converses into an agentic workflow was the hard,
-still-unfinished part — not the voice, not the UI. Budget accordingly.
+transcripts of you actually talking. Codifying how you really converse is the
+hard part of a project like this — not the voice, not the UI. Budget
+accordingly.
 
 Start collecting the corpus during Stage 1. It has the longest lead time and
 no code dependency.
@@ -400,9 +356,9 @@ no code dependency.
 
 ## 11. Resolved (2026-09-08)
 
-1. **Landing page** — none. `/` is the chat surface, matching the reference,
-   whose only pre-chat screen is the Stage 4 sign-in. A marketing page can be
-   added later at its own route without touching the shell.
+1. **Landing page** — none. `/` is the chat surface; the only pre-chat screen
+   is the Stage 4 sign-in. A marketing page can be added later at its own route
+   without touching the shell.
 2. **LLM provider** — **Amazon Bedrock**, through its OpenAI-compatible gateway
    at `https://bedrock-mantle.us-east-1.api.aws/v1` with `BEDROCK_API_KEY`, via
    `ChatOpenAI` from `@langchain/openai`. Identical to how
@@ -422,10 +378,9 @@ no code dependency.
 
 ## 12. What Stage 1 actually shipped
 
-**Frontend** — `/` renders the replica shell: `.shell` → `.mobile-header` +
-`.chat-canvas` → `.avatar-panel` + `.thread-pane`, with the full stylesheet
-lifted from the reference and split into layers under `web/src/styles/`, class
-names verbatim. Working pieces: date dividers, user and reply bubbles, the live
+**Frontend** — `/` renders the shell: `.shell` → `.mobile-header` +
+`.chat-canvas` → `.avatar-panel` + `.thread-pane`, with the stylesheet split
+into layers under `web/src/styles/`. Working pieces: date dividers, user and reply bubbles, the live
 turn with its rotating shimmer phrase, the auto-growing composer with
 Enter-to-send and IME handling, the scroll-to-bottom pill, and the mobile
 breakpoint. The push-to-talk bar renders disabled — it is part of the composer's
@@ -458,10 +413,9 @@ a preflight on the same route succeeds.
 
 ## 13. What Stage 2 actually shipped
 
-**The wire.** Audio rides the turn's own SSE stream, exactly as the reference
-does it: `audio_delta` spans carrying base64 + a MIME type + a sequence number,
-closed by `audio_done`, with `voice_unavailable` as the downgrade. Reading that
-out of the reference bundle changed the design — the earlier sketch had a
+**The wire.** Audio rides the turn's own SSE stream: `audio_delta` spans
+carrying base64 + a MIME type + a sequence number, closed by `audio_done`, with
+`voice_unavailable` as the downgrade. This replaced an earlier sketch that had a
 separate synthesize endpoint, which would have meant a second round trip and no
 way to start speaking mid-reply.
 
@@ -495,6 +449,5 @@ voice anyway. The `SpeechSynthesizer` seam makes any of them a small change.
 
 **Not built, deliberately:** streaming synthesis into MediaSource (needs a
 provider that streams — that is Stage 2.5), a replay button in the message row,
-and any speaking-state indicator. The reference's `.wave` element is its
-*listening* indicator and belongs to Stage 3's push-to-talk, so it was left
-alone rather than repurposed.
+and any speaking-state indicator. `.wave` is a *listening* indicator and belongs
+to Stage 3's hold-to-speak, so it was left alone rather than repurposed.

@@ -2,6 +2,7 @@
 
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useSpeechCapture } from '@/hooks/useSpeechCapture';
 import { PRODUCT_NAME } from '@/lib/persona';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
@@ -18,17 +19,23 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     turn,
     inputError,
     clearInputError,
-    sendMessage,
+    sendOrQueueMessage,
+    queuedText,
     voiceNotice,
     isMuted,
     toggleMuted,
   } = useConversation();
+
   const [draft, setDraft] = useState('');
   const rowRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const capture = useSpeechCapture({ onTranscribed: sendOrQueueMessage });
+
   const isBusy = isTurnActive(turn);
-  const hasDraft = draft.trim() !== '';
+
+  const inputText = capture.isCapturing ? capture.partialTranscript : draft;
+  const canSend = inputText.trim() !== '' && !capture.isCapturing;
 
   useLayoutEffect(() => {
     const row = rowRef.current;
@@ -43,19 +50,18 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     return () => observer.disconnect();
   }, [onHeightChange]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `draft` is the change signal — the textarea is re-measured through its ref after the new text renders.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `inputText` is the change signal — the textarea is re-measured through its ref after the new text renders.
   useLayoutEffect(() => {
     const input = inputRef.current;
     if (input === null) return;
     input.style.height = 'auto';
     input.style.height = `${Math.min(input.scrollHeight, MAX_INPUT_HEIGHT_PX)}px`;
-  }, [draft]);
+  }, [inputText]);
 
-  const submit = () => {
-    const text = draft.trim();
-    if (text === '' || isBusy) return;
+  const submitDraft = () => {
+    if (!canSend) return;
     setDraft('');
-    void sendMessage(text);
+    sendOrQueueMessage(draft);
   };
 
   return (
@@ -64,7 +70,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         className="composer"
         onSubmit={(event) => {
           event.preventDefault();
-          submit();
+          submitDraft();
         }}
       >
         <button
@@ -85,10 +91,13 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         <textarea
           ref={inputRef}
           rows={1}
-          className="composer-input"
-          placeholder={isBusy ? 'Replying…' : `Message ${PRODUCT_NAME}…`}
+          className={`composer-input${capture.isCapturing ? ' is-ghost' : ''}`}
+          placeholder={
+            isBusy ? `${PRODUCT_NAME} is replying…` : `Message ${PRODUCT_NAME}…`
+          }
           aria-label={`Message ${PRODUCT_NAME}`}
-          value={draft}
+          value={inputText}
+          readOnly={capture.isCapturing}
           onChange={(event) => {
             setDraft(event.target.value);
             if (inputError !== null) clearInputError();
@@ -100,25 +109,29 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
               return;
             if (event.key !== 'Enter' || event.shiftKey) return;
             event.preventDefault();
-            submit();
+            submitDraft();
           }}
         />
 
         <button
           className="composer-send"
-          aria-label="Send"
+          aria-label={isBusy ? 'Queue' : 'Send'}
           type="submit"
-          disabled={!hasDraft || isBusy}
+          disabled={!canSend}
         >
           <ArrowUp size={20} aria-hidden="true" />
         </button>
       </form>
 
-      <PushToTalkBar />
+      <PushToTalkBar capture={capture} />
 
       {inputError !== null ? (
         <p className="composer-error" role="alert">
           {inputError}
+        </p>
+      ) : queuedText !== null ? (
+        <p className="composer-hint" role="status">
+          Sends when {PRODUCT_NAME} finishes
         </p>
       ) : voiceNotice !== null && !isMuted ? (
         <p className="composer-hint" role="status">

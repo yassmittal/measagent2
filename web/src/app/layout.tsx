@@ -34,8 +34,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={geist.variable}>
-      {/* `#root` is the height chain the stylesheet hangs `100dvh` off, kept
-          from the reference so its layout rules transfer untouched. */}
+      {/* `#root` is the height chain the stylesheet hangs `100dvh` off: the
+          thread scrolls inside it, so every layer above must have a height. */}
       <body>
         <div id="root">{children}</div>
       </body>

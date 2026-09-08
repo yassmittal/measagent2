@@ -8,6 +8,7 @@ import { EMPTY_THREAD_PROMPT } from '@/lib/persona';
 import { isTurnActive, type TurnState } from '@/state/conversation-reducer';
 import { LiveTurn } from './LiveTurn';
 import { MessageRow } from './MessageRow';
+import { QueuedMessage } from './QueuedMessage';
 
 const PINNED_THRESHOLD_PX = 80;
 
@@ -15,12 +16,14 @@ interface ConversationThreadProps {
   messages: ThreadMessage[];
   turn: TurnState;
   isLoading: boolean;
+  queuedText: string | null;
 }
 
 export function ConversationThread({
   messages,
   turn,
   isLoading,
+  queuedText,
 }: ConversationThreadProps) {
   const scrollRef = useRef<HTMLElement | null>(null);
   const [isPinnedToBottom, setPinnedToBottom] = useState(true);
@@ -40,12 +43,12 @@ export function ConversationThread({
     thread.scrollTop = thread.scrollHeight;
   }, [isPinnedToBottom]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `messages` and `turn.text` are the change signal, not values read in the body — the scroll happens through a ref once they have rendered.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `messages`, `turn.text` and `queuedText` are the change signal, not values read in the body — the scroll happens through a ref once they have rendered.
   useEffect(() => {
     const thread = scrollRef.current;
     if (thread === null || !isPinnedToBottom) return;
     thread.scrollTop = thread.scrollHeight;
-  }, [messages, turn.text, isPinnedToBottom]);
+  }, [messages, turn.text, queuedText, isPinnedToBottom]);
 
   const scrollToBottom = () => {
     const thread = scrollRef.current;
@@ -59,7 +62,7 @@ export function ConversationThread({
       <section
         className="thread"
         role="log"
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the thread is the page's only scroll container, so it has to be keyboard reachable. The reference does the same.
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the thread is the page's only scroll container, so it has to be keyboard reachable.
         tabIndex={0}
         aria-label="Conversation"
         ref={scrollRef}
@@ -95,6 +98,8 @@ export function ConversationThread({
             })}
 
             {isActive ? <LiveTurn turn={turn} /> : null}
+
+            {queuedText !== null ? <QueuedMessage text={queuedText} /> : null}
 
             {turn.phase === 'failed' && turn.failure !== null ? (
               <div className="thread-notice" role="alert">

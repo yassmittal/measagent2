@@ -10,6 +10,7 @@ export type TurnPhase = 'idle' | 'sending' | 'streaming' | 'failed';
 export interface TurnState {
   phase: TurnPhase;
   turnId: string | null;
+  replyMessageId: string | null;
   text: string;
   failure: string | null;
 }
@@ -21,6 +22,7 @@ export interface ConversationState {
   isLoading: boolean;
   inputError: string | null;
   voiceNotice: string | null;
+  queuedText: string | null;
 }
 
 const VOICE_NOTICES: Record<VoiceUnavailableReason, string> = {
@@ -31,6 +33,7 @@ const VOICE_NOTICES: Record<VoiceUnavailableReason, string> = {
 export const IDLE_TURN: TurnState = {
   phase: 'idle',
   turnId: null,
+  replyMessageId: null,
   text: '',
   failure: null,
 };
@@ -42,6 +45,7 @@ export const INITIAL_STATE: ConversationState = {
   isLoading: true,
   inputError: null,
   voiceNotice: null,
+  queuedText: null,
 };
 
 const PENDING_ID_PREFIX = 'pending:';
@@ -57,6 +61,8 @@ export type ConversationAction =
   | { type: 'send_started'; optimisticMessage: ThreadMessage }
   | { type: 'stream_event'; event: ChatStreamEvent }
   | { type: 'send_failed'; message: string }
+  | { type: 'turn_cancelled'; at: string }
+  | { type: 'message_queued'; text: string }
   | { type: 'input_error'; message: string }
   | { type: 'clear_input_error' };
 
@@ -78,6 +84,7 @@ export function conversationReducer(
         ...state,
         messages: [...state.messages, action.optimisticMessage],
         turn: { ...IDLE_TURN, phase: 'sending' },
+        queuedText: null,
         inputError: null,
         voiceNotice: null,
       };
@@ -91,6 +98,16 @@ export function conversationReducer(
         messages: state.messages.filter((message) => !isPendingMessage(message)),
         turn: { ...IDLE_TURN, phase: 'failed', failure: action.message },
       };
+
+    case 'turn_cancelled':
+      return {
+        ...state,
+        messages: [...state.messages, ...stoppedReplyOf(state.turn, action.at)],
+        turn: IDLE_TURN,
+      };
+
+    case 'message_queued':
+      return { ...state, queuedText: action.text, inputError: null };
 
     case 'input_error':
       return { ...state, inputError: action.message };
@@ -113,7 +130,12 @@ function applyStreamEvent(
           ...state.messages.filter((message) => !isPendingMessage(message)),
           event.userMessage,
         ],
-        turn: { ...IDLE_TURN, phase: 'streaming', turnId: event.turnId },
+        turn: {
+          ...IDLE_TURN,
+          phase: 'streaming',
+          turnId: event.turnId,
+          replyMessageId: event.replyMessageId,
+        },
       };
 
     case 'delta':
@@ -135,12 +157,26 @@ function applyStreamEvent(
     case 'voice_unavailable':
       return { ...state, voiceNotice: VOICE_NOTICES[event.reason] };
 
-    // Audio is played by `useSpeechPlayback`, not rendered, so these carry no
-    // state the thread needs.
     case 'audio_delta':
     case 'audio_done':
       return state;
   }
+}
+
+function stoppedReplyOf(turn: TurnState, at: string): ThreadMessage[] {
+  if (turn.replyMessageId === null || turn.text === '') return [];
+
+  return [
+    {
+      id: turn.replyMessageId,
+      role: 'assistant',
+      text: turn.text,
+      status: 'interrupted',
+      at,
+      turnId: turn.turnId,
+      feedback: null,
+    },
+  ];
 }
 
 export const isTurnActive = (turn: TurnState): boolean =>

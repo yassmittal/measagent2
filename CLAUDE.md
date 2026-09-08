@@ -1,9 +1,9 @@
 # CLAUDE.md
 
-Guidance for Claude Code working in **meAsAgent** — a personal AI avatar, modelled
-on `avatar.andrewng.org` (v2). `PLAN.md` is the build plan and the source of
-truth for what each stage delivers, `README.md` is how to set the project up and
-run it, and this file is the day-to-day working guide.
+Guidance for Claude Code working in **meAsAgent** — a personal AI avatar that
+answers. `PLAN.md` is the build plan and the source of truth for what
+each stage delivers, `README.md` is how to set the project up and run it, and
+this file is the day-to-day working guide.
 
 Deployed at **meAsAgent.vercel.app**. `meAsAgent.com` is the eventual domain but
 is not owned yet — every URL in the code and metadata uses the Vercel domain.
@@ -11,7 +11,6 @@ is not owned yet — every URL in the code and metadata uses the Vercel domain.
 ## Layout
 
 ```
-reference/   the real site's html/css/js — READ-ONLY source of truth, never edit
 web/         Next.js 16 + React 19 frontend (Vercel)
 api/         Fastify 5 + Bun backend
 shared/      TypeScript types shared by web + api, no publish step
@@ -57,43 +56,51 @@ mongoexport --uri "mongodb://127.0.0.1:27018/measagent" --collection messages --
 
 ## Stage
 
-Stages 1 and 2 are done: the pixel replica shell with working text chat, and
-spoken replies streamed as `audio_delta` spans alongside the text. Stages 3-6
-(voice in, Google sign-in, long-term memory, RAG) are specified in `PLAN.md §1`.
+Stages 1-3 are done: the chat shell with working text chat, spoken replies
+streamed as `audio_delta` spans alongside the text, and hold-to-speak voice
+input. Stages 4-6 (Google sign-in, long-term memory, RAG) are specified in
+`PLAN.md §1`.
 
-Live voice (Stage 3) is a third pipeline: the s2s service owns the audio and
-calls `POST /v1/chat/completions` as its language model, routed by the
-`ma-route:` marker in `lib/voice/route-marker.ts`. The browser side is
-`web/src/lib/voice/realtime-client.ts` plus the worklets in
-`web/public/worklets/` — transport only, no product logic.
+Voice input (Stage 3) is dictation, not a live call. Holding the mic streams
+microphone audio straight from the browser to the transcription provider, and
+the release sends the transcript as an ordinary message — so a spoken turn and
+a typed turn are the same turn from `handlers/chats/send-message.ts` onward.
+The api only mints the session (`services/transcription/` is the provider seam,
+`POST /v1/transcription/sessions` the route); audio never passes through it.
+The browser side is `web/src/lib/voice/speech-capture.ts` plus
+`web/public/worklets/mic-capture.js` — transport only, no product logic, with
+the gesture in `hooks/useSpeechCapture.ts`.
+
+`POST /v1/chat/completions` (`handlers/voice/chat-completions.ts`, routed by the
+`ma-route:` marker in `lib/voice/route-marker.ts`) is a separate seam for an
+external speech-to-speech service to use this api as its language model. The
+browser does not call it.
 
 Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
 seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`
 orchestrates a turn. **A failing voice must never fail a turn** — every path
 downgrades to a `voice_unavailable` event and the reply still arrives as text.
 
-## Reference-driven UI
+## Stylesheet-driven UI
 
-The stylesheet is lifted from the reference with **class names kept verbatim**,
-split into layers under `web/src/styles/` and imported in order by
-`web/src/app/globals.css`. That is what lets the DOM be reconstructed 1:1.
+The stylesheet is split into layers under `web/src/styles/`, imported in order
+by `web/src/app/globals.css`, and written flat — no nesting, one class per
+element. Components are named after the class they own, so the CSS and the
+markup can be navigated from either end: grep a class name and you find both
+the rule and the component.
 
-To recover the markup for any component, prettify the bundle and grep it for the
-class name — the JSX survives minification as
-`w.jsx("div", { className: "composer-row", ... })`:
-
-```bash
-bunx prettier@3 --parser babel reference/aiandrew.bundle.js > /tmp/ref.js
-grep -n '"composer-row"' /tmp/ref.js
-```
+The styles lead the markup here. Several layers describe UI that is not built
+yet (message actions, settings, feedback, auth); when you build one of those,
+render the DOM the existing rules already expect rather than writing new CSS.
+`grep -rn '\.class-name' web/src/styles/` shows what a rule needs.
 
 Two rules that are not negotiable:
 
 - **Never ship the trial fonts.** `ABCDiatype-*-Trial.woff2` are Dinamo trial
-  licences. Geist Sans is substituted via `next/font`, keeping the reference's
-  own `size-adjust` local fallback.
-- **Never use Andrew Ng's name, likeness, bio or portrait.** The persona is
-  Yash. All of it lives in `web/src/lib/persona.ts`.
+  licences and must not enter the repo. Geist Sans is loaded via `next/font`
+  with a `size-adjust` local fallback so metrics stay stable.
+- **The persona is Yash, and only Yash.** Name, likeness, bio and portrait all
+  live in `web/src/lib/persona.ts`; never borrow another person's.
 
 ## Backend conventions
 
@@ -138,9 +145,8 @@ plugins/*.ts                   env, mongo, cors, docs, indexes
   never several `useState`s that can disagree about the same turn.
 - No `useEffect` for derived state — derive during render.
 - Icons come from `lucide-react`, sized at the call site. Do not hand-roll SVG
-  components; the reference's own icons are plain 18-20px stroked glyphs and
-  lucide matches them closely enough that consistency is worth more than the
-  last pixel.
+  components — the UI wants plain 18-20px stroked glyphs, and one consistent
+  icon set is worth more than the last pixel of any single glyph.
 - Dates are formatted with `date-fns`, through `lib/format-date.ts`. Its output
   is locale-fixed on purpose: the thread is server rendered, so a label that
   differed between server and browser would be a hydration mismatch.

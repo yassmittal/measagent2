@@ -20,13 +20,14 @@ import {
   type ConversationState,
   conversationReducer,
   INITIAL_STATE,
+  isTurnActive,
   pendingMessageId,
 } from './conversation-reducer';
 
 interface ConversationContextValue extends ConversationState {
-  sendMessage: (text: string) => Promise<void>;
+  sendOrQueueMessage: (text: string) => void;
+  cancelActiveTurn: () => void;
   clearInputError: () => void;
-  refreshThread: () => Promise<void>;
   isMuted: boolean;
   toggleMuted: () => void;
 }
@@ -45,6 +46,8 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
+
+  const activeTurnRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const chatId = readActiveChatId();
@@ -89,11 +92,15 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
       stopPlayback();
 
+      const turnController = new AbortController();
+      activeTurnRef.current = turnController;
+
       try {
         await sendMessage({
           chatId: chatIdRef.current ?? undefined,
           text,
           speak: !isMutedRef.current,
+          signal: turnController.signal,
           onEvent: (event) => {
             if (event.type === 'turn_started') writeActiveChatId(event.chat.id);
             if (event.type === 'audio_delta') {
@@ -104,25 +111,50 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
           },
         });
       } catch {
-        dispatch({
-          type: 'send_failed',
-          message: 'That message did not get through. Try again.',
-        });
+        if (turnController.signal.aborted) {
+          dispatch({ type: 'turn_cancelled', at: new Date().toISOString() });
+        } else {
+          dispatch({
+            type: 'send_failed',
+            message: 'That message did not get through. Try again.',
+          });
+        }
+      } finally {
+        if (activeTurnRef.current === turnController) activeTurnRef.current = null;
       }
     },
     [enqueueSpan, stopPlayback],
   );
 
+  const isBusy = isTurnActive(state.turn);
+
+  const sendOrQueueMessage = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (trimmed === '') return;
+
+      if (isBusy) {
+        dispatch({ type: 'message_queued', text: trimmed });
+        return;
+      }
+      void send(trimmed);
+    },
+    [isBusy, send],
+  );
+
+  const { queuedText } = state;
+  useEffect(() => {
+    if (queuedText === null || isBusy) return;
+    void send(queuedText);
+  }, [queuedText, isBusy, send]);
+
+  const cancelActiveTurn = useCallback(() => {
+    activeTurnRef.current?.abort();
+    activeTurnRef.current = null;
+    stopPlayback();
+  }, [stopPlayback]);
+
   const clearInputError = useCallback(() => dispatch({ type: 'clear_input_error' }), []);
-
-  const refreshThread = useCallback(async () => {
-    const chatId = chatIdRef.current;
-    if (chatId === null) return;
-
-    const thread = await loadThread(chatId).catch(() => null);
-    if (thread === null) return;
-    dispatch({ type: 'thread_loaded', chat: thread.chat, messages: thread.messages });
-  }, []);
 
   const toggleMuted = useCallback(() => {
     setMuted((wasMuted) => {
@@ -136,13 +168,13 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ConversationContextValue>(
     () => ({
       ...state,
-      sendMessage: send,
+      sendOrQueueMessage,
+      cancelActiveTurn,
       clearInputError,
-      refreshThread,
       isMuted,
       toggleMuted,
     }),
-    [state, send, clearInputError, refreshThread, isMuted, toggleMuted],
+    [state, sendOrQueueMessage, cancelActiveTurn, clearInputError, isMuted, toggleMuted],
   );
 
   return (
