@@ -1,10 +1,10 @@
 'use client';
 
+import { ArrowUp, VolumeX } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { PRODUCT_NAME } from '@/lib/persona';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
-import { SendIcon, SpeakerMutedIcon } from './icons';
 import { PushToTalkBar } from './PushToTalkBar';
 
 const MAX_INPUT_HEIGHT_PX = 216;
@@ -35,6 +35,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     return () => observer.disconnect();
   }, [onHeightChange]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `draft` is the change signal — the textarea is re-measured through its ref after the new text renders.
   useLayoutEffect(() => {
     const input = inputRef.current;
     if (input === null) return;
@@ -66,7 +67,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
           title="Spoken replies are not available yet"
           disabled
         >
-          <SpeakerMutedIcon />
+          <VolumeX size={18} strokeWidth={1.8} aria-hidden="true" />
         </button>
 
         <textarea
@@ -97,7 +98,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
           type="submit"
           disabled={!hasDraft || isBusy}
         >
-          <SendIcon />
+          <ArrowUp size={20} aria-hidden="true" />
         </button>
       </form>
 

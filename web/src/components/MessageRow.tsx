@@ -44,13 +44,13 @@ export function MessageRow({ message, entering }: MessageRowProps) {
   );
 }
 
-
 function MessageText({ text }: { text: string }) {
   const paragraphs = text.split(/\n{2,}/).filter((paragraph) => paragraph.trim() !== '');
 
   return (
     <>
       {paragraphs.map((paragraph, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: paragraphs come from splitting one immutable string, so none is ever moved, inserted or removed.
         <p key={index}>{paragraph}</p>
       ))}
     </>

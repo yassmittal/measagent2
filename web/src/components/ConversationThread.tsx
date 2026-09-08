@@ -1,11 +1,11 @@
 'use client';
 
 import type { ThreadMessage } from '@measagent/shared';
+import { ArrowDown } from 'lucide-react';
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formatDateDivider } from '@/lib/format-date';
 import { EMPTY_THREAD_PROMPT } from '@/lib/persona';
 import { isTurnActive, type TurnState } from '@/state/conversation-reducer';
-import { ScrollDownIcon } from './icons';
 import { LiveTurn } from './LiveTurn';
 import { MessageRow } from './MessageRow';
 
@@ -40,6 +40,7 @@ export function ConversationThread({
     thread.scrollTop = thread.scrollHeight;
   }, [isPinnedToBottom]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `messages` and `turn.text` are the change signal, not values read in the body — the scroll happens through a ref once they have rendered.
   useEffect(() => {
     const thread = scrollRef.current;
     if (thread === null || !isPinnedToBottom) return;
@@ -58,6 +59,7 @@ export function ConversationThread({
       <section
         className="thread"
         role="log"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the thread is the page's only scroll container, so it has to be keyboard reachable. The reference does the same.
         tabIndex={0}
         aria-label="Conversation"
         ref={scrollRef}
@@ -110,7 +112,7 @@ export function ConversationThread({
           aria-label="Scroll to bottom"
           onClick={scrollToBottom}
         >
-          <ScrollDownIcon />
+          <ArrowDown size={18} aria-hidden="true" />
         </button>
       )}
     </>

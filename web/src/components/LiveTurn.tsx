@@ -19,7 +19,9 @@ export function LiveTurn({ turn }: { turn: TurnState }) {
             <PhraseCrossfade text={label} textKey={labelKey} shimmering={true} />
           </p>
           {turn.text !== '' ? (
+            // biome-ignore lint/a11y/useSemanticElements: journey markup is lifted verbatim from the reference, whose CSS selects on div nesting.
             <div className="journey" role="list" aria-label="What the avatar is doing">
+              {/* biome-ignore lint/a11y/useSemanticElements: see the parent .journey */}
               <div
                 className="journey-node journey-answer"
                 data-kind="answer"

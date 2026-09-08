@@ -2,7 +2,8 @@
 
 Guidance for Claude Code working in **meAsAgent** — a personal AI avatar, modelled
 on `avatar.andrewng.org` (v2). `PLAN.md` is the build plan and the source of
-truth for what each stage delivers; this file is the day-to-day working guide.
+truth for what each stage delivers, `README.md` is how to set the project up and
+run it, and this file is the day-to-day working guide.
 
 Deployed at **meAsAgent.vercel.app**. `meAsAgent.com` is the eventual domain but
 is not owned yet — every URL in the code and metadata uses the Vercel domain.
@@ -127,6 +128,13 @@ plugins/*.ts                   env, mongo, cors, docs, indexes
 - **All streaming state lives in one reducer** (`state/conversation-reducer.ts`),
   never several `useState`s that can disagree about the same turn.
 - No `useEffect` for derived state — derive during render.
+- Icons come from `lucide-react`, sized at the call site. Do not hand-roll SVG
+  components; the reference's own icons are plain 18-20px stroked glyphs and
+  lucide matches them closely enough that consistency is worth more than the
+  last pixel.
+- Dates are formatted with `date-fns`, through `lib/format-date.ts`. Its output
+  is locale-fixed on purpose: the thread is server rendered, so a label that
+  differed between server and browser would be a hydration mismatch.
 
 ## Naming
 
