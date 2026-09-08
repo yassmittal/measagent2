@@ -57,11 +57,20 @@ mongoexport --uri "mongodb://127.0.0.1:27018/measagent" --collection messages --
 
 ## Stage
 
-Stage 1 is done: the pixel replica shell with working text chat, no auth, no
-voice. Stages 2-6 (voice out, voice in, Google sign-in, long-term memory, RAG)
-are specified in `PLAN.md §1`. **Do not start Stage 2 work until Stage 1's DOM
-still matches the reference** — retrofitting layout under a live voice pipeline
-is much harder than the reverse.
+Stages 1 and 2 are done: the pixel replica shell with working text chat, and
+spoken replies streamed as `audio_delta` spans alongside the text. Stages 3-6
+(voice in, Google sign-in, long-term memory, RAG) are specified in `PLAN.md §1`.
+
+Live voice (Stage 3) is a third pipeline: the s2s service owns the audio and
+calls `POST /v1/chat/completions` as its language model, routed by the
+`ma-route:` marker in `lib/voice/route-marker.ts`. The browser side is
+`web/src/lib/voice/realtime-client.ts` plus the worklets in
+`web/public/worklets/` — transport only, no product logic.
+
+Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
+seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`
+orchestrates a turn. **A failing voice must never fail a turn** — every path
+downgrades to a `voice_unavailable` event and the reply still arrives as text.
 
 ## Reference-driven UI
 

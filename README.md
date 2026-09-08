@@ -147,6 +147,7 @@ serializer, not just validation, so they are always current.
 |---|---|
 | `POST /v1/chats` | send a message; responds with an SSE stream for the turn |
 | `GET /v1/chats/:chatId` | load a thread and its messages |
+| `POST /v1/chats/:chatId/turns/:turnId/tts` | re-synthesize a stored reply as one audio file |
 | `GET /health` | liveness |
 
 Requests carry the owner in an `x-device-id` header. A thread belonging to
@@ -156,7 +157,68 @@ another device returns 404, not someone else's data.
 `EventSource` — the browser has to POST a body and send its own headers, so
 both ends speak SSE over a plain chunked `fetch`. Event shapes live in
 `shared/src/stream.ts`: `turn_started` → `delta`… → `turn_completed`, or
-`turn_failed` with a `retryable` flag.
+`turn_failed` with a `retryable` flag. When the reply is spoken, `audio_delta`
+spans are interleaved with the text and closed by `audio_done`.
+
+---
+
+## Live voice
+
+Talking to the avatar is a separate pipeline from the typed one. A standalone
+speech-to-speech service owns the microphone, voice activity detection,
+transcription and synthesis; our API is only its language model, reached at
+`POST /v1/chat/completions`:
+
+```
+browser ──ws──► s2s service ──POST /v1/chat/completions──► this API
+        mic in,     VAD·STT·TTS      Bearer MA_S2S_API_KEY    persona,
+        audio out                                             history, Mongo
+```
+
+The s2s service has one process-global backend URL and no per-session routing
+channel, so the browser smuggles `ma-route: {"threadId","userId","sessionId"}`
+through the realtime session `instructions`, and the gateway reads that line to
+decide which conversation a request belongs to. Nothing else in the incoming
+`messages` is trusted — the persona prompt is rebuilt server-side every turn.
+Spoken and typed turns therefore land in the same thread.
+
+Run it locally (Apple Silicon; models are cached after the first run):
+
+```bash
+cd ~/projects/sui/sui-sentinal/speech-to-speech
+.venv/bin/speech-to-speech serve   --port 8766   --stt mlx-audio-whisper   --mlx_audio_whisper_model_name mlx-community/whisper-large-v3-turbo-4bit   --tts facebookMMS --facebook_mms_device cpu   --llm_backend chat-completions --model_name measagent   --responses_api_base_url "http://127.0.0.1:3010/v1"   --responses_api_api_key "$MA_S2S_API_KEY"   --responses_api_stream
+```
+
+Set `NEXT_PUBLIC_SPEECH_TO_SPEECH_URL` to that endpoint. Unset it and the
+control renders disabled rather than breaking.
+
+Browser-side, `lib/voice/realtime-client.ts` owns transport only: two audio
+worklets in `public/worklets/` resample between the AudioContext rate and the
+service's 16kHz PCM16, and `input_audio_buffer.speech_started` clears the
+playback queue so talking over the avatar interrupts it.
+
+## Spoken replies in typed chat
+
+The avatar speaks by default; the speaker button in the composer mutes it and
+the choice is remembered per device. Muting sends `speak: false` with the
+message, so nothing is synthesized server-side rather than synthesized and
+thrown away.
+
+Audio rides the same stream as the text. As the reply arrives it is split into
+sentence-sized spans (`api/lib/speech/sentence-chunker.ts`), each is
+synthesized, and each is sent as an `audio_delta` the browser plays in
+sequence — Kokoro has no streaming endpoint, so this is how the avatar starts
+talking before the reply has finished being written. Markdown is stripped first
+(`speakable-text.ts`), because a synthesizer will happily read out asterisks.
+
+The provider sits behind `SpeechSynthesizer` in `api/services/speech/`. Stage 2
+is Kokoro-82M through the HuggingFace router, which is nearly free but has fixed
+voices and can never sound like Yash; replacing it with an ElevenLabs clone is
+an edit to `getSpeechSynthesizer()` and nothing else.
+
+**A failing voice never fails a turn.** No `HF_TOKEN`, an unreachable provider, a
+depleted quota — all of them emit `voice_unavailable` and the reply arrives as
+text exactly as it would have.
 
 ---
 
@@ -223,8 +285,8 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | Stage | Delivers | Auth | Voice |
 |---|---|---|---|
 | **1** ✅ | replica shell + text chat | none | none |
-| **2** | voice out — the avatar speaks | none | TTS |
-| **3** | voice in — push-to-talk and live mode | none | STT + TTS |
+| **2** ✅ | voice out — the avatar speaks | none | TTS |
+| **3** 🔨 | voice in — live conversation in the browser | none | STT + TTS |
 | **4** | Google sign-in, per-user threads, consent | Google | both |
 | **5** | long-term memory and return reminders | Google | both |
 | **6** | RAG over Yash's corpus, web search, feedback | Google | both |

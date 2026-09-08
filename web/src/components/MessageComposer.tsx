@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUp, VolumeX } from 'lucide-react';
+import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { PRODUCT_NAME } from '@/lib/persona';
 import { useConversation } from '@/state/ConversationProvider';
@@ -14,7 +14,15 @@ interface MessageComposerProps {
 }
 
 export function MessageComposer({ onHeightChange }: MessageComposerProps) {
-  const { turn, inputError, clearInputError, sendMessage } = useConversation();
+  const {
+    turn,
+    inputError,
+    clearInputError,
+    sendMessage,
+    voiceNotice,
+    isMuted,
+    toggleMuted,
+  } = useConversation();
   const [draft, setDraft] = useState('');
   const rowRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -60,14 +68,18 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         }}
       >
         <button
-          className="composer-icon-btn composer-voice muted"
+          className={`composer-icon-btn composer-voice${isMuted ? ' muted' : ''}`}
           type="button"
-          aria-label="Spoken replies are not available yet"
-          aria-pressed={false}
-          title="Spoken replies are not available yet"
-          disabled
+          aria-label={isMuted ? 'Turn spoken replies on' : 'Turn spoken replies off'}
+          aria-pressed={!isMuted}
+          title={isMuted ? 'Spoken replies are off' : 'Spoken replies are on'}
+          onClick={toggleMuted}
         >
-          <VolumeX size={18} strokeWidth={1.8} aria-hidden="true" />
+          {isMuted ? (
+            <VolumeX size={18} strokeWidth={1.8} aria-hidden="true" />
+          ) : (
+            <Volume2 size={18} strokeWidth={1.8} aria-hidden="true" />
+          )}
         </button>
 
         <textarea
@@ -107,6 +119,10 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
       {inputError !== null ? (
         <p className="composer-error" role="alert">
           {inputError}
+        </p>
+      ) : voiceNotice !== null && !isMuted ? (
+        <p className="composer-hint" role="status">
+          {voiceNotice}
         </p>
       ) : null}
     </footer>

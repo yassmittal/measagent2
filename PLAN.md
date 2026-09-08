@@ -65,8 +65,8 @@ auth, as requested.
 
 | Stage | Delivers | Auth | Voice | Memory |
 |---|---|---|---|---|
-| **1** | Pixel replica shell + working text chat against a local persona | none | none | in-thread only |
-| **2** | Voice out (avatar speaks) | none | TTS | in-thread |
+| **1** ✅ | Pixel replica shell + working text chat against a local persona | none | none | in-thread only |
+| **2** ✅ | Voice out (avatar speaks) | none | TTS | in-thread |
 | **3** | Voice in (push-to-talk + live mode) | none | STT + TTS | in-thread |
 | **4** | Google sign-in, per-user threads, consent screen | Google | both | per-user threads |
 | **5** | Long-term memory (`relationship`) + return reminders | Google | both | cross-thread |
@@ -453,3 +453,48 @@ import time. And `reply.hijack()` skips the Fastify hooks that write CORS
 headers, so `ChatEventStream` copies the already-staged headers onto the raw
 response by hand; without that the stream is blocked in the browser even though
 a preflight on the same route succeeds.
+
+---
+
+## 13. What Stage 2 actually shipped
+
+**The wire.** Audio rides the turn's own SSE stream, exactly as the reference
+does it: `audio_delta` spans carrying base64 + a MIME type + a sequence number,
+closed by `audio_done`, with `voice_unavailable` as the downgrade. Reading that
+out of the reference bundle changed the design — the earlier sketch had a
+separate synthesize endpoint, which would have meant a second round trip and no
+way to start speaking mid-reply.
+
+**Chunking instead of streaming.** Kokoro-through-HuggingFace returns a whole
+file, so `lib/speech/sentence-chunker.ts` splits the reply at sentence
+boundaries (120-480 characters) and each span is synthesized and sent on its
+own. Spans are chained, never parallel: they are played in order, and a later
+span finishing first would either scramble the speech or force the client to
+buffer the whole reply. `speakable-text.ts` strips markdown first — code fences
+are dropped outright, since nobody wants a synthesizer reading out braces.
+
+**Muting is server-side.** The composer's speaker button sends `speak: false`
+with the message rather than discarding audio in the browser, so a muted visitor
+costs nothing to serve. The preference is remembered per device.
+
+**Replay.** `POST /v1/chats/:chatId/turns/:turnId/tts` re-synthesizes a stored
+reply as one complete file, which is what anything scrolled back to or reloaded
+needs. Same ownership check as the rest: another device gets a 404.
+
+**Verified end to end** against the running API: the full turn streams and
+persists, an unknown turn is 404, another device's turn is 404, a missing device
+header is 400, and a synthesis failure emits `voice_unavailable` while the reply
+still arrives in full. The chunker, markdown stripping and span ordering were
+exercised against a stub synthesizer.
+
+**Blocked on account, not code:** the shared `HF_TOKEN` has *depleted its
+monthly included credits*, so no real audio has been heard yet. Three ways out —
+top up HuggingFace, run Kokoro locally on the Mac (`kokoro-onnx`/MLX, free), or
+bring Stage 2.5 forward and go straight to ElevenLabs, which is the eventual
+voice anyway. The `SpeechSynthesizer` seam makes any of them a small change.
+
+**Not built, deliberately:** streaming synthesis into MediaSource (needs a
+provider that streams — that is Stage 2.5), a replay button in the message row,
+and any speaking-state indicator. The reference's `.wave` element is its
+*listening* indicator and belongs to Stage 3's push-to-talk, so it was left
+alone rather than repurposed.

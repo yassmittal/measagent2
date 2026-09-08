@@ -44,7 +44,26 @@ const schemas = Object.freeze({
           description: 'Omit to start a new conversation.',
         },
         text: { type: 'string', minLength: 1, maxLength: MAX_PROMPT_LENGTH },
+        speak: {
+          type: 'boolean',
+          default: true,
+          description: 'Set false to skip synthesizing the reply.',
+        },
       },
+    },
+  },
+
+  replayTurnSpeech: {
+    $id: 'replay-turn-speech',
+    tags,
+    description:
+      'Re-synthesize a stored reply and return it as one audio file. The ' +
+      'response is binary, so it carries no JSON response schema.',
+    params: {
+      type: 'object',
+      required: ['chatId', 'turnId'],
+      additionalProperties: false,
+      properties: { chatId: { type: 'string' }, turnId: { type: 'string' } },
     },
   },
 

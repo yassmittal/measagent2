@@ -1,4 +1,9 @@
-import type { ChatStreamEvent, ThreadMessage, ThreadSummary } from '@measagent/shared';
+import type {
+  ChatStreamEvent,
+  ThreadMessage,
+  ThreadSummary,
+  VoiceUnavailableReason,
+} from '@measagent/shared';
 
 export type TurnPhase = 'idle' | 'sending' | 'streaming' | 'failed';
 
@@ -15,7 +20,13 @@ export interface ConversationState {
   turn: TurnState;
   isLoading: boolean;
   inputError: string | null;
+  voiceNotice: string | null;
 }
+
+const VOICE_NOTICES: Record<VoiceUnavailableReason, string> = {
+  not_configured: 'Spoken replies are not switched on yet.',
+  synthesis_failed: 'The voice dropped out — the reply is all here.',
+};
 
 export const IDLE_TURN: TurnState = {
   phase: 'idle',
@@ -30,6 +41,7 @@ export const INITIAL_STATE: ConversationState = {
   turn: IDLE_TURN,
   isLoading: true,
   inputError: null,
+  voiceNotice: null,
 };
 
 const PENDING_ID_PREFIX = 'pending:';
@@ -67,6 +79,7 @@ export function conversationReducer(
         messages: [...state.messages, action.optimisticMessage],
         turn: { ...IDLE_TURN, phase: 'sending' },
         inputError: null,
+        voiceNotice: null,
       };
 
     case 'stream_event':
@@ -118,6 +131,15 @@ function applyStreamEvent(
         ...state,
         turn: { ...state.turn, phase: 'failed', failure: event.message },
       };
+
+    case 'voice_unavailable':
+      return { ...state, voiceNotice: VOICE_NOTICES[event.reason] };
+
+    // Audio is played by `useSpeechPlayback`, not rendered, so these carry no
+    // state the thread needs.
+    case 'audio_delta':
+    case 'audio_done':
+      return state;
   }
 }
 

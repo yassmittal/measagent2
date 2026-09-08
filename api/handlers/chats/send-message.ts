@@ -12,15 +12,8 @@ import { HISTORY_TURN_LIMIT, MAX_PROMPT_LENGTH } from '../../shared/constants.js
 import type { MessageDoc, ThreadDoc } from '../../shared/documents.js';
 import { getErrorMessage } from '../../shared/errors.js';
 import { readOwnerId } from '../../shared/identity.js';
+import { createReplyVoice } from './reply-voice.js';
 
-/**
- * `POST /v1/chats` — send a message and stream the reply.
- *
- * The user's message and an empty reply row are both written *before* the model
- * is called. That ordering is what makes a dropped connection recoverable: the
- * reply exists as `resolving`, so a reload can show "may still be writing this"
- * instead of silently losing the turn.
- */
 export async function sendMessage(
   this: FastifyRequest['server'],
   request: FastifyRequest<{ Body: SendMessageRequest }>,
@@ -89,13 +82,23 @@ export async function sendMessage(
     replyMessageId: replyMessage._id,
   });
 
+  const voice = createReplyVoice({
+    stream,
+    log: this.log,
+    turnId,
+    enabled: request.body.speak !== false,
+  });
+
   try {
     const result = await streamReply({
       systemPrompt: buildPersonaSystemPrompt(),
       history,
       userPrompt: text,
       model: buildChatModel(),
-      onDelta: (delta) => stream.send({ type: 'delta', text: delta }),
+      onDelta: (delta) => {
+        stream.send({ type: 'delta', text: delta });
+        voice.speak(delta);
+      },
       shouldStop: () => stream.isClosed,
     });
 
@@ -111,10 +114,9 @@ export async function sendMessage(
     await touchThread(db, thread._id, new Date());
 
     stream.send({ type: 'turn_completed', message: toThreadMessage(finished) });
+
+    await voice.finish();
   } catch (error) {
-    // The reply row stays `resolving` on purpose — the client is told the turn
-    // failed, and a later reload still surfaces the unfinished message rather
-    // than pretending it never happened.
     this.log.error(
       { err: error, threadId: thread._id, turnId },
       'Chat turn failed'
@@ -130,7 +132,6 @@ export async function sendMessage(
   }
 }
 
-/** Load the named thread, or start a new one titled from this first message. */
 async function resolveThread(
   db: Db,
   ownerId: string,
