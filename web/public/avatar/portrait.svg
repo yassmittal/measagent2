@@ -1,0 +1,13 @@
+<!-- Placeholder portrait. Swap this file for a real photo; nothing references
+     it except AVATAR_PORTRAIT_SRC in src/lib/persona.ts. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320" role="img" aria-label="Portrait placeholder">
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef1f6"/>
+      <stop offset="1" stop-color="#dfe5ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" fill="url(#ground)"/>
+  <circle cx="160" cy="128" r="52" fill="#c3cddd"/>
+  <path d="M40 320c0-62 54-104 120-104s120 42 120 104Z" fill="#c3cddd"/>
+</svg>

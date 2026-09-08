@@ -1,0 +1,113 @@
+'use client';
+
+import { useLayoutEffect, useRef, useState } from 'react';
+import { PRODUCT_NAME } from '@/lib/persona';
+import { useConversation } from '@/state/ConversationProvider';
+import { isTurnActive } from '@/state/conversation-reducer';
+import { SendIcon, SpeakerMutedIcon } from './icons';
+import { PushToTalkBar } from './PushToTalkBar';
+
+const MAX_INPUT_HEIGHT_PX = 216;
+
+interface MessageComposerProps {
+  onHeightChange: (height: number) => void;
+}
+
+export function MessageComposer({ onHeightChange }: MessageComposerProps) {
+  const { turn, inputError, clearInputError, sendMessage } = useConversation();
+  const [draft, setDraft] = useState('');
+  const rowRef = useRef<HTMLElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const isBusy = isTurnActive(turn);
+  const hasDraft = draft.trim() !== '';
+
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (row === null) return;
+
+    const report = () => onHeightChange(Math.ceil(row.getBoundingClientRect().height));
+    report();
+
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(report);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [onHeightChange]);
+
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (input === null) return;
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight, MAX_INPUT_HEIGHT_PX)}px`;
+  }, [draft]);
+
+  const submit = () => {
+    const text = draft.trim();
+    if (text === '' || isBusy) return;
+    setDraft('');
+    void sendMessage(text);
+  };
+
+  return (
+    <footer ref={rowRef} className="composer-row">
+      <form
+        className="composer"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
+        <button
+          className="composer-icon-btn composer-voice muted"
+          type="button"
+          aria-label="Spoken replies are not available yet"
+          aria-pressed={false}
+          title="Spoken replies are not available yet"
+          disabled
+        >
+          <SpeakerMutedIcon />
+        </button>
+
+        <textarea
+          ref={inputRef}
+          rows={1}
+          className="composer-input"
+          placeholder={isBusy ? 'Replying…' : `Message ${PRODUCT_NAME}…`}
+          aria-label={`Message ${PRODUCT_NAME}`}
+          value={draft}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            if (inputError !== null) clearInputError();
+          }}
+          onKeyDown={(event) => {
+            // `isComposing` / keyCode 229 mean an IME is mid-word; Enter there
+            // commits the candidate rather than sending the message.
+            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
+              return;
+            if (event.key !== 'Enter' || event.shiftKey) return;
+            event.preventDefault();
+            submit();
+          }}
+        />
+
+        <button
+          className="composer-send"
+          aria-label="Send"
+          type="submit"
+          disabled={!hasDraft || isBusy}
+        >
+          <SendIcon />
+        </button>
+      </form>
+
+      <PushToTalkBar />
+
+      {inputError !== null ? (
+        <p className="composer-error" role="alert">
+          {inputError}
+        </p>
+      ) : null}
+    </footer>
+  );
+}

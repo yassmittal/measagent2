@@ -1,0 +1,292 @@
+/* Thumbs, the downvote reason picker and the free-text feedback modals. */
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.feedback-text {
+  width: 100%;
+  resize: vertical;
+  min-height: 88px;
+  padding: var(--sp-2) var(--sp-3);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--fill);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+}
+
+.feedback-text:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.feedback-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.feedback-count {
+  font-size: 12px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.feedback-mic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--text-muted);
+  background: var(--fill);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  touch-action: none;
+  transition:
+    color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease);
+}
+
+.feedback-mic:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.feedback-mic[data-recording] {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.feedback-mic:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.feedback-send {
+  padding: var(--sp-1) var(--sp-4);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--button-ink);
+  background: var(--button-bg);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: opacity var(--t-fast) var(--ease);
+}
+
+.feedback-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.feedback-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.feedback-status-ok {
+  color: var(--text-muted);
+}
+
+.feedback-status-err {
+  color: var(--danger, #c0392b);
+}
+
+.feedback-modal-scrim {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  display: grid;
+  place-items: start center;
+  padding: var(--sp-6);
+  background: #0000007a;
+  overflow-y: auto;
+}
+
+.feedback-modal-scrim[hidden] {
+  display: none;
+}
+
+.feedback-modal {
+  box-sizing: border-box;
+  width: min(500px, calc(100vw - 2 * var(--sp-6)));
+  padding: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--e5);
+  margin-block: auto;
+}
+
+.feedback-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.feedback-modal-header h2 {
+  margin: 0;
+  color: var(--n900);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.feedback-modal-close {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--text-subtle);
+  border-radius: var(--r-pill);
+  background: transparent;
+}
+
+.feedback-modal-close:hover {
+  color: var(--text);
+  background: var(--fill);
+}
+
+.feedback-modal-close:disabled {
+  opacity: 0.45;
+  cursor: default;
+  background: transparent;
+}
+
+.feedback-form-modal {
+  gap: var(--sp-3);
+}
+
+.feedback-form-modal .feedback-text {
+  min-height: 148px;
+  padding: var(--sp-3);
+  color: var(--text-secondary);
+  background: var(--surface);
+  border-color: var(--hairline);
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  resize: none;
+}
+
+.feedback-mic.feedback-modal-mic {
+  width: auto;
+  height: 24px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0;
+  color: var(--text-muted);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.feedback-mic.feedback-modal-mic:hover:not(:disabled) {
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.feedback-mic.feedback-modal-mic[data-recording] {
+  color: var(--accent);
+  background: transparent;
+  border-color: transparent;
+}
+
+.feedback-modal-submit {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  color: var(--button-ink);
+  border-radius: var(--r-md);
+  background: var(--button-bg);
+  font-size: 15px;
+  font-weight: 500;
+  transition:
+    background var(--t-fast) var(--ease),
+    opacity var(--t-fast) var(--ease);
+}
+
+.feedback-modal-submit:hover:not(:disabled) {
+  background: var(--button-bg-hover);
+}
+
+.feedback-modal-submit:disabled {
+  color: var(--text-subtle);
+  background: var(--fill-strong);
+  cursor: default;
+}
+
+.downvote-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.downvote-modal .feedback-text {
+  min-height: 96px;
+  resize: none;
+  font-size: 16px;
+}
+
+.downvote-modal .feedback-modal-submit {
+  background: var(--button-bg);
+}
+
+.downvote-modal button.feedback-modal-submit:hover:not(:disabled) {
+  background: var(--button-bg-hover);
+}
+
+.downvote-reason {
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 14px;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.downvote-reason:hover {
+  border-color: var(--n300, var(--hairline));
+  background: var(--fill, var(--surface));
+}
+
+.downvote-reason.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--cd-secondary);
+}
+
+.downvote-reason:disabled {
+  cursor: default;
+  opacity: 0.65;
+}

@@ -1,0 +1,98 @@
+/* Design tokens. The whole visual identity lives in this one block. */
+
+:root {
+  --bg: #fbfbfb;
+  --surface: #ffffff;
+  --surface-sunken: #f4f4f6;
+  --avatar-bg: #eef1f6;
+  --n900: #1f2430;
+  --n800: #374151;
+  --n700: #4b5563;
+  --n600: #6b7280;
+  --n500: #9ca3af;
+  --n400: #cfd3da;
+  --n300: #e1e4e9;
+  --n200: #eceef1;
+  --n100: #f1f2f4;
+  --text: hsl(240 10% 3.9%);
+  --ink: var(--text);
+  --text-secondary: var(--n800);
+  --text-muted: var(--n600);
+  --text-subtle: var(--n500);
+  --fill: var(--n100);
+  --fill-hover: #e6e8ec;
+  --fill-strong: var(--n200);
+  --hairline: #d1d5db;
+  --hair-t: rgba(211, 211, 211, 0.5);
+  --accent: #1877f2;
+  --send: var(--accent);
+  --accent-hover: #1568d8;
+  --accent-weak: rgba(24, 118, 242, 0.1);
+  --accent-soft: #cfe0f6;
+  --button-bg: #d8efff;
+  --button-bg-hover: #c5e5ff;
+  --button-ink: #0c3d63;
+  --bubble: #d8efff;
+  --bubble-ink: #0c3d63;
+  --cd: linear-gradient(155deg, #eaf5ff, #d8efff);
+  --cd-hi: linear-gradient(155deg, #eff8ff, #dcf1ff);
+  --cd-border: #c2e2fb;
+  --cd-ink: #0c3d63;
+  --cd-secondary: #3a5a72;
+  --cd-meta: #5a7891;
+  --success: #16a34a;
+  --green: var(--success);
+  --danger: #b4232a;
+  --red: var(--danger);
+  --relationship-gold-dark: #b8860b;
+  --relationship-gold: #daa520;
+  --relationship-gold-bright: #ffd700;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 56px;
+  --sp-10: 72px;
+  --sp-11: 96px;
+  --measure: 33em;
+  --col-narrow: 640px;
+  --col: 720px;
+  --col-wide: 960px;
+  --col-lesson: 1040px;
+  --e1: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --e2: 0 2px 14px rgba(16, 24, 40, 0.05);
+  --e3: 0 6px 24px rgba(16, 24, 40, 0.08);
+  --e4: 0 14px 34px rgba(16, 24, 40, 0.12);
+  --e5: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --e-cd: 0 3px 16px rgba(12, 61, 99, 0.07);
+  --e-cd-hover: 0 14px 34px rgba(12, 61, 99, 0.13);
+  --ring: 0 0 0 3px var(--accent-weak);
+  --r-xs: 8px;
+  --r-sm: 11px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 0.15s;
+  --t: 0.22s;
+  --t-slow: 0.35s;
+  --t-slower: 0.5s;
+  --t-wash: 0.6s;
+}
+
+@font-face {
+  font-family: Diatype Fallback;
+  src: local("Helvetica Neue");
+  size-adjust: 97%;
+}
+
+:root {
+  --font-body:
+    var(--font-geist-sans), "Diatype Fallback", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+}

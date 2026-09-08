@@ -1,0 +1,339 @@
+/* The live "what the agent is doing" trace shown while a reply streams. */
+
+.thread,
+.settings-panel,
+.msg-andrew pre,
+.journey-answer-text pre,
+.msg-andrew table,
+.journey-answer-text table {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.thread::-webkit-scrollbar,
+.settings-panel::-webkit-scrollbar,
+.msg-andrew pre::-webkit-scrollbar,
+.journey-answer-text pre::-webkit-scrollbar,
+.msg-andrew table::-webkit-scrollbar,
+.journey-answer-text table::-webkit-scrollbar {
+  display: none;
+}
+
+.is-entering,
+.thread-notice {
+  animation: msg-enter var(--t-slow) var(--ease) both;
+}
+
+.msg-andrew pre,
+.journey-answer-text pre {
+  background: var(--surface-sunken);
+  border-radius: var(--r-xs);
+  padding: var(--sp-3) var(--sp-4);
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.msg-andrew code,
+.journey-answer-text code {
+  font-size: 0.88em;
+  white-space: pre-wrap;
+}
+
+.msg-andrew pre code,
+.journey-answer-text pre code {
+  white-space: pre;
+}
+
+.msg-andrew a,
+.journey-answer-text a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.msg-andrew table,
+.journey-answer-text table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: var(--sp-3) 0;
+}
+
+.msg-andrew th,
+.journey-answer-text th {
+  font-weight: 500;
+  text-align: left;
+}
+
+.msg-andrew th,
+.msg-andrew td,
+.journey-answer-text th,
+.journey-answer-text td {
+  padding: 6px 14px 6px 0;
+  border-bottom: 1px solid var(--hair-t);
+}
+
+.ghost-collapse {
+  overflow: hidden;
+  transition: height 0.4s var(--ease);
+  will-change: height;
+}
+
+.journey-wrap .live-progress,
+.journey-wrap .journey {
+  transition:
+    opacity 0.3s var(--ease),
+    transform 0.3s var(--ease);
+}
+
+.journey-wrap.is-collapsing .live-progress {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.journey-wrap.is-collapsing .journey {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition-delay: 70ms;
+}
+
+.journey {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  margin: var(--sp-3) 0 var(--sp-5);
+}
+
+.journey:before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--hairline);
+}
+
+.journey-node {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.journey-dot {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--text);
+  margin-top: 8px;
+  position: relative;
+  transition: background var(--t) var(--ease);
+}
+
+.journey-node[data-status="running"] .journey-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--accent);
+  animation: journey-breathe 1.6s var(--ease) infinite;
+}
+
+.journey-node[data-status="pending"] .journey-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--n400);
+}
+
+.journey-node[data-status="error"] .journey-dot {
+  background: var(--danger);
+}
+
+.journey-node[data-kind="answer"] .journey-dot {
+  background: var(--text);
+}
+
+.journey-skill-badge {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  margin: 1.5px -6.5px 0;
+  position: relative;
+}
+
+.journey-skill-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  color: var(--cd-secondary);
+}
+
+.journey-body {
+  display: flex;
+  flex-direction: column;
+  padding-top: 1px;
+  min-width: 0;
+}
+
+.journey-label {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text-subtle);
+  line-height: 27px;
+}
+
+.journey-label.is-shimmering {
+  --shimmer-base: var(--text-subtle);
+}
+
+.journey-node[data-kind="skill"] .journey-label {
+  color: var(--cd-secondary);
+}
+
+.live-turn-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 10px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text-subtle);
+  background: transparent;
+  border: 1px solid var(--border-subtle, currentColor);
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.live-turn-stop:hover,
+.live-turn-stop:focus-visible {
+  opacity: 1;
+  color: var(--text-primary, currentColor);
+}
+
+.journey-meta {
+  font-size: 14px;
+  margin-top: 2px;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.is-shimmering {
+  --shimmer-base: var(--text);
+  background-image: linear-gradient(
+    90deg,
+    var(--shimmer-base) 0%,
+    var(--shimmer-base) 40%,
+    var(--n200) 50%,
+    var(--shimmer-base) 60%,
+    var(--shimmer-base) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: text-shimmer 1.6s linear infinite;
+}
+
+.live-progress .is-shimmering {
+  --shimmer-base: var(--text-subtle);
+}
+
+.journey-node[data-kind="skill"] .journey-label.is-shimmering {
+  --shimmer-base: var(--cd-secondary);
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+.phrase-crossfade {
+  position: relative;
+  display: inline-block;
+}
+
+.phrase-fade {
+  display: inline-block;
+  animation: phrase-fade-in 0.4s var(--ease);
+}
+
+.phrase-fade-leaving {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  animation: phrase-fade-out 0.4s var(--ease) forwards;
+}
+
+.journey-answer-text {
+  max-width: var(--measure);
+}
+
+.journey-answer-text > :first-child {
+  margin-top: 0;
+}
+
+.journey-answer-text > :last-child {
+  margin-bottom: 0;
+}
+
+.live-progress {
+  color: var(--text-subtle);
+  font-size: 16px;
+  line-height: 25px;
+  margin: 0 0 var(--sp-2);
+}
+
+.answer-dejourney {
+  padding-left: 27px;
+  transform: translate(0);
+  transition: transform 0.4s var(--ease);
+  will-change: transform;
+}
+
+.answer-dejourney[data-collapsing] {
+  transform: translate(-27px);
+}
+
+.answer-dejourney .msg-andrew {
+  animation: none;
+}
+
+.thread-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notice-retry,
+.notice-support {
+  border-radius: var(--r-pill);
+  background: var(--fill);
+  padding: 2px var(--sp-3);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.notice-retry:hover,
+.notice-support:hover {
+  background: var(--fill-hover);
+}

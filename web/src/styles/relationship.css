@@ -1,0 +1,77 @@
+/* The long-term-memory level indicator. */
+
+.relationship-level {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.relationship-level-label {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  background-image: linear-gradient(
+    90deg,
+    var(--relationship-gold-dark),
+    var(--relationship-gold),
+    var(--relationship-gold-bright),
+    #fff1a8,
+    var(--relationship-gold-bright),
+    var(--relationship-gold),
+    var(--relationship-gold-dark)
+  );
+  background-size: 240% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.45));
+  animation: relationship-gold-sweep 2.4s linear infinite;
+}
+
+.relationship-level-countdown {
+  color: var(--relationship-gold-dark);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.relationship-level-tooltip {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 50%;
+  z-index: 20;
+  width: min(280px, calc(100vw - 2 * var(--sp-4)));
+  padding: var(--sp-3);
+  border-radius: var(--r-xs);
+  background: #fff8dc;
+  color: var(--text);
+  box-shadow: var(--e3);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -4px);
+  transition:
+    opacity var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease),
+    visibility var(--t-fast) var(--ease);
+  pointer-events: none;
+}
+
+.relationship-level-tooltip[data-visible] {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%);
+}
+
+@keyframes relationship-gold-sweep {
+  0% {
+    background-position: 200% 50%;
+  }
+  to {
+    background-position: 0% 50%;
+  }
+}

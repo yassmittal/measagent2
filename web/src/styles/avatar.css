@@ -1,0 +1,111 @@
+/* The portrait and the identity card beside it (desktop rail + mobile header). */
+
+.avatar {
+  display: grid;
+  width: var(--avatar-size, 96px);
+  height: var(--avatar-size, 96px);
+  border-radius: var(--r-pill);
+  background: var(--avatar-bg);
+  overflow: hidden;
+  box-shadow: var(--e2);
+  flex: none;
+}
+
+.avatar video,
+.avatar img {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.avatar video {
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+.avatar video[data-active] {
+  opacity: 1;
+}
+
+.avatar video::-webkit-media-controls,
+.avatar video::-webkit-media-controls-panel,
+.avatar video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+.avatar-panel {
+  --avatar-size: clamp(180px, 32vh, 320px);
+  width: 350px;
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-6);
+  padding-top: 56px;
+  text-align: center;
+}
+
+.avatar-panel .avatar {
+  box-shadow: var(--e3);
+}
+
+.avatar-panel-id {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.avatar-panel-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.avatar-panel-name .verified-badge {
+  width: 20px;
+  height: 20px;
+}
+
+.avatar-panel-bio {
+  margin: 0;
+  max-width: 300px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.avatar-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: 280px;
+  margin-top: var(--sp-4);
+}
+
+.avatar-feedback-toggle {
+  align-self: center;
+  padding: var(--sp-1) var(--sp-2);
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--r-pill);
+  transition: color var(--t-fast) var(--ease);
+}
+
+.avatar-feedback-toggle:hover {
+  color: var(--text);
+}
+
+.mobile-header {
+  display: none;
+}

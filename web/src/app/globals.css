@@ -1,0 +1,18 @@
+/*
+ * Layer order is load-bearing: tokens define the variables everything else
+ * reads, base sets the document, and the component layers below it are written
+ * flat (no nesting, original class names) so the reference DOM maps 1:1.
+ */
+@import "../styles/tokens.css";
+@import "../styles/base.css";
+@import "../styles/avatar.css";
+@import "../styles/thread.css";
+@import "../styles/journey.css";
+@import "../styles/composer.css";
+@import "../styles/voice.css";
+@import "../styles/feedback.css";
+@import "../styles/settings.css";
+@import "../styles/auth.css";
+@import "../styles/legal.css";
+@import "../styles/relationship.css";
+@import "../styles/responsive.css";

@@ -1,0 +1,281 @@
+/* Account menu and the settings panel it opens. */
+
+.profile {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 50;
+}
+
+.profile-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: var(--avatar-bg);
+  box-shadow: var(--e1);
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+
+.profile-button:hover {
+  box-shadow: var(--e3);
+}
+
+.profile-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-initial {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@keyframes menu-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 232px;
+  max-width: 300px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e5);
+  padding: var(--sp-2);
+  animation: menu-enter var(--t) var(--ease) both;
+}
+
+.profile-menu-id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+
+.profile-menu-name {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.profile-menu-email {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.profile-menu-item:hover {
+  background: var(--hair-t);
+  color: var(--text);
+}
+
+.profile-menu-divider {
+  height: 1px;
+  background: var(--hair-t);
+  margin: var(--sp-2) var(--sp-3);
+}
+
+@keyframes scrim-enter {
+  0% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-scrim {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-6);
+  background: color-mix(in srgb, var(--n900) 32%, transparent);
+  animation: scrim-enter var(--t) var(--ease) both;
+}
+
+.settings-panel {
+  width: min(400px, 100%);
+  max-height: calc(100vh - var(--sp-6) - var(--sp-6));
+  max-height: calc(100dvh - var(--sp-6) - var(--sp-6));
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-6) var(--sp-6) 28px;
+  animation: menu-enter var(--t-slow) var(--ease) both;
+}
+
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--sp-3);
+}
+
+.settings-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+
+.settings-close {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  color: var(--text-muted);
+  transition:
+    color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease);
+}
+
+.settings-close:hover {
+  color: var(--text);
+  background: var(--hair-t);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+}
+
+.settings-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.settings-row-name {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+a.profile-menu-item {
+  display: block;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.settings-section-title {
+  margin: 0 0 2px;
+  color: var(--text-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-row-value {
+  color: var(--n900);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.shirt-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.shirt-option {
+  padding: 6px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text-subtle);
+  font-size: 14px;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.shirt-option.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.settings-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.settings-note a {
+  color: var(--accent);
+}
+
+.settings-signout {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--n900);
+  font-size: 14px;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.settings-signout:hover {
+  background: var(--fill-strong, var(--surface));
+}
