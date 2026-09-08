@@ -1,0 +1,33 @@
+{
+  "name": "@measagent/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 bun --watch run server.ts",
+    "start": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 bun run server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/autoload": "^6.5.0",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/env": "^7.0.0",
+    "@fastify/mongodb": "^9.0.2",
+    "@fastify/sensible": "^6.0.5",
+    "@fastify/swagger": "^9.8.1",
+    "@fastify/swagger-ui": "^6.1.1",
+    "@langchain/core": "^1.2.9",
+    "@langchain/openai": "^1.5.11",
+    "@measagent/shared": "workspace:*",
+    "close-with-grace": "^2.5.0",
+    "fastify": "^5.12.3",
+    "fastify-plugin": "^6.0.0",
+    "mongodb": "^6.21.0",
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^5.9.3"
+  }
+}

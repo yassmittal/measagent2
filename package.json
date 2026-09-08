@@ -1,0 +1,20 @@
+{
+  "name": "measagent",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "web",
+    "api",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "bun --filter '@measagent/api' --filter '@measagent/web' dev",
+    "dev:web": "bun --filter @measagent/web dev",
+    "dev:api": "bun --filter @measagent/api dev",
+    "db:start": "./scripts/mongodb.sh start",
+    "db:stop": "./scripts/mongodb.sh stop",
+    "db:status": "./scripts/mongodb.sh status",
+    "db:logs": "./scripts/mongodb.sh logs",
+    "typecheck": "bun --filter '*' typecheck"
+  }
+}

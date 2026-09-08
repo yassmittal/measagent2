@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.mongo/
+.env
+.env.local
+*.tsbuildinfo
+*.log
+.DS_Store
+private.md
+reference
