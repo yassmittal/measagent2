@@ -2,16 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  isPermanentFailure,
   SpeechCaptureError,
   type SpeechCaptureFailure,
   SpeechCaptureSession,
 } from '@/lib/voice/speech-capture';
 
-export type SpeechCaptureStatus =
-  | 'idle'
-  | 'starting'
-  | 'listening'
-  | 'finishing';
+export type SpeechCaptureStatus = 'idle' | 'starting' | 'listening' | 'finishing';
 
 export interface SpeechCapture {
   status: SpeechCaptureStatus;
@@ -102,7 +99,7 @@ export function useSpeechCapture({
   }, [finishCapture]);
 
   useEffect(() => {
-    if (unavailableReason !== null) return;
+    if (unavailableReason !== null && isPermanentFailure(unavailableReason)) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'Space' || event.repeat || isTypingInto(event.target)) return;

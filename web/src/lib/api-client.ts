@@ -12,9 +12,21 @@ export class ApiRequestError extends Error {
     this.name = 'ApiRequestError';
   }
 }
-export function apiRequestHeaders(): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    'x-device-id': readDeviceId(),
-  };
+
+/**
+ * Identifies the caller. Every request carries it: until sign-in lands the
+ * device id is what owns a conversation, so a request without it has no thread
+ * to read or write.
+ */
+export function apiIdentityHeaders(): HeadersInit {
+  return { 'x-device-id': readDeviceId() };
+}
+
+/**
+ * For requests that actually send a JSON body — and only those. Declaring the
+ * content type on a bodyless request makes Fastify reject it as a malformed
+ * JSON payload before the route is ever reached.
+ */
+export function apiJsonHeaders(): HeadersInit {
+  return { ...apiIdentityHeaders(), 'Content-Type': 'application/json' };
 }

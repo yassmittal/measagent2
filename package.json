@@ -8,6 +8,8 @@
     "shared"
   ],
   "scripts": {
+    "stack": "./scripts/dev-stack.sh",
+    "talk": "./scripts/voice-talk.sh",
     "dev": "bun --filter '@measagent/api' --filter '@measagent/web' dev",
     "dev:web": "bun --filter @measagent/web dev",
     "dev:api": "bun --filter @measagent/api dev",

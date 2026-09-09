@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .mongo/
+.dev/
 .env
 .env.local
 *.tsbuildinfo
@@ -8,3 +9,4 @@ node_modules/
 .DS_Store
 private.md
 reference
+.playwright-mcp

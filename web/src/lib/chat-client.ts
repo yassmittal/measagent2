@@ -3,11 +3,16 @@ import type {
   LoadThreadResponse,
   SendMessageRequest,
 } from '@measagent/shared';
-import { API_BASE_URL, ApiRequestError, apiRequestHeaders } from './api-client';
+import {
+  API_BASE_URL,
+  ApiRequestError,
+  apiIdentityHeaders,
+  apiJsonHeaders,
+} from './api-client';
 
 export async function loadThread(chatId: string): Promise<LoadThreadResponse | null> {
   const response = await fetch(`${API_BASE_URL}/v1/chats/${chatId}`, {
-    headers: apiRequestHeaders(),
+    headers: apiIdentityHeaders(),
   });
 
   if (response.status === 404) return null;
@@ -28,7 +33,7 @@ export async function sendMessage(options: SendMessageOptions): Promise<void> {
 
   const response = await fetch(`${API_BASE_URL}/v1/chats`, {
     method: 'POST',
-    headers: apiRequestHeaders(),
+    headers: apiJsonHeaders(),
     body: JSON.stringify(body),
     signal,
   });

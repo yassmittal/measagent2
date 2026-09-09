@@ -1,10 +1,18 @@
 import type { TranscriptionSession } from '@measagent/shared';
-import { API_BASE_URL, apiRequestHeaders } from '../api-client';
+import { API_BASE_URL, apiIdentityHeaders } from '../api-client';
 
 const MIC_CHUNK_MS = 50;
 const FINAL_TRANSCRIPT_GRACE_MS = 1500;
 
 export type SpeechCaptureFailure = 'mic_denied' | 'not_configured' | 'unreachable';
+
+/**
+ * Whether a failure will keep failing until something outside the page changes.
+ * A blocked microphone or a provider that is switched off will not fix itself,
+ * so the control goes dead; anything else is worth another press.
+ */
+export const isPermanentFailure = (failure: SpeechCaptureFailure): boolean =>
+  failure === 'mic_denied' || failure === 'not_configured';
 
 export class SpeechCaptureError extends Error {
   constructor(
@@ -179,7 +187,7 @@ async function openMicrophone(): Promise<MediaStream> {
 async function requestTranscriptionSession(): Promise<TranscriptionSession> {
   const response = await fetch(`${API_BASE_URL}/v1/transcription/sessions`, {
     method: 'POST',
-    headers: apiRequestHeaders(),
+    headers: apiIdentityHeaders(),
   });
 
   if (response.status === 503) {

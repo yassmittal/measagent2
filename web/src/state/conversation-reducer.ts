@@ -62,6 +62,9 @@ export type ConversationAction =
   | { type: 'stream_event'; event: ChatStreamEvent }
   | { type: 'send_failed'; message: string }
   | { type: 'turn_cancelled'; at: string }
+  | { type: 'voice_user_spoke'; message: ThreadMessage }
+  | { type: 'voice_reply_delta'; text: string }
+  | { type: 'voice_turn_completed' }
   | { type: 'message_queued'; text: string }
   | { type: 'input_error'; message: string }
   | { type: 'clear_input_error' };
@@ -108,6 +111,23 @@ export function conversationReducer(
 
     case 'message_queued':
       return { ...state, queuedText: action.text, inputError: null };
+
+    // A spoken turn reuses the typed turn's shape so the thread renders one way
+    // for both. It carries no turnId: the voice service owns the turn, so there
+    // is no open request here for a Stop button to abort.
+    case 'voice_user_spoke':
+      return {
+        ...state,
+        messages: [...state.messages, action.message],
+        turn: { ...IDLE_TURN, phase: 'streaming' },
+        inputError: null,
+      };
+
+    case 'voice_reply_delta':
+      return { ...state, turn: { ...state.turn, text: state.turn.text + action.text } };
+
+    case 'voice_turn_completed':
+      return { ...state, turn: IDLE_TURN };
 
     case 'input_error':
       return { ...state, inputError: action.message };

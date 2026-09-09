@@ -61,20 +61,30 @@ streamed as `audio_delta` spans alongside the text, and hold-to-speak voice
 input. Stages 4-6 (Google sign-in, long-term memory, RAG) are specified in
 `PLAN.md §1`.
 
-Voice input (Stage 3) is dictation, not a live call. Holding the mic streams
-microphone audio straight from the browser to the transcription provider, and
-the release sends the transcript as an ordinary message — so a spoken turn and
-a typed turn are the same turn from `handlers/chats/send-message.ts` onward.
-The api only mints the session (`services/transcription/` is the provider seam,
-`POST /v1/transcription/sessions` the route); audio never passes through it.
-The browser side is `web/src/lib/voice/speech-capture.ts` plus
-`web/public/worklets/mic-capture.js` — transport only, no product logic, with
-the gesture in `hooks/useSpeechCapture.ts`.
+Voice input (Stage 3) is **hold-to-speak over a live voice session**, and it is
+a third pipeline: the standalone speech-to-speech service owns the microphone,
+voice-activity detection, transcription and synthesis, and calls
+`POST /v1/chat/completions` as its language model. This api owns the persona,
+the history and the persistence — nothing in the incoming `messages` is trusted
+except the latest transcript, so a spoken turn and a typed turn land in the same
+thread. Routing is the `ma-route:` marker in `lib/voice/route-marker.ts`,
+smuggled through the realtime session's `instructions` because the service has
+no per-session routing channel of its own.
 
-`POST /v1/chat/completions` (`handlers/voice/chat-completions.ts`, routed by the
-`ma-route:` marker in `lib/voice/route-marker.ts`) is a separate seam for an
-external speech-to-speech service to use this api as its language model. The
-browser does not call it.
+The browser side is `web/src/lib/voice/realtime-client.ts` plus the worklets in
+`web/public/worklets/` — transport only, no product logic. The gesture is
+`hooks/useLiveVoice.ts`: it opens the socket once and thereafter only toggles
+`setMicrophoneEnabled`, because a permission prompt and a handshake are far too
+much to pay on every press. **Releasing the button does not cut the audio** —
+the microphone stays open for a short tail so the service hears the silence it
+uses to detect end-of-turn, and closes early once the avatar starts speaking.
+
+A spoken turn is persisted by the api on the service's behalf, so the browser
+renders the transcripts optimistically and then re-reads the thread.
+
+`services/transcription/` and `web/src/lib/voice/speech-capture.ts` implement a
+second, browser-held dictation path against a streaming speech-to-text provider.
+It is **not wired to any UI** and needs `ASSEMBLYAI_API_KEY` to run at all.
 
 Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
 seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`

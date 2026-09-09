@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type LiveVoiceSession, useLiveVoice } from '@/hooks/useLiveVoice';
 import { useSpeechPlayback } from '@/hooks/useSpeechPlayback';
 import { readActiveChatId, writeActiveChatId } from '@/lib/active-chat';
 import { loadThread, sendMessage } from '@/lib/chat-client';
@@ -28,6 +29,8 @@ interface ConversationContextValue extends ConversationState {
   sendOrQueueMessage: (text: string) => void;
   cancelActiveTurn: () => void;
   clearInputError: () => void;
+  /** Hold-to-speak. The voice service owns the audio; this owns the words. */
+  voice: LiveVoiceSession;
   isMuted: boolean;
   toggleMuted: () => void;
 }
@@ -156,6 +159,42 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
   const clearInputError = useCallback(() => dispatch({ type: 'clear_input_error' }), []);
 
+  const refreshThread = useCallback(async () => {
+    const chatId = chatIdRef.current;
+    if (chatId === null) return;
+
+    const thread = await loadThread(chatId).catch(() => null);
+    if (thread === null) return;
+    dispatch({ type: 'thread_loaded', chat: thread.chat, messages: thread.messages });
+  }, []);
+
+  // A spoken turn is written to the database by the voice service, not by this
+  // browser — so the words are shown optimistically as they arrive, then the
+  // thread is re-read to replace them with what was actually stored.
+  const voice = useLiveVoice({
+    threadId: state.chat?.id ?? null,
+    onUserSpoke: (text) => {
+      stopPlayback();
+      dispatch({
+        type: 'voice_user_spoke',
+        message: {
+          id: pendingMessageId(),
+          role: 'user',
+          text,
+          status: 'complete',
+          at: new Date().toISOString(),
+          turnId: null,
+          feedback: null,
+        },
+      });
+    },
+    onReplyDelta: (text) => dispatch({ type: 'voice_reply_delta', text }),
+    onReplyCompleted: () => {
+      dispatch({ type: 'voice_turn_completed' });
+      void refreshThread();
+    },
+  });
+
   const toggleMuted = useCallback(() => {
     setMuted((wasMuted) => {
       const muted = !wasMuted;
@@ -171,10 +210,19 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       sendOrQueueMessage,
       cancelActiveTurn,
       clearInputError,
+      voice,
       isMuted,
       toggleMuted,
     }),
-    [state, sendOrQueueMessage, cancelActiveTurn, clearInputError, isMuted, toggleMuted],
+    [
+      state,
+      sendOrQueueMessage,
+      cancelActiveTurn,
+      clearInputError,
+      voice,
+      isMuted,
+      toggleMuted,
+    ],
   );
 
   return (

@@ -2,7 +2,6 @@
 
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { useSpeechCapture } from '@/hooks/useSpeechCapture';
 import { PRODUCT_NAME } from '@/lib/persona';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
@@ -21,6 +20,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     clearInputError,
     sendOrQueueMessage,
     queuedText,
+    voice,
     voiceNotice,
     isMuted,
     toggleMuted,
@@ -30,12 +30,13 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
   const rowRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const capture = useSpeechCapture({ onTranscribed: sendOrQueueMessage });
-
   const isBusy = isTurnActive(turn);
 
-  const inputText = capture.isCapturing ? capture.partialTranscript : draft;
-  const canSend = inputText.trim() !== '' && !capture.isCapturing;
+  // While the microphone is open the input belongs to the transcript: spoken
+  // words appear where typed ones would, rather than tucked into the footer.
+  const isDictating = voice.isHolding;
+  const inputText = isDictating ? voice.spokenDraft : draft;
+  const canSend = draft.trim() !== '' && !isDictating;
 
   useLayoutEffect(() => {
     const row = rowRef.current;
@@ -91,13 +92,17 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         <textarea
           ref={inputRef}
           rows={1}
-          className={`composer-input${capture.isCapturing ? ' is-ghost' : ''}`}
+          className={`composer-input${isDictating ? ' is-ghost' : ''}`}
           placeholder={
-            isBusy ? `${PRODUCT_NAME} is replying…` : `Message ${PRODUCT_NAME}…`
+            isDictating
+              ? 'Listening…'
+              : isBusy
+                ? `${PRODUCT_NAME} is replying…`
+                : `Message ${PRODUCT_NAME}…`
           }
           aria-label={`Message ${PRODUCT_NAME}`}
           value={inputText}
-          readOnly={capture.isCapturing}
+          readOnly={isDictating}
           onChange={(event) => {
             setDraft(event.target.value);
             if (inputError !== null) clearInputError();
@@ -123,7 +128,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         </button>
       </form>
 
-      <PushToTalkBar capture={capture} />
+      <PushToTalkBar voice={voice} />
 
       {inputError !== null ? (
         <p className="composer-error" role="alert">
