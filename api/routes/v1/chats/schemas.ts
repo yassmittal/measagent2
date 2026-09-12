@@ -53,20 +53,6 @@ const schemas = Object.freeze({
     },
   },
 
-  replayTurnSpeech: {
-    $id: 'replay-turn-speech',
-    tags,
-    description:
-      'Re-synthesize a stored reply and return it as one audio file. The ' +
-      'response is binary, so it carries no JSON response schema.',
-    params: {
-      type: 'object',
-      required: ['chatId', 'turnId'],
-      additionalProperties: false,
-      properties: { chatId: { type: 'string' }, turnId: { type: 'string' } },
-    },
-  },
-
   loadThread: {
     $id: 'load-thread',
     tags,

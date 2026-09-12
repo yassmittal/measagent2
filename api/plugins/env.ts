@@ -30,8 +30,6 @@ export default fp(
 
           // Stage 2 — Kokoro text-to-speech through the HuggingFace router.
           HF_TOKEN: { type: 'string', default: '' },
-          // Stage 3 — browser-held streaming speech-to-text.
-          ASSEMBLYAI_API_KEY: { type: 'string', default: '' },
           // Stage 3 — the standalone speech-to-speech service's bearer token.
           MA_S2S_API_KEY: { type: 'string', default: '' },
         },

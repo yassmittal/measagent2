@@ -95,7 +95,7 @@ Reset the database completely: `bun run db:stop && rm -rf .mongo`.
 | `MA_DB_NAME` | `measagent` |
 | `BEDROCK_API_KEY`, `BEDROCK_REGION` | the language model |
 | `BEDROCK_BASE_URL` | optional override, for stubs or a different gateway |
-| `HF_TOKEN`, `ASSEMBLYAI_API_KEY`, `MA_S2S_API_KEY` | voice, from Stage 2 on |
+| `HF_TOKEN`, `MA_S2S_API_KEY` | voice, from Stage 2 on |
 
 Every variable is read once in `api/plugins/env.ts` and reached through
 `fastify.config`. Nothing else touches `process.env`.
@@ -162,33 +162,40 @@ spans are interleaved with the text and closed by `audio_done`.
 
 ## Voice input
 
-Holding the mic button dictates a message. It is not a live call: the browser
-opens the microphone, streams audio straight to the transcription provider, and
-on release sends the finished transcript as an ordinary message. A spoken turn
-and a typed turn are the same turn from `POST /v1/chats` onward, so they share
-one thread, one persona prompt and one set of stream events.
+Holding the mic button talks to the avatar over a **live voice session**. A
+standalone speech-to-speech service owns the microphone, voice-activity
+detection, transcription and synthesis, and calls this API as its language
+model. This API owns the persona, the history and the persistence, so a spoken
+turn and a typed turn land in the same thread.
 
 ```
-browser ──POST /v1/transcription/sessions──► this API ──► provider (mint token)
-        ──ws (16kHz PCM16)────────────────► provider  ──► transcript
-        ──POST /v1/chats (transcript)─────► this API
+browser ──ws (audio)──► speech-to-speech service ──POST /v1/chat/completions──► this API
+        ◄──── audio ─── (its own TTS)            ◄──── reply text ────────────
 ```
 
-Audio never passes through the API — it only mints a short-lived, single-use
-websocket url so the provider credential stays on the server. The seam is
-`api/services/transcription/`; swapping providers is an edit there and nowhere
-else. Set `ASSEMBLYAI_API_KEY` to switch it on; leave it unset and the mic bar
-renders disabled with a reason rather than breaking.
+Nothing in the incoming `messages` is trusted except the latest transcript: the
+real system prompt is rebuilt server-side every time. Routing is the
+`ma-route:` marker in `api/lib/voice/route-marker.ts`, smuggled through the
+realtime session's `instructions` because the service has no per-session
+routing channel of its own. A warm-up request arrives with no marker and must
+get a canned completion, never an error, or the service fails to boot.
+`MA_S2S_API_KEY` is the bearer token it presents.
 
-Browser-side, `lib/voice/speech-capture.ts` owns transport only, and
-`public/worklets/mic-capture.js` resamples from the AudioContext rate down to
-the 16kHz PCM16 the provider expects. The hold gesture — pointer or spacebar —
-lives in `hooks/useSpeechCapture.ts`, and the partial transcript is displayed
-in the composer input, so speech and typing land in the same place.
+Browser-side, `lib/voice/realtime-client.ts` and the worklets in
+`public/worklets/` are transport only. The gesture lives in
+`hooks/useLiveVoice.ts`: the socket is opened once and thereafter only
+`setMicrophoneEnabled` is toggled, because a permission prompt and a handshake
+are far too much to pay on every press. **Releasing the button does not cut the
+audio** — the microphone stays open for a short tail so the service hears the
+silence it uses to detect end-of-turn, and closes early once the avatar starts
+speaking.
 
-`POST /v1/chat/completions` is an unrelated seam that lets an external
-speech-to-speech service use this API as its language model, routed by the
-`ma-route:` marker. The browser does not call it.
+A spoken turn is persisted by this API on the service's behalf, so the browser
+renders the transcripts optimistically and then re-reads the thread.
+
+Note the consequence: **spoken replies are voiced by the speech-to-speech
+service's own TTS, not by the Kokoro seam below.** Kokoro speaks typed replies
+only. Unifying the two voices is the job of whatever replaces Kokoro.
 
 ---
 
@@ -208,7 +215,7 @@ talking before the reply has finished being written. Markdown is stripped first
 
 The provider sits behind `SpeechSynthesizer` in `api/services/speech/`. Stage 2
 is Kokoro-82M through the HuggingFace router, which is nearly free but has fixed
-voices and can never sound like Yash; replacing it with an ElevenLabs clone is
+voices and cannot be cloned from a person; replacing it with an ElevenLabs clone is
 an edit to `getSpeechSynthesizer()` and nothing else.
 
 **A failing voice never fails a turn.** No `HF_TOKEN`, an unreachable provider, a

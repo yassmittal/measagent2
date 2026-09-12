@@ -10,7 +10,3 @@ export type { SpeechSynthesizer, SynthesizedSpeech } from './types.js';
 export function getSpeechSynthesizer(): SpeechSynthesizer {
   return kokoroSpeechSynthesizer;
 }
-
-export function isSpeechSynthesisConfigured(): boolean {
-  return getSpeechSynthesizer().isConfigured();
-}

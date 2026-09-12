@@ -82,10 +82,6 @@ uses to detect end-of-turn, and closes early once the avatar starts speaking.
 A spoken turn is persisted by the api on the service's behalf, so the browser
 renders the transcripts optimistically and then re-reads the thread.
 
-`services/transcription/` and `web/src/lib/voice/speech-capture.ts` implement a
-second, browser-held dictation path against a streaming speech-to-text provider.
-It is **not wired to any UI** and needs `ASSEMBLYAI_API_KEY` to run at all.
-
 Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
 seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`
 orchestrates a turn. **A failing voice must never fail a turn** — every path

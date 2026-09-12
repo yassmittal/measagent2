@@ -225,13 +225,17 @@ feel we want the streaming variant (`streamSpeech`) feeding MediaSource in the
 browser. Kokoro-via-HF has no streaming endpoint, so Stage 2 accepts
 play-after-generate and Stage 2.5 adds streaming with ElevenLabs.
 
-### 6.2 STT — built fresh
-sui-sentinal has no browser STT (its s2s service owns it), so this is the one
-piece with no prior art to lift. `POST /v1/transcription/sessions` mints a
-short-lived, single-use AssemblyAI url, the browser opens
-`wss://streaming.assemblyai.com/v3/ws` itself, and mic audio goes through an
-`AudioWorklet` resampling to 16kHz PCM16. **Never proxy audio through Fastify** —
-the round trip is what would make dictation feel laggy.
+### 6.2 STT — built, then removed (2026-09-12)
+The original design was browser-held dictation: `POST /v1/transcription/sessions`
+mints a short-lived AssemblyAI url, the browser opens the socket itself, and mic
+audio goes through an `AudioWorklet` resampling to 16kHz PCM16.
+
+It was built and then **deleted**, because §6.3's live mode answered the same
+question and shipped instead. Two speech-to-text designs were sitting in the
+repo, only one of them reachable. If the s2s service ever proves too expensive
+to host, this is the lighter path to rebuild — it is ~200 lines and the
+token-minting shape is standard. The rule it was built around still stands:
+**never proxy audio through Fastify.**
 
 ### 6.3 Live (speech-to-speech) mode — reuse the gateway pattern
 This is the genuinely clever bit in sui-sentinal and worth copying wholesale.
@@ -322,7 +326,6 @@ dashboard-issued and expire in ~2 weeks"`). That density and that tone.
 | Fly/Railway/EC2 | 1 | Fastify service |
 | HuggingFace | 2 | `HF_TOKEN`, Kokoro TTS — you already have this working |
 | ElevenLabs | 2.5 | voice cloning; paid tier required for cloning |
-| AssemblyAI | 3 | streaming STT, priced per hour of audio |
 | 100ms | 3 | only if we do live s2s mode |
 | Tavily | 6 | web search tool, free tier exists |
 | PostHog + Sentry | 6 | both have usable free tiers |

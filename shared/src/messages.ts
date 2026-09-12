@@ -3,12 +3,6 @@ export type MessageStatus = 'complete' | 'interrupted' | 'resolving';
 
 export type FeedbackVote = 'up' | 'down';
 
-export interface MessageFeedback {
-  vote: FeedbackVote;
-  reason: string | null;
-  submittedAt: string;
-}
-
 export interface ThreadMessage {
   id: string;
   role: MessageRole;

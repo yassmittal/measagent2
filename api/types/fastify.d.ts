@@ -19,7 +19,6 @@ declare module 'fastify' {
       BEDROCK_REGION: string;
       BEDROCK_BASE_URL: string;
       HF_TOKEN: string;
-      ASSEMBLYAI_API_KEY: string;
       MA_S2S_API_KEY: string;
     };
   }

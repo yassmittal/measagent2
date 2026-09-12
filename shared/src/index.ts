@@ -1,7 +1,6 @@
 export type {
   FeedbackVote,
   LoadThreadResponse,
-  MessageFeedback,
   MessageRole,
   MessageStatus,
   SendMessageRequest,
@@ -19,4 +18,3 @@ export type {
   VoiceUnavailableEvent,
   VoiceUnavailableReason,
 } from './stream.js';
-export type { TranscriptionSession } from './transcription.js';
