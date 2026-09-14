@@ -4,15 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { toThreadMessage } from '../../lib/chat/messages.js';
 import { buildPersonaSystemPrompt } from '../../lib/chat/persona.js';
 import { streamReply } from '../../lib/chat/reply-runner.js';
-import {
-  lastUserMessageText,
-  type LiveVoiceMarker,
-  parseRouteMarker,
-} from '../../lib/voice/route-marker.js';
+import { lastUserMessageText, parseRouteMarker } from '../../lib/voice/route-marker.js';
 import { buildChatModel } from '../../services/language-model.js';
 import { messagesCollection, threadsCollection } from '../../shared/collections.js';
 import { VOICE_HISTORY_TURN_LIMIT, VOICE_MAX_TOKENS } from '../../shared/constants.js';
 import type { MessageDoc } from '../../shared/documents.js';
+import { getErrorMessage } from '../../shared/errors.js';
 
 
 interface ChatCompletionsBody {
@@ -22,6 +19,11 @@ interface ChatCompletionsBody {
 }
 
 const WARMUP_REPLY = "Hello! I'm ready.";
+
+interface VoiceSessionClaims {
+  sub: string;
+  threadId: string;
+}
 
 const SSE_KEEPALIVE_MS = 5000;
 
@@ -44,9 +46,17 @@ export async function chatCompletions(
   const model = typeof body.model === 'string' ? body.model : 'measagent';
   const id = completionId();
 
-  const marker = parseRouteMarker(body.messages);
-  if (marker === null) {
+  const routeToken = parseRouteMarker(body.messages);
+  if (routeToken === null) {
     return sendCompletion(reply, id, model, WARMUP_REPLY);
+  }
+
+  let session: VoiceSessionClaims;
+  try {
+    session = this.jwt.verify<VoiceSessionClaims>(routeToken);
+  } catch (error) {
+    this.log.warn({ err: getErrorMessage(error) }, 'Rejected a live voice route marker');
+    return sendOpenAiError(reply, 401, 'Invalid or expired voice session', 'invalid_request_error');
   }
 
   const userPrompt = lastUserMessageText(body.messages);
@@ -61,23 +71,23 @@ export async function chatCompletions(
 
   if (body.stream !== true) {
     try {
-      const spoken = await runLiveVoiceTurn(this, db, marker, userPrompt);
+      const spoken = await runLiveVoiceTurn(this, db, session, userPrompt);
       return sendCompletion(reply, id, model, spoken);
     } catch (error) {
-      this.log.error({ err: error, threadId: marker.threadId }, 'Live voice turn failed');
+      this.log.error({ err: error, threadId: session.threadId }, 'Live voice turn failed');
       return sendOpenAiError(reply, 500, 'Live voice turn failed', 'server_error');
     }
   }
 
   const stream = new ChatCompletionStream(reply, id, model);
   try {
-    await runLiveVoiceTurn(this, db, marker, userPrompt, (delta) =>
+    await runLiveVoiceTurn(this, db, session, userPrompt, (delta) =>
       stream.sendDelta(delta)
     );
     stream.finish();
   } catch (error) {
     this.log.error(
-      { err: error, threadId: marker.threadId },
+      { err: error, threadId: session.threadId },
       'Live voice turn failed mid-stream'
     );
     stream.abort();
@@ -87,16 +97,17 @@ export async function chatCompletions(
 async function runLiveVoiceTurn(
   fastify: FastifyInstance,
   db: Db,
-  marker: LiveVoiceMarker,
+  session: VoiceSessionClaims,
   userPrompt: string,
   onDelta?: (delta: string) => void
 ): Promise<string> {
+  const ownerId = session.sub;
   const thread = await threadsCollection(db).findOne({
-    _id: marker.threadId,
-    userId: marker.userId,
+    _id: session.threadId,
+    userId: ownerId,
   });
   if (thread === null) {
-    throw new Error(`No thread ${marker.threadId} for ${marker.userId}`);
+    throw new Error(`No thread ${session.threadId} for ${ownerId}`);
   }
 
   const history = await messagesCollection(db)
@@ -110,7 +121,7 @@ async function runLiveVoiceTurn(
   const userMessage: MessageDoc = {
     _id: uuidv4(),
     threadId: thread._id,
-    userId: marker.userId,
+    userId: ownerId,
     role: 'user',
     text: userPrompt,
     status: 'complete',
@@ -130,7 +141,7 @@ async function runLiveVoiceTurn(
   const replyMessage: MessageDoc = {
     _id: uuidv4(),
     threadId: thread._id,
-    userId: marker.userId,
+    userId: ownerId,
     role: 'assistant',
     text,
     status: 'complete',

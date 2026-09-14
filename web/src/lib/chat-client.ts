@@ -1,7 +1,9 @@
 import type {
   ChatStreamEvent,
+  ListThreadsResponse,
   LoadThreadResponse,
   SendMessageRequest,
+  ThreadSummary,
 } from '@measagent/shared';
 import {
   API_BASE_URL,
@@ -21,6 +23,18 @@ export async function loadThread(chatId: string): Promise<LoadThreadResponse | n
   }
 
   return (await response.json()) as LoadThreadResponse;
+}
+
+export async function listThreads(): Promise<ThreadSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/v1/chats`, {
+    headers: apiIdentityHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError('Could not load your conversations', response.status);
+  }
+
+  return ((await response.json()) as ListThreadsResponse).chats;
 }
 
 export interface SendMessageOptions extends SendMessageRequest {

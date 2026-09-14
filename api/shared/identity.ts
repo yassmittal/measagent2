@@ -1,19 +1,53 @@
 import type { FastifyRequest } from 'fastify';
+import { toDeviceOwnerId } from '../lib/auth/owner-id.js';
 
-/**
- * Until Stage 4 adds Google sign-in there are no accounts, so a conversation is
- * owned by a device id the browser mints once and keeps in `localStorage`.
- * It is not a security boundary — anyone can send any id — it exists so a
- * refresh does not lose the thread, and so `userId` is populated from day one.
- */
+
 export const DEVICE_ID_HEADER = 'x-device-id';
 
 const DEVICE_ID_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
+const BEARER_PREFIX = 'Bearer ';
 
-/** The caller's owner id, or null when the header is missing or malformed. */
-export function readOwnerId(request: FastifyRequest): string | null {
+export type CallerKind = 'account' | 'device';
+
+export interface Caller {
+  ownerId: string;
+  kind: CallerKind;
+}
+
+interface SessionClaims {
+  sub: string;
+}
+
+export function readSessionOwnerId(request: FastifyRequest): string | null {
+  const header = request.headers.authorization;
+  if (typeof header !== 'string' || !header.startsWith(BEARER_PREFIX)) return null;
+
+  try {
+    const claims = request.server.jwt.verify<SessionClaims>(
+      header.slice(BEARER_PREFIX.length).trim()
+    );
+    return typeof claims.sub === 'string' && claims.sub !== '' ? claims.sub : null;
+  } catch {
+    // Expired or tampered with. Treated as "not signed in" rather than an
+    // error, so a stale token in a long-open tab falls back to anonymous
+    // instead of breaking every request the page makes.
+    return null;
+  }
+}
+
+export function readDeviceOwnerId(request: FastifyRequest): string | null {
   const header = request.headers[DEVICE_ID_HEADER];
   const value = Array.isArray(header) ? header[0] : header;
   if (typeof value !== 'string' || !DEVICE_ID_PATTERN.test(value)) return null;
-  return `device:${value}`;
+  return toDeviceOwnerId(value);
+}
+
+export function readCaller(request: FastifyRequest): Caller | null {
+  const sessionOwnerId = readSessionOwnerId(request);
+  if (sessionOwnerId !== null) return { ownerId: sessionOwnerId, kind: 'account' };
+
+  const deviceOwnerId = readDeviceOwnerId(request);
+  if (deviceOwnerId !== null) return { ownerId: deviceOwnerId, kind: 'device' };
+
+  return null;
 }

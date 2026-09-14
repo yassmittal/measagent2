@@ -9,6 +9,7 @@ import { isTurnActive, type TurnState } from '@/state/conversation-reducer';
 import { LiveTurn } from './LiveTurn';
 import { MessageRow } from './MessageRow';
 import { QueuedMessage } from './QueuedMessage';
+import { ThreadClaimedNotice } from './ThreadClaimedNotice';
 
 const PINNED_THRESHOLD_PX = 80;
 
@@ -74,6 +75,8 @@ export function ConversationThread({
         }}
       >
         <div className="thread-col">
+          <ThreadClaimedNotice />
+
           <div className="thread-items">
             {messages.length === 0 && !isActive && !isLoading ? (
               <p className="thread-empty">{EMPTY_THREAD_PROMPT}</p>

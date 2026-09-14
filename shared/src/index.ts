@@ -1,5 +1,15 @@
 export type {
+  ConsentResponse,
+  GoogleSignInRequest,
+  OpenVoiceSessionRequest,
+  OpenVoiceSessionResponse,
+  SessionResponse,
+  SignInResponse,
+  UserProfile,
+} from './identity.js';
+export type {
   FeedbackVote,
+  ListThreadsResponse,
   LoadThreadResponse,
   MessageRole,
   MessageStatus,

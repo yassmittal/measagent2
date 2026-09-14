@@ -57,6 +57,7 @@ export const isPendingMessage = (message: ThreadMessage): boolean =>
   message.id.startsWith(PENDING_ID_PREFIX);
 
 export type ConversationAction =
+  | { type: 'identity_changed' }
   | { type: 'thread_loaded'; chat: ThreadSummary | null; messages: ThreadMessage[] }
   | { type: 'send_started'; optimisticMessage: ThreadMessage }
   | { type: 'stream_event'; event: ChatStreamEvent }
@@ -74,6 +75,9 @@ export function conversationReducer(
   action: ConversationAction,
 ): ConversationState {
   switch (action.type) {
+    case 'identity_changed':
+      return INITIAL_STATE;
+
     case 'thread_loaded':
       return {
         ...state,

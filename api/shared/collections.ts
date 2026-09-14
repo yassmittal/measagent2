@@ -1,5 +1,5 @@
 import type { Collection, Db } from 'mongodb';
-import type { MessageDoc, ThreadDoc } from './documents.js';
+import type { MessageDoc, ThreadDoc, UserDoc } from './documents.js';
 
 /**
  * Collection names are looked up here rather than typed at each call site, so a
@@ -7,6 +7,7 @@ import type { MessageDoc, ThreadDoc } from './documents.js';
  * result set.
  */
 export const COLLECTIONS = Object.freeze({
+  users: 'users',
   threads: 'threads',
   messages: 'messages',
   relationships: 'relationships',
@@ -18,3 +19,6 @@ export const threadsCollection = (db: Db): Collection<ThreadDoc> =>
 
 export const messagesCollection = (db: Db): Collection<MessageDoc> =>
   db.collection<MessageDoc>(COLLECTIONS.messages);
+
+export const usersCollection = (db: Db): Collection<UserDoc> =>
+  db.collection<UserDoc>(COLLECTIONS.users);

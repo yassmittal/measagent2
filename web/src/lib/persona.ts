@@ -13,3 +13,5 @@ export const PERSONA_TAGLINE =
 export const EMPTY_THREAD_PROMPT = 'Say hello — meAsAgent remembers where you left off.';
 
 export const AVATAR_PORTRAIT_SRC = '/avatar/portrait.svg';
+
+export const CONTACT_EMAIL = 'yashmittalmm@gmail.com';

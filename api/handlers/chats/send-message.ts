@@ -11,7 +11,7 @@ import { messagesCollection, threadsCollection } from '../../shared/collections.
 import { HISTORY_TURN_LIMIT, MAX_PROMPT_LENGTH } from '../../shared/constants.js';
 import type { MessageDoc, ThreadDoc } from '../../shared/documents.js';
 import { getErrorMessage } from '../../shared/errors.js';
-import { readOwnerId } from '../../shared/identity.js';
+import { readCaller } from '../../shared/identity.js';
 import { createReplyVoice } from './reply-voice.js';
 
 export async function sendMessage(
@@ -19,10 +19,11 @@ export async function sendMessage(
   request: FastifyRequest<{ Body: SendMessageRequest }>,
   reply: FastifyReply
 ): Promise<void> {
-  const ownerId = readOwnerId(request);
-  if (ownerId === null) {
-    return reply.badRequest('A valid x-device-id header is required');
+  const caller = readCaller(request);
+  if (caller === null) {
+    return reply.badRequest('Sign in, or send a valid x-device-id header');
   }
+  const ownerId = caller.ownerId;
 
   if (!isChatModelConfigured()) {
     return reply.serviceUnavailable('The language model is not configured');

@@ -28,3 +28,15 @@ export interface MessageDoc {
   createdAt: Date;
   feedback: { vote: 'up' | 'down'; reason: string | null; submittedAt: Date } | null;
 }
+
+export interface UserDoc {
+  _id: string;
+  googleSubject: string;
+  email: string;
+  name: string;
+  pictureUrl: string | null;
+  createdAt: Date;
+  lastSignedInAt: Date;
+  /** Null until the terms are accepted; re-asked when the version moves on. */
+  consent: { acceptedAt: Date; termsVersion: string } | null;
+}

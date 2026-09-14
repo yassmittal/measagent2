@@ -14,8 +14,9 @@ import {
 } from 'react';
 import { type LiveVoiceSession, useLiveVoice } from '@/hooks/useLiveVoice';
 import { useSpeechPlayback } from '@/hooks/useSpeechPlayback';
-import { readActiveChatId, writeActiveChatId } from '@/lib/active-chat';
+import { writeActiveChatId } from '@/lib/active-chat';
 import { loadThread, sendMessage } from '@/lib/chat-client';
+import { loadInitialThread } from '@/lib/initial-thread';
 import { readVoiceMuted, writeVoiceMuted } from '@/lib/voice-preference';
 import {
   type ConversationState,
@@ -24,6 +25,7 @@ import {
   isTurnActive,
   pendingMessageId,
 } from './conversation-reducer';
+import { useSession } from './SessionProvider';
 
 interface ConversationContextValue extends ConversationState {
   sendOrQueueMessage: (text: string) => void;
@@ -39,6 +41,7 @@ const ConversationContext = createContext<ConversationContextValue | null>(null)
 
 export function ConversationProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(conversationReducer, INITIAL_STATE);
+  const { identityKey, isSignedIn } = useSession();
   const { enqueueSpan, stopPlayback } = useSpeechPlayback();
 
   const [isMuted, setMuted] = useState(false);
@@ -53,17 +56,14 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const activeTurnRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const chatId = readActiveChatId();
-    if (chatId === null) {
-      dispatch({ type: 'thread_loaded', chat: null, messages: [] });
-      return;
-    }
+    if (identityKey === null) return;
 
     let cancelled = false;
-    loadThread(chatId)
+    dispatch({ type: 'identity_changed' });
+
+    loadInitialThread(isSignedIn)
       .then((thread) => {
         if (cancelled) return;
-        if (thread === null) writeActiveChatId(null);
         dispatch({
           type: 'thread_loaded',
           chat: thread?.chat ?? null,
@@ -78,7 +78,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [identityKey, isSignedIn]);
 
   const send = useCallback(
     async (text: string) => {

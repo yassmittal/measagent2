@@ -96,6 +96,8 @@ Reset the database completely: `bun run db:stop && rm -rf .mongo`.
 | `BEDROCK_API_KEY`, `BEDROCK_REGION` | the language model |
 | `BEDROCK_BASE_URL` | optional override, for stubs or a different gateway |
 | `HF_TOKEN`, `MA_S2S_API_KEY` | voice, from Stage 2 on |
+| `MA_SESSION_SECRET` | signs the session tokens the browser carries. `openssl rand -hex 32`. Changing it signs everybody out |
+| `MA_GOOGLE_CLIENT_ID` | the OAuth 2.0 Web application client id. Leave it empty and the service runs fine — everyone just stays anonymous |
 
 Every variable is read once in `api/plugins/env.ts` and reached through
 `fastify.config`. Nothing else touches `process.env`.
@@ -105,6 +107,8 @@ Every variable is read once in `api/plugins/env.ts` and reached through
 | Variable | Notes |
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | the API origin. Public by design — the browser calls it |
+| `NEXT_PUBLIC_SPEECH_TO_SPEECH_URL` | the live voice socket, e.g. `ws://127.0.0.1:8766/v1/realtime` |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | same value as `MA_GOOGLE_CLIENT_ID`. Empty means the sign-in panel says so |
 
 ---
 
@@ -144,12 +148,18 @@ serializer, not just validation, so they are always current.
 | Route | Does |
 |---|---|
 | `POST /v1/chats` | send a message; responds with an SSE stream for the turn |
+| `GET /v1/chats` | the caller's conversations, most recent first |
 | `GET /v1/chats/:chatId` | load a thread and its messages |
-| `POST /v1/chats/:chatId/turns/:turnId/tts` | re-synthesize a stored reply as one audio file |
+| `POST /v1/auth/google` | trade a Google credential for a session token |
+| `GET /v1/auth/session` | the account behind the session token on the request |
+| `GET`/`POST /v1/consent` | read and record acceptance of the terms |
+| `POST /v1/voice/sessions` | mint the routing marker for one live voice session |
+| `POST /v1/chat/completions` | the OpenAI-compatible endpoint the voice service calls |
 | `GET /health` | liveness |
 
-Requests carry the owner in an `x-device-id` header. A thread belonging to
-another device returns 404, not someone else's data.
+Every request says who it is: an `Authorization: Bearer` session token if signed
+in, an `x-device-id` header if not. Both may be present and the session wins.
+A thread belonging to someone else returns 404, not their data.
 
 `POST /v1/chats` is framed as SSE but is deliberately **not** consumed with
 `EventSource` — the browser has to POST a body and send its own headers, so
@@ -157,6 +167,44 @@ both ends speak SSE over a plain chunked `fetch`. Event shapes live in
 `shared/src/stream.ts`: `turn_started` → `delta`… → `turn_completed`, or
 `turn_failed` with a `retryable` flag. When the reply is spoken, `audio_delta`
 spans are interleaved with the text and closed by `audio_done`.
+
+---
+
+## Signing in
+
+Signing in is optional. Anyone can talk to the avatar straight away as an
+anonymous `device:<id>`, and signing in with Google **claims that device's
+conversations onto the account** — one `updateMany`, because `userId` has been
+on every document since the first commit. The thread says so afterwards rather
+than moving quietly.
+
+```
+browser ──Google credential──► POST /v1/auth/google
+                                   │  google-auth-library verifies it
+                                   │  upsert the user, claim the device's threads
+                                   ▼
+browser ◄──── our own signed session token (30 days) ────┘
+        └── every later request: Authorization: Bearer …
+```
+
+Three decisions worth knowing:
+
+- **The session is a signed token, not a row.** Which owner is calling is
+  answered by a signature, with no database read per message. The trade is that
+  sign-out cannot be enforced server-side, so the lifetime is finite;
+  `api/plugins/auth.ts` is where a denylist would go if that changes.
+- **Bearer header, not a cookie.** The api is on another origin from the web
+  app, and cross-site cookies are being removed from browsers.
+- **Consent is per account and versioned.** Bumping `CONSENT_TERMS_VERSION` in
+  `api/shared/constants.ts` makes every stored acceptance read as unaccepted, so
+  everyone is asked again.
+
+**Setting it up:** create an OAuth 2.0 *Web application* client in the Google
+Cloud console, add `http://localhost:3000` (and your deployed origin) to its
+authorised JavaScript origins, then put the client id in **both**
+`MA_GOOGLE_CLIENT_ID` and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, and a random
+`MA_SESSION_SECRET` in `api/.env`. With either missing the app still runs and
+everybody stays anonymous — the sign-in panel says as much.
 
 ---
 
@@ -286,7 +334,7 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | **1** ✅ | chat shell + text chat | none | none |
 | **2** ✅ | voice out — the avatar speaks | none | TTS |
 | **3** ✅ | voice in — hold-to-speak dictation | none | STT + TTS |
-| **4** | Google sign-in, per-user threads, consent | Google | both |
+| **4** ✅ | Google sign-in, per-user threads, consent | Google | both |
 | **5** | long-term memory and return reminders | Google | both |
 | **6** | RAG over Yash's corpus, web search, feedback | Google | both |
 

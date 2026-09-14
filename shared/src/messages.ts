@@ -30,3 +30,7 @@ export interface LoadThreadResponse {
   chat: ThreadSummary;
   messages: ThreadMessage[];
 }
+
+export interface ListThreadsResponse {
+  chats: ThreadSummary[];
+}

@@ -20,6 +20,8 @@ declare module 'fastify' {
       BEDROCK_BASE_URL: string;
       HF_TOKEN: string;
       MA_S2S_API_KEY: string;
+      MA_SESSION_SECRET: string;
+      MA_GOOGLE_CLIENT_ID: string;
     };
   }
 }

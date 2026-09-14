@@ -14,3 +14,9 @@ export const MAX_PROMPT_LENGTH = 8000;
 export const VOICE_HISTORY_TURN_LIMIT = 8;
 export const VOICE_MAX_TOKENS = 220;
 export const MAX_SPOKEN_REPLY_LENGTH = 4000;
+
+export const CONSENT_TERMS_VERSION = '2026-09-12';
+export const SESSION_LIFETIME_DAYS = 30;
+export const THREAD_LIST_LIMIT = 50;
+/** How long a hold-to-speak session's routing marker stays valid. */
+export const VOICE_SESSION_LIFETIME = '2h';

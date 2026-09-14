@@ -1,6 +1,7 @@
 import closeWithGrace from 'close-with-grace';
 import Fastify from 'fastify';
 import app from './app.js';
+import authPlugin from './plugins/auth.js';
 import corsPlugin from './plugins/cors.js';
 import envPlugin from './plugins/env.js';
 import indexesPlugin from './plugins/indexes.js';
@@ -23,6 +24,7 @@ await fastify.register(envPlugin);
 // 2. No-dependency utilities.
 await fastify.register(sensiblePlugin);
 await fastify.register(corsPlugin);
+await fastify.register(authPlugin);
 
 // 3. Storage.
 await fastify.register(mongodbPlugin);

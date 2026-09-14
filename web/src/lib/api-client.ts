@@ -1,3 +1,4 @@
+import { readSessionToken } from './auth/session-storage';
 import { readDeviceId } from './device-id';
 
 export const API_BASE_URL =
@@ -13,13 +14,13 @@ export class ApiRequestError extends Error {
   }
 }
 
-/**
- * Identifies the caller. Every request carries it: until sign-in lands the
- * device id is what owns a conversation, so a request without it has no thread
- * to read or write.
- */
 export function apiIdentityHeaders(): HeadersInit {
-  return { 'x-device-id': readDeviceId() };
+  const headers: Record<string, string> = { 'x-device-id': readDeviceId() };
+
+  const sessionToken = readSessionToken();
+  if (sessionToken !== null) headers.authorization = `Bearer ${sessionToken}`;
+
+  return headers;
 }
 
 /**

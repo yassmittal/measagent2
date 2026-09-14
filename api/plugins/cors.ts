@@ -16,7 +16,7 @@ export default fp(
     await fastify.register(cors, {
       origin: origins,
       credentials: true,
-      allowedHeaders: ['content-type', DEVICE_ID_HEADER],
+      allowedHeaders: ['content-type', 'authorization', DEVICE_ID_HEADER],
     });
   },
   { name: 'cors', dependencies: ['env'] }

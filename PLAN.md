@@ -7,7 +7,8 @@ answers as Yash. Written 2026-09-08.
 eventual domain but is not owned yet, so every URL in code and metadata uses the
 Vercel domain. The placeholder folder `ai-avatar/` has been renamed `meAsAgent/`.
 
-**Status: Stages 1-3 are built.** Stages 4-6 are still plan only.
+**Status: Stages 1-4 are built.** Stages 5-6 are still plan only. Stage 2.5 was
+investigated and dropped — `STAGE-2.5.md` says why.
 Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
 
 ---
@@ -43,7 +44,7 @@ auth, as requested.
 | **1** ✅ | Chat shell + working text chat against a local persona | none | none | in-thread only |
 | **2** ✅ | Voice out (avatar speaks) | none | TTS | in-thread |
 | **3** ✅ | Voice in (hold-to-speak dictation) | none | STT + TTS | in-thread |
-| **4** | Google sign-in, per-user threads, consent screen | Google | both | per-user threads |
+| **4** ✅ | Google sign-in, per-user threads, consent screen | Google | both | per-user threads |
 | **5** | Long-term memory (`relationship`) + return reminders | Google | both | cross-thread |
 | **6** | RAG over your own corpus, Tavily search, feedback/analytics | Google | both | full |
 
@@ -153,11 +154,14 @@ port.
 | Route | Stage | Purpose |
 |---|---|---|
 | `POST /v1/chats` | 1 | send a message, stream the reply |
-| `GET  /v1/chats` | 4 | list threads for the signed-in user |
+| `GET  /v1/chats` | 4 | list threads for the caller |
 | `GET  /v1/chats/:threadId` | 4 | load one thread |
 | `POST /v1/tts` | 2 | synthesize speech for a text span |
 | `GET  /v1/stt/token` | 3 | mint an ephemeral STT token |
 | `POST /v1/chat/completions` | 3 | OpenAI-compatible endpoint for live voice (see §6.3) |
+| `POST /v1/auth/google` | 4 | trade a Google credential for a session |
+| `GET  /v1/auth/session` | 4 | the account behind a session token |
+| `POST /v1/voice/sessions` | 4 | mint a live-voice routing marker |
 | `POST /v1/feedback` | 6 | thumbs up/down on a message |
 | `GET/POST /v1/consent` | 4 | consent record |
 | `GET  /v1/relationship` | 5 | long-term memory document |
@@ -172,9 +176,12 @@ their bundle, they read a chunked `fetch` body. Do the same: `fetch` +
 
 ## 5. Data model (MongoDB)
 
-Four collections. Names are deliberately boring.
+Five collections. Names are deliberately boring.
 
 ```
+users           { _id: ownerId, googleSubject, email, name, pictureUrl,
+                  createdAt, lastSignedInAt,
+                  consent: { acceptedAt, termsVersion } | null }   # Stage 4
 threads         { _id, userId, title, createdAt, updatedAt, lastMessageAt }
 messages        { _id, threadId, userId, role, text, audioStatus,
                   createdAt, feedback: { vote, reason, submittedAt } | null }
@@ -187,6 +194,11 @@ Stage 1 has no `userId`; use a single anonymous device id from `localStorage`
 so threads survive a refresh, and migrate those threads onto the real user
 at Stage 4. Design that migration in from the start — it is a five-line
 `updateMany` if `userId` exists as a field from day one, and a rewrite if not.
+*(Stage 4 built it: `lib/chat/thread-ownership.ts`, and it is exactly that.)*
+
+An owner id carries its kind as a prefix — `device:<id>` or `google:<subject>` —
+and a signed-in user's `_id` **is** that owner id, so the value on a thread is
+also the key of the `users` collection and no lookup translates between them.
 
 Indexes: `threads(userId, lastMessageAt desc)`, `messages(threadId, createdAt)`,
 `returnReminders(userId, deliveredAt)`.
@@ -454,3 +466,57 @@ voice anyway. The `SpeechSynthesizer` seam makes any of them a small change.
 provider that streams — that is Stage 2.5), a replay button in the message row,
 and any speaking-state indicator. `.wave` is a *listening* indicator and belongs
 to Stage 3's hold-to-speak, so it was left alone rather than repurposed.
+
+---
+
+## 14. What Stage 4 actually shipped
+
+**Sign-in is an offer, not a gate.** Anyone can still chat anonymously as a
+`device:<id>`; signing in with Google claims that device's conversations onto
+the account with the `updateMany` §5 was designed around, and says so on screen.
+The alternative — §11's sign-in wall — would have made the claim path dead code
+and stopped anyone trying the product without a Google account.
+
+**Google Identity Services in the browser, our own session token after that.**
+The browser gets a Google credential, posts it once to `POST /v1/auth/google`,
+and carries a token this service signed from then on. `google-auth-library`
+verifies the credential rather than hand-decoding it: signature, issuer,
+audience, expiry and clock skew are each a way in if skipped. The token is a
+JWT, not a sessions collection — a signature answers "which owner is calling"
+without a database read per message. The cost is that sign-out cannot be
+enforced server-side, which is why the lifetime is 30 days rather than forever;
+`plugins/auth.ts` is where a denylist would go.
+
+**`Authorization: Bearer`, not a cookie.** The api is on a different origin from
+the web app, and a cross-site cookie is exactly what browsers are removing.
+
+**The live voice marker is now a signed token.** `lib/voice/route-marker.ts`
+used to carry `{ threadId, userId }` in the clear, assembled by the browser —
+which meant the browser named its own owner id. Stage 4 makes that a real
+boundary: `POST /v1/voice/sessions` proves ownership once and returns a signed
+marker, and `POST /v1/chat/completions` verifies it. A hand-written marker is
+now a 401. This had to change anyway: the old marker hardcoded `device:<id>`, so
+every spoken turn would have broken the moment someone signed in.
+
+**Consent is per account, with the version stored.** An acceptance of superseded
+wording reads as no acceptance, so bumping `CONSENT_TERMS_VERSION` re-asks
+everyone. It is not enforced server-side — nothing yet does anything with what
+consent covers, and refusing to answer a signed-in person would be theatre.
+
+**Verified end to end** against the running api and the real database: 23 checks
+covering anonymous chat unchanged, cross-device isolation, 401s on the
+signed-out surface, a forged bearer token, claiming, ownership after claiming
+(the device alone gets 404), another account getting 404, consent recording and
+reading back, voice markers for owner and stranger, an unmarked warmup still
+answering, and a hand-written marker refused. Then in the browser: the sign-in
+panel, the consent card, the profile menu, settings, and sign-out returning the
+app to anonymous.
+
+**Not verified:** a real Google credential, because that needs a client id from
+the Google Cloud console. Everything up to Google's own check is exercised — a
+credential it did not issue is refused with a 401 and a logged warning.
+
+**Not built, deliberately:** a conversation list (there is no CSS for one, and
+the product is one continuing conversation per person), a self-service delete,
+and account deletion. The privacy notice says deletion is by email, and calls
+that a gap rather than dressing it up.

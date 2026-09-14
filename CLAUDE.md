@@ -56,10 +56,12 @@ mongoexport --uri "mongodb://127.0.0.1:27018/measagent" --collection messages --
 
 ## Stage
 
-Stages 1-3 are done: the chat shell with working text chat, spoken replies
-streamed as `audio_delta` spans alongside the text, and hold-to-speak voice
-input. Stages 4-6 (Google sign-in, long-term memory, RAG) are specified in
-`PLAN.md §1`.
+Stages 1-4 are done: the chat shell with working text chat, spoken replies
+streamed as `audio_delta` spans alongside the text, hold-to-speak voice input,
+and Google sign-in with per-account conversations. Stages 5-6 (long-term memory,
+RAG) are specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
+`STAGE-2.5.md` says why, and records three things about voice that are wrong in
+older docs.
 
 Voice input (Stage 3) is **hold-to-speak over a live voice session**, and it is
 a third pipeline: the standalone speech-to-speech service owns the microphone,
@@ -81,6 +83,13 @@ uses to detect end-of-turn, and closes early once the avatar starts speaking.
 
 A spoken turn is persisted by the api on the service's behalf, so the browser
 renders the transcripts optimistically and then re-reads the thread.
+
+Since Stage 4 the marker is **a token the api signed**, fetched from
+`POST /v1/voice/sessions`, not a JSON object the browser assembles. The browser
+opens the realtime session itself, so an owner id it could write into that
+string would not be an owner id at all. Ownership is proved once when the marker
+is minted; `chat-completions.ts` verifies the signature and trusts nothing else
+in the request but the latest transcript.
 
 Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
 seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`
@@ -169,10 +178,35 @@ Comment the *why*, never the *what*.
 
 ## Data
 
-MongoDB. `threads`, `messages` now; `relationships` and `returnReminders` at
-Stage 5. Every document carries `userId` **from day one** even though Stage 1
-has no accounts — it holds an anonymous `device:<id>` until sign-in, which makes
-the Stage 4 migration one `updateMany` instead of a schema rewrite.
+MongoDB. `users`, `threads`, `messages` now; `relationships` and
+`returnReminders` at Stage 5. Every document carries `userId` **from day one** —
+it held an anonymous `device:<id>` before accounts existed, which is what made
+the Stage 4 migration one `updateMany` (`lib/chat/thread-ownership.ts`) instead
+of a schema rewrite.
+
+An owner id carries its kind as a prefix, `device:<id>` or `google:<subject>`
+(`lib/auth/owner-id.ts`), and a user's `_id` **is** their owner id, so the value
+on a thread is also the key of the `users` collection.
+
+## Identity
+
+`shared/identity.ts` is the only place a request's owner is decided.
+`readCaller` prefers a valid session token and falls back to the device header —
+the order matters on the request right after a sign-in, when the browser still
+sends both. Handlers call `readCaller`; nothing reads the headers itself.
+
+Sign-in is **optional**, and every route that takes a device id still does.
+Google's credential is verified by `google-auth-library` in
+`services/google-identity.ts`; what the browser carries afterwards is this
+service's own 30-day token, signed in `plugins/auth.ts` and sent as
+`Authorization: Bearer` rather than a cookie, because the api is on a different
+origin from the web app. There is no sign-out route: the token is not stored
+here, so signing out is the browser discarding it.
+
+Consent lives on the user document with the version accepted
+(`CONSENT_TERMS_VERSION`); an acceptance of superseded wording reads as no
+acceptance, which is decided once in `lib/auth/user-profile.ts` rather than at
+each call site.
 
 ## Deploying
 

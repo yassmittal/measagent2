@@ -139,11 +139,18 @@ how does the api know *which conversation* a request belongs to?
 The client smuggles it through the realtime session's `instructions` field:
 
 ```
-ma-route: {"threadId":"…","userId":"device:…","sessionId":"…"}
+ma-route: <a token the api signed>
 ```
 
-It arrives as a line in a system message. `lib/voice/route-marker.ts` parses it;
-`handlers/voice/chat-completions.ts` uses it to load the right thread.
+It arrives as a line in a system message. `lib/voice/route-marker.ts` pulls the
+token out; `handlers/voice/chat-completions.ts` verifies it and loads the thread
+it names.
+
+**The marker is a signed token, not readable JSON, and that is the point.** The
+browser opens the realtime session itself, so anything it could read in that
+string it could also write — and an owner id the caller chooses is not an owner
+id. Ownership is proved once, at `POST /v1/voice/sessions`, and the marker only
+says that it was proved. A hand-written marker now gets a 401.
 
 Two consequences worth knowing:
 
@@ -155,8 +162,10 @@ Two consequences worth knowing:
   `"Hello! I'm ready."` without touching the database. That is exactly the call
   that fails when the api is down.
 
-The thread must already exist — the handler looks it up by `threadId` + `userId`
-and errors if it is missing. So send one message before talking.
+The thread must already exist — the marker cannot be minted for a conversation
+that is not there, and the handler looks it up again by thread and owner. So
+send one message before talking. Markers expire after two hours
+(`VOICE_SESSION_LIFETIME`), which is a voice session's length, not a sign-in's.
 
 ---
 
@@ -213,10 +222,10 @@ bun run talk              # newest conversation
 bun run talk <threadId>   # a specific one
 ```
 
-This reads a real thread and its owner out of Mongo and builds the `ma-route:`
-marker for you. **Do not hand-write the marker.** If it names a thread that does
-not exist, the failure is silent from the client's side — you get a response
-with no words in it:
+This finds a real conversation in Mongo, asks the api for a marker as that
+conversation's owner, and hands it to s2s. **Do not hand-write the marker** —
+the api will refuse it. And when a marker is wrong, the failure is silent from
+the client's side: you get a response with no words in it:
 
 ```
 USER: Hello, hello.
@@ -224,10 +233,16 @@ ASSISTANT: <response started>
 ASSISTANT: <response completed>      ← no text, no <audio done>
 ```
 
-The reason is only in `.dev/api.log`:
+The reason is only in `.dev/api.log` — either the marker did not verify:
 
 ```
-Error: No thread <id> for device:<id>
+Rejected a live voice route marker
+```
+
+or it verified but names a conversation that owner does not have:
+
+```
+Error: No thread <id> for <owner>
 ```
 
 A working session has text and an `<audio done>` between those two lines:
@@ -253,10 +268,14 @@ Send one message in the web app first, or there is no thread to talk into.
 | s2s exits at boot, `APIConnectionError` | api was not running first — use `bun run stack` |
 | s2s answers but nothing is saved | `ma-route:` marker missing or malformed — the api treated it as a warmup |
 | api returns 401 to s2s | `MA_S2S_API_KEY` in `api/.env` ≠ `--responses_api_api_key` |
-| `No thread <id> for device:<id>` | hand-written marker — use `bun run talk`, which reads a real one from Mongo |
+| `Rejected a live voice route marker` | hand-written or expired marker — use `bun run talk`, which gets a real one from the api |
+| `No thread <id> for <owner>` | the marker verified but the conversation moved owner (a sign-in claims it) — open a new voice session |
 | `<response completed>` with no text | same thing: bad marker. Check `.dev/api.log` |
 | Reply arrives as text, no audio | `HF_TOKEN` missing or the TTS provider failed — by design the turn still succeeds |
 | Web loads but every send fails | api down, or `NEXT_PUBLIC_API_BASE_URL` points somewhere else |
+| The sign-in panel says it is not switched on | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is empty in `web/.env.local` |
+| Sign-in returns 503 | `MA_GOOGLE_CLIENT_ID` or `MA_SESSION_SECRET` is empty in `api/.env` |
+| Everyone is signed out at once | `MA_SESSION_SECRET` changed — every token signed with the old one is now invalid |
 
 `bun run stack` reads `MA_S2S_API_KEY` out of `api/.env` and passes it to s2s, so
 the two cannot drift apart — that is why the key is not written in the command.

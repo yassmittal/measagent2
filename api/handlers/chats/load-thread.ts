@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { LoadThreadResponse } from '@measagent/shared';
 import { toThreadMessage, toThreadSummary } from '../../lib/chat/messages.js';
 import { messagesCollection, threadsCollection } from '../../shared/collections.js';
-import { readOwnerId } from '../../shared/identity.js';
+import { readCaller } from '../../shared/identity.js';
 
 /**
  * `GET /v1/chats/:chatId` — the thread as it should render on a cold load.
@@ -15,9 +15,9 @@ export async function loadThread(
   request: FastifyRequest<{ Params: { chatId: string } }>,
   reply: FastifyReply
 ): Promise<LoadThreadResponse | undefined> {
-  const ownerId = readOwnerId(request);
-  if (ownerId === null) {
-    return reply.badRequest('A valid x-device-id header is required');
+  const caller = readCaller(request);
+  if (caller === null) {
+    return reply.badRequest('Sign in, or send a valid x-device-id header');
   }
 
   const db = this.mongo.db;
@@ -27,7 +27,7 @@ export async function loadThread(
 
   const thread = await threadsCollection(db).findOne({
     _id: request.params.chatId,
-    userId: ownerId,
+    userId: caller.ownerId,
   });
   if (thread === null) {
     return reply.notFound('Chat not found');

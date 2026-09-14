@@ -53,6 +53,21 @@ const schemas = Object.freeze({
     },
   },
 
+  listThreads: {
+    $id: 'list-threads',
+    tags,
+    description:
+      "This caller's conversations, most recent first. Used to find the " +
+      'conversation to reopen after signing in on a new browser.',
+    response: {
+      200: {
+        type: 'object',
+        required: ['chats'],
+        properties: { chats: { type: 'array', items: threadSummary } },
+      },
+    },
+  },
+
   loadThread: {
     $id: 'load-thread',
     tags,

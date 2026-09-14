@@ -32,6 +32,11 @@ export default fp(
           HF_TOKEN: { type: 'string', default: '' },
           // Stage 3 — the standalone speech-to-speech service's bearer token.
           MA_S2S_API_KEY: { type: 'string', default: '' },
+
+          // Stage 4 — Google sign-in. Both are needed before anyone can sign
+          // in; with either missing the service still runs, anonymously.
+          MA_SESSION_SECRET: { type: 'string', default: '' },
+          MA_GOOGLE_CLIENT_ID: { type: 'string', default: '' },
         },
       },
     });
