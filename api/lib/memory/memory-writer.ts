@@ -134,7 +134,7 @@ const isStringArray = (value: unknown): value is string[] =>
 // up inside tagged sections of two different prompts.
 const TAG_PATTERN = /<\/?[a-z_][a-z0-9_-]*\s*>/gi;
 
-function removeWriterTags(text: string): string {
+export function removeWriterTags(text: string): string {
   return text.replace(TAG_PATTERN, '');
 }
 

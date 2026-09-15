@@ -50,6 +50,18 @@ export default fp(
           MA_MEMORY_QUIET_SECONDS: { type: 'number', default: 1200 },
           /** How long a visitor must have been away before a return reminder is written. */
           MA_REMINDER_AFTER_SECONDS: { type: 'number', default: 86400 },
+
+          // The owner's weekly summary email, through Resend. With the key or
+          // the sender empty, no summary is ever written or sent.
+          MA_RESEND_API_KEY: { type: 'string', default: '' },
+          /** Overridable so tests can point it at a stub that records every email. */
+          MA_RESEND_BASE_URL: { type: 'string', default: 'https://api.resend.com' },
+          /** A verified sender, e.g. `meAsAgent <weekly@example.com>`. */
+          MA_EMAIL_FROM: { type: 'string', default: '' },
+          /** Where the web app lives, for the links in an email. */
+          MA_WEB_BASE_URL: { type: 'string', default: 'http://localhost:3000' },
+          /** Where this api is reachable from the internet, for one-click unsubscribe. */
+          MA_API_PUBLIC_URL: { type: 'string', default: 'http://localhost:3010' },
         },
       },
     });

@@ -179,6 +179,10 @@ port.
 | `DELETE /v1/relationships/:avatarId` | 5 | that avatar forgets the caller |
 | `DELETE /v1/relationships` | 5 | every avatar forgets the caller |
 | `POST /v1/reminders/return` | 5 | deliver the "while you were away" follow-up, once — a POST because reading it spends it |
+| `GET  /v1/me/avatar/visitors` | OV | the owner's visitors |
+| `GET  /v1/me/avatar/visitors/:visitorKey` | OV | one visitor's conversations, read-only |
+| `GET/PATCH /v1/me/weekly-summary` | OV | the owner's weekly email switch and time zone |
+| `POST /v1/weekly-summary/unsubscribe` | OV | stop the weekly email with the link's token |
 
 **Streaming:** the reply stream should be SSE from `POST /v1/chats`. Note the
 original does *not* use `EventSource` — there is no `text/event-stream` in
@@ -189,13 +193,14 @@ their bundle, they read a chunked `fetch` body. Do the same: `fetch` +
 
 ## 5. Data model (MongoDB)
 
-Six collections. Names are deliberately boring.
+Seven collections. Names are deliberately boring.
 
 ```
 users           { _id: ownerId, googleSubject, email, name, pictureUrl,
                   createdAt, lastSignedInAt,
                   consent: { acceptedAt, termsVersion } | null,    # Stage 4
-                  memoryBudget: { day, used } }                    # Stage 5
+                  memoryBudget: { day, used },                     # Stage 5
+                  weeklySummary: { isEnabled, timeZone } }         # OV — absent means on, UTC
 avatars         { _id, ownerId, handle, bio, aboutMe, speakingStyle, avoidTopics,
                   availability: live|paused, listing: pending|listed|declined,
                   listingReviewedAt, ownerAttestedAt, createdAt, updatedAt }  # MP
@@ -209,6 +214,11 @@ relationships   { _id, userId, avatarId, summary, interests[], openThreads[],
                   createdAt, updatedAt }           # Stage 5 — per person *per avatar*
 returnReminders { _id, userId, avatarId, threadId, text, generatedAt,
                   expiresAt, deliveredAt }         # Stage 5
+weeklySummaries { _id, ownerId, avatarId, weekKey, periodStart, periodEnd,
+                  status: summarizing|sending|sent|skipped|failed,
+                  visitors[] | null, totals, attentionFlags[],
+                  attempts, nextAttemptAt, leaseUntil, lastError,
+                  sentAt, createdAt, updatedAt }   # OV — one per owner per week
 ```
 
 Stage 1 has no `userId`; use a single anonymous device id from `localStorage`
@@ -226,7 +236,10 @@ Indexes: `threads(userId, avatarId, lastMessageAt desc)`,
 unique), and at Stage 5 `relationships(userId, avatarId)` (unique),
 `relationships(memoryDueAt)`, `relationships(reminderDueAt)`,
 `returnReminders(userId, avatarId)` unique where `deliveredAt` is null (one pending
-reminder per pair), and `returnReminders(userId, deliveredAt)`.
+reminder per pair), and `returnReminders(userId, deliveredAt)`. The owner view
+adds `threads(avatarId, lastMessageAt desc)`, `weeklySummaries(ownerId, weekKey)`
+(unique), `weeklySummaries(status, nextAttemptAt)` and
+`weeklySummaries(avatarId, sentAt desc)`.
 
 ---
 
@@ -624,3 +637,36 @@ claiming, typed/spoken parity), 26 relationship and forgetting checks, 46 remind
 checks (scheduling, isolation, delivered exactly once under a race, expiry, paused
 avatars, forgetting, failures), and a browser pass. Four real Bedrock calls chose
 the writer model.
+
+---
+
+## 17. What the owner view and weekly summary shipped
+
+Built 2026-09-15. `OWNER-VIEW.md` has every decision and what was rejected.
+
+**Owners read their visitors.** `/launch/visitors` lists everyone who talked to
+the avatar, with what it remembers about them; one visitor's page shows their
+conversations read-only. Signed-in visitors appear by Google name and photo,
+anonymous ones by number, never by email. The rule for whose conversations an
+owner may read lives once, in `findAvatarVisitors`: not the owner's own, signed-in
+visitors who accepted the terms, anonymous visitors only after the notice under
+the composer shipped (`OWNER_NOTICE_SHOWN_SINCE`). Owners must have accepted the
+terms themselves.
+
+**A weekly summary email**, Monday 09:00 in the owner's time zone, through Resend
+called with `fetch`. One small-model call per visitor writes a line or two and an
+optional "needs you" reason from a fixed list; the code strips contact details and
+never lets the model describe a safety concern. One document per owner per week,
+a lease, retries that never repeat finished work, and the document id as the
+provider's idempotency key. Owners turn it off on the page or from a signed link.
+
+**Wording changed:** a line under the composer for everyone, the privacy notice
+(anonymous conversations are read too, the email, Resend as a processor, the
+operator promise) and a line in the terms on how owners may use what they read.
+
+**Verified** against two api instances on one test database, a stub model and a
+stub mail server that recorded everything: 45 owner-view checks, 25 unit checks
+(weeks across daylight saving, parsing, the email), 65 weekly-summary checks
+(once per owner per week across instances and a restart, provider down and back,
+refusals, retries running out, a failing model, injection, isolation between
+owners, unsubscribing), four real Bedrock calls, and a browser pass.

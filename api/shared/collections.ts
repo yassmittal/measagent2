@@ -6,6 +6,7 @@ import type {
   ReturnReminderDoc,
   ThreadDoc,
   UserDoc,
+  WeeklySummaryDoc,
 } from './documents.js';
 
 /**
@@ -20,6 +21,7 @@ export const COLLECTIONS = Object.freeze({
   messages: 'messages',
   relationships: 'relationships',
   returnReminders: 'returnReminders',
+  weeklySummaries: 'weeklySummaries',
 });
 
 export const threadsCollection = (db: Db): Collection<ThreadDoc> =>
@@ -39,3 +41,6 @@ export const relationshipsCollection = (db: Db): Collection<RelationshipDoc> =>
 
 export const returnRemindersCollection = (db: Db): Collection<ReturnReminderDoc> =>
   db.collection<ReturnReminderDoc>(COLLECTIONS.returnReminders);
+
+export const weeklySummariesCollection = (db: Db): Collection<WeeklySummaryDoc> =>
+  db.collection<WeeklySummaryDoc>(COLLECTIONS.weeklySummaries);

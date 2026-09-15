@@ -1,4 +1,5 @@
 import type { MessageRole, MessageStatus, VisitorMemory } from '@measagent/shared';
+import type { AttentionFlag } from '@measagent/shared/weekly-summary';
 import type {
   AvatarAvailability,
   AvatarListing,
@@ -64,6 +65,11 @@ export interface UserDoc {
   consent: { acceptedAt: Date; termsVersion: string } | null;
   /** Memory summaries spent today — absent until the first one. */
   memoryBudget?: { day: string; used: number };
+  /**
+   * The owner's weekly email. Absent means on, in UTC; either field may be
+   * absent on its own, so read it through `readWeeklySummarySettings`.
+   */
+  weeklySummary?: { isEnabled?: boolean; timeZone?: string };
 }
 
 /**
@@ -119,4 +125,49 @@ export interface ReturnReminderDoc {
   /** A reminder about something from weeks ago reads as a non sequitur, so it lapses. */
   expiresAt: Date;
   deliveredAt: Date | null;
+}
+
+export type WeeklySummaryStatus = 'summarizing' | 'sending' | 'sent' | 'skipped' | 'failed';
+
+/** One visitor in one owner's week. Their conversation text is never copied here. */
+export interface WeeklySummaryVisitor {
+  key: string;
+  name: string;
+  isNew: boolean;
+  conversationCount: number;
+  /** Messages the visitor sent during the week. */
+  messageCount: number;
+  /** Null until the model has summarised this visitor's week. */
+  summary: string | null;
+  needsAttention: AttentionFlag | null;
+}
+
+/**
+ * One owner's summary of one week, from the moment it is due until it is sent.
+ * The unique `(ownerId, weekKey)` index is what makes "once per owner per week"
+ * a rule: whichever instance creates the document owns that week, and every
+ * later step is claimed with a lease on it.
+ */
+export interface WeeklySummaryDoc {
+  _id: string;
+  ownerId: string;
+  avatarId: string;
+  /** The owner's local date of the Monday the email goes out, `YYYY-MM-DD`. */
+  weekKey: string;
+  periodStart: Date;
+  periodEnd: Date;
+  status: WeeklySummaryStatus;
+  /** Null until the week has been read. Emptied once sent — only the flags are kept. */
+  visitors: WeeklySummaryVisitor[] | null;
+  totals: { visitorCount: number; newVisitorCount: number; messageCount: number } | null;
+  /** Kept after sending, for the "needs you" marks on the visitors page. */
+  attentionFlags: { visitorKey: string; flag: AttentionFlag }[];
+  attempts: number;
+  nextAttemptAt: Date | null;
+  leaseUntil: Date | null;
+  /** Why it was skipped or failed, or the last error it will be retried after. */
+  lastError: string | null;
+  sentAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

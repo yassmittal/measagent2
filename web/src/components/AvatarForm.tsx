@@ -120,6 +120,9 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
           >
             {avatar.availability === 'live' ? 'Pause avatar' : 'Resume avatar'}
           </button>
+          <Link href="/launch/visitors" className="avatar-form-visitors">
+            See who talks to your avatar
+          </Link>
         </section>
       ) : (
         <label className="avatar-form-field">

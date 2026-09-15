@@ -1,0 +1,108 @@
+We're building **the owner side of meAsAgent: an owner view and a weekly summary email.** Today someone who launches an avatar gets nothing back from it. Visitors talk to it, it remembers them, and it follows up with them, but the person behind it never learns who came, what they wanted, or whether anything needs their attention. After this task, an owner can open their avatar's conversations and what it remembers about each visitor, and once a week receives an email summarising that week: who talked to their avatar, what about, and anything that looks important enough to need them personally.
+
+That is the point of the product: busy people can't talk to everyone, so their AI counterpart does it, and they still hear what matters.
+
+Don't write code yet. Read first, ask me your questions, agree a plan with me, and only then build.
+
+## 1. Read before anything else
+
+- `CLAUDE.md`: the working conventions. Follow them.
+- `STAGE-5.md` and `STAGE-5-EXPLAINED.md`: the most recent work (long-term memory, return reminders, the claim-merge fix). This task builds directly on it. Pay special attention to decision 2 (consent is asked once; owners read conversations), decision 9 (background jobs and leases) and "Still open".
+- `MULTI-PERSON.md`: decision 5 ("owners cannot read their visitors' conversations", now superseded) says what turning owner access on involves, including the problem of anonymous visitors.
+- `PLAN.md` §5 (data model), §15 and §16, and `README.md` / `RUNBOOK.md` for how the pipelines and the background passes run.
+- `web/AGENTS.md` and `admin/AGENTS.md`: this is Next.js 16. Read the relevant guide in `node_modules/next/dist/docs/` before writing routing or page code.
+- `web/src/app/privacy/page.tsx` and `web/src/components/ConsentCard.tsx`: what visitors have been told. The owner view must stay inside those promises, or the wording changes deliberately.
+
+## 2. What already exists
+
+Confirm each of these yourself; don't take them on trust.
+
+- **Everything is keyed for it.** Threads carry `userId` (the visitor) and `avatarId`. `relationships` holds what each avatar remembers about each visitor (`summary`, `interests[]`, `openThreads[]`, `lastSeenAt`). `returnReminders` holds follow-ups. An owner's avatars come from `avatars.ownerId`, and "what visitors said to my avatar" is a query on `avatarId`.
+- **The owner already has a page:** `/launch` (`web/src/app/launch/page.tsx`, `AvatarEditor`, `lib/avatar-client.ts`) backed by `GET/POST/PATCH /v1/me/avatar`. There is no owner-facing conversation or visitor UI yet.
+- **Consent wording already permits this.** The card says conversations "are read by the person behind it, and by nobody else"; the privacy notice says owners "may be sent summaries". Consent is accepted once and never re-asked (`hasAcceptedTerms` in `api/lib/auth/user-profile.ts`).
+- **Anonymous visitors never see the consent card**, but their conversations are stored with `device:<id>` owners and `avatarId`s like everyone else's.
+- **Background work exists.** `api/plugins/background-jobs.ts` runs passes on a timer; `api/jobs/relationship-lease.ts` shows the lease pattern that keeps several api instances from doing the same work twice. There is no email sending anywhere, and no email provider account.
+- **Owner emails** are on `users.email`, from Google. `CONTACT_EMAIL` in `web/src/lib/product.ts` is the operator's address for the legal pages.
+- **The stylesheet** (`web/src/styles/`) has no layer for an owner dashboard. Check before assuming. `directory.css` and `avatar-editor.css` show how new layers were added when nothing existed.
+- **The owner's own account has three split conversations with `yash2`** from before the claim-merge fix. Decide with me whether they are merged first.
+
+## 3. Ask me these before planning
+
+Ask them together, with a recommended option where you have one. Add anything else that would change the design, and skip anything you can decide sensibly yourself.
+
+1. **What does an owner see?** Full transcripts of every conversation, per-visitor memory only, or both? Grouped by visitor, by week, or as a feed? Where does it live: inside `/launch`, a new `/launch/visitors`-style page, or somewhere else?
+2. **Who is a visitor, to an owner?** Signed-in visitors show a name and photo from Google. Should the owner see the visitor's name, email, photo, or only a pseudonym? Is an owner's own conversation with their own avatar shown?
+3. **Anonymous visitors.** They never saw the consent card. Are their conversations shown to owners and included in the email? If yes, what notice do they get and where (before the first message, in the composer, on the page)? If no, what does the owner see instead (a count)?
+4. **The weekly email.** Which provider (weigh Resend, Postmark, Amazon SES, or anything simpler), and why? What day and time, in whose timezone? Plain text, HTML, or both? What is in it: counts, top topics, per-visitor summaries, "needs your attention" items? Is it generated by the model, and if so which one and at what cost per owner?
+5. **"Something important".** What makes a conversation worth flagging to the owner (a request to contact them, a business enquiry, a complaint, a safety concern)? Who decides: rules, the model, or both? What is never flagged or never quoted?
+6. **Opt-out and control.** Can an owner turn the weekly email off? How do unsubscribe links work without a sign-in? Does a visitor get any control over appearing in an owner's summary?
+7. **Privacy and wording.** Does anything in the consent card or privacy notice need to change? Does the operator-does-not-read promise still hold if the operator sends the email?
+8. **Scheduling and delivery guarantees.** Where does the weekly job run (the existing timer and lease, or something else)? How is "sent exactly once per owner per week" guaranteed across instances and restarts? What happens if the provider is down?
+9. **Admin.** Does the admin portal need to see anything (email sending status, failures), or stay out of it?
+10. **Scope.** What ships first on its own (the view, the email, or both)?
+
+## 4. Constraints that must keep holding
+
+- **Owners only ever see their own avatar's visitors.** One owner can never read another avatar's conversations, memory or summaries. Every query filters on avatars the caller owns, checked on the server.
+- **Visitors never see each other**, and nothing an owner does changes what an avatar remembers or tells a visitor.
+- **An avatar is only ever of the person who launched it**, and nothing is created on anyone's behalf, not even test data that ships.
+- **Anonymous visitors still work**, and signing in stays optional for talking.
+- **A failing email never fails anything else.** Chat, memory and reminders keep working if the provider is down or unconfigured, the same way a failing voice or memory never fails a turn.
+- **The persona and memory rules from Stage 5 hold:** remembered text is data, the api's closing rules stay last, memory stays per visitor per avatar.
+- **Every token keeps its purpose claim.** If unsubscribe or email links need a signed token, it gets its own purpose in `lib/auth/token-purpose.ts`.
+- **The stylesheet leads the markup.** Grep `web/src/styles/` before writing CSS. New CSS follows the existing conventions: flat rules, one class per element, a component named after the class it owns.
+- **No real email is sent during tests**, and no real Bedrock key is used for tests beyond a handful of calls I agree to.
+
+## 5. How I want the code written
+
+This project will grow, so these points matter more than speed.
+
+- **Readable first.** Names explain themselves: functions are verb phrases, booleans read as assertions, types describe shapes. No `data`, `info`, `item`, `handleStuff` or `temp`.
+- **Reuse before adding.** `readCaller`/`readSessionOwnerId`, `findAvatarWithOwner`, `toVisitorMemory`, `claimDueRelationship`-style leases, `buildChatModel`, the route/schema/handler split, `SettingsPanel`, `formatAbsoluteDate`, the background-jobs plugin. Extend them, don't duplicate them.
+- **No speculative code.** Nothing "for later", no abstraction with a single user, no options nobody passes.
+- **Libraries.** An email SDK is expected; say which one and why before installing it. Keep the api fast and small.
+- **Framework best practices.**
+  - Next.js: server components by default; typed routes (run `bunx next typegen` after adding routes).
+  - React: no `useEffect` for derived state; streaming state stays in the one reducer.
+  - Fastify: every route has a JSON schema including responses; errors go through `@fastify/sensible`; `lib/` never imports fastify; env is read once in `plugins/env.ts`.
+- **Comment the why, never the what.** Match the density and tone already in the codebase.
+
+## 6. How to work
+
+1. Read (section 1), then ask me the questions (section 3) and wait for answers.
+2. Propose a plan in plain language: the data model and indexes, routes, the owner UI, the email (content, provider, schedule, idempotency), privacy and consent wording, the anonymous-visitor answer, and how it splits into phases that each ship on their own. Wait for my go-ahead.
+3. Build **one phase at a time**.
+4. Verify each phase for real, not only with typecheck:
+   - Run `bun run typecheck` at the repo root, and `bun run lint && bun run build` in `web/` and `admin/`.
+   - Run checks against a test api and a **separate test database** on the local MongoDB, with a stub OpenAI-compatible model that records every prompt, and **a stub or sandbox email transport that records every email instead of sending it**. `STAGE-5.md` describes how the Stage 5 harness did it.
+   - At minimum, prove:
+     - an owner sees their own avatar's visitors and nobody else's, and a non-owner, visitor, device or admin token gets nothing;
+     - an owner of two avatars (if allowed), or two owners, never see each other's data;
+     - what an owner sees respects the anonymous-visitor decision;
+     - a weekly email is generated once per owner per week, across two api instances and a restart;
+     - a failing or unconfigured provider fails nothing else, and is retried or recorded;
+     - opt-out / unsubscribe actually stops the email;
+     - flagged "important" items come from that owner's visitors only, and no remembered text is treated as an instruction when generating the summary.
+   - Do a browser pass through every new piece of UI, at desktop and phone width.
+   - Delete the test data you create, and drop the test database.
+5. Keep `PLAN.md`, `README.md`, `RUNBOOK.md` and `CLAUDE.md` accurate as things change.
+6. At the end, write `OWNER-VIEW.md` in the repo root explaining what you built and **why**, decision by decision: what you chose, what you rejected, what you couldn't verify, anything you changed that I didn't ask for, and what's still open. `STAGE-5.md` and `MULTI-PERSON.md` are the tone and depth I'm after.
+
+## 7. Things that will bite
+
+- **Never run any git command.** No status, diff, add or commit. Leave changes in the working tree and tell me what changed.
+- **My dev stack may already be running** (`bun run stack`: web :3000, api :3010, voice :8766, MongoDB :27018). Don't kill those processes. Run test apis on other ports (e.g. 3011/3012) against another database name, started from `api/` with env on the command line. Command-line env wins over `api/.env`. Also set `BEDROCK_API_KEY=stub-key`, so a missed base-URL override fails at Bedrock instead of spending money.
+- **Dropping a test database drops the indexes** the api created at boot, including the unique partial index on `returnReminders`. Recreate them in the test setup, or restart the test apis.
+- **The api's background passes run in every api instance**, including the dev one on :3010 against the real database with the real key. A new weekly job there would send real emails, so keep the provider unconfigured locally unless we agree otherwise.
+- **`mongodb` is pinned to v6** because v7 crashes on Bun at import. A test script outside `api/` must import it from `api/node_modules/mongodb/lib/index.js`.
+- **Bun rewrites `.env` values.** It expands `$name` even inside single quotes, which is why `MA_ADMIN_PASSWORD_HASH` is stored base64-encoded. Any new secret containing `$` needs the same treatment. **`bun --watch` keeps the environment it started with**: restart the api after changing `.env`.
+- **CORS lists methods explicitly** (`api/plugins/cors.ts`: GET, HEAD, POST, PATCH, DELETE). A new method is blocked at the browser preflight until it's added. Direct `curl` checks won't catch this.
+- **A body-less `DELETE` with `content-type: application/json` is a 400** (`FST_ERR_CTP_EMPTY_JSON_BODY`). The web client sends no content-type on DELETE; test scripts must do the same.
+- **Runtime values in `shared/` need a subpath export** (like `@measagent/shared/relationships`). The package index re-exports types only.
+- **Typed routes are on** in `web/` and `admin/`. A new page isn't linkable until `bunx next typegen` runs.
+- **Browser passes against the test api** need a web build with `NEXT_PUBLIC_API_BASE_URL` pointed at it (`next start -p 3001`), and the test api's `MA_WEB_ORIGIN` set to that origin. Signing in is done by putting a session token (HS256, `purpose: 'session'`, signed with `MA_SESSION_SECRET`) in `localStorage['measagent.session-token']`. Reload after a rebuild, or you are testing the old bundle.
+- **A modal rendered inside a styled container inherits its text styles.** `RelationshipLevel` portals its `SettingsPanel` to `<body>` for this reason.
+- **Playwright can only write screenshots under the repo** (`.playwright-mcp/`, gitignored). Delete the ones you create; older ones there are not yours.
+- **`aria-modal` hides the page from accessibility snapshots.** Check the DOM before assuming a render bug.
+- **Admin sign-in is rate limited** to 5 attempts per 15 minutes, per api process.
+- **The typed-chat text-to-speech token is depleted** (`STAGE-2.5.md`), so typed replies arrive as text plus a `voice_unavailable` notice. That is expected, not a bug.

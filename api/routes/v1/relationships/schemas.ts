@@ -8,6 +8,17 @@ const avatarParams = {
 
 const stringList = { type: 'array', items: { type: 'string' } } as const;
 
+export const visitorMemory = {
+  type: 'object',
+  nullable: true,
+  required: ['summary', 'interests', 'openThreads'],
+  properties: {
+    summary: { type: 'string' },
+    interests: stringList,
+    openThreads: stringList,
+  },
+} as const;
+
 const schemas = Object.freeze({
   loadRelationship: {
     $id: 'load-relationship',
@@ -24,16 +35,7 @@ const schemas = Object.freeze({
         properties: {
           isMemoryOn: { type: 'boolean' },
           userMessageCount: { type: 'integer', minimum: 0 },
-          memory: {
-            type: 'object',
-            nullable: true,
-            required: ['summary', 'interests', 'openThreads'],
-            properties: {
-              summary: { type: 'string' },
-              interests: stringList,
-              openThreads: stringList,
-            },
-          },
+          memory: visitorMemory,
           memoryUpdatedAt: { type: 'string', nullable: true },
         },
       },

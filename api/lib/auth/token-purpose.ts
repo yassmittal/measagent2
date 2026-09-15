@@ -8,6 +8,8 @@ export const TOKEN_PURPOSE = Object.freeze({
   session: 'session',
   voiceSession: 'voice-session',
   adminSession: 'admin-session',
+  /** Carried in the weekly email's unsubscribe link, which works without signing in. */
+  weeklySummaryUnsubscribe: 'weekly-summary-unsubscribe',
 });
 
 export type TokenPurpose = (typeof TOKEN_PURPOSE)[keyof typeof TOKEN_PURPOSE];

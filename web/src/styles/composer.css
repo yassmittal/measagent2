@@ -138,6 +138,28 @@
   text-align: center;
 }
 
+.composer-owner-notice {
+  pointer-events: auto;
+  width: 100%;
+  max-width: var(--col);
+  color: var(--text-subtle);
+  font-size: 12px;
+  line-height: 1.4;
+  margin: var(--sp-2) 0 0;
+  padding: 0 var(--sp-5);
+  text-align: center;
+}
+
+.composer-owner-notice-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.composer-owner-notice-link:hover {
+  color: var(--text-muted);
+}
+
 .composer-input.is-ghost {
   color: var(--text-subtle);
 }

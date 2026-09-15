@@ -237,6 +237,16 @@
   cursor: default;
 }
 
+.avatar-form-visitors {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
+.avatar-form-visitors:hover {
+  text-decoration: underline;
+}
+
 .avatar-form-saved {
   font-size: 14px;
   line-height: 1.4;

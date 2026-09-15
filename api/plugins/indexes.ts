@@ -5,6 +5,7 @@ import {
   relationshipsCollection,
   returnRemindersCollection,
   threadsCollection,
+  weeklySummariesCollection,
 } from '../shared/collections.js';
 import { getErrorMessage } from '../shared/errors.js';
 
@@ -21,6 +22,8 @@ export default fp(
 
     try {
       await threadsCollection(db).createIndex({ userId: 1, avatarId: 1, lastMessageAt: -1 });
+      // The owner's side reads threads by avatar, not by visitor.
+      await threadsCollection(db).createIndex({ avatarId: 1, lastMessageAt: -1 });
       await messagesCollection(db).createIndex({ threadId: 1, createdAt: 1 });
       // Both unique indexes are rules, not just speed: one avatar per account,
       // and a handle — which is a public URL — belongs to exactly one avatar.
@@ -41,6 +44,13 @@ export default fp(
         { unique: true, partialFilterExpression: { deliveredAt: null }, name: 'one_pending_per_pair' }
       );
       await returnRemindersCollection(db).createIndex({ userId: 1, deliveredAt: 1 });
+      // One summary per owner per week, however many instances open it at once.
+      await weeklySummariesCollection(db).createIndex(
+        { ownerId: 1, weekKey: 1 },
+        { unique: true, name: 'one_per_owner_week' }
+      );
+      await weeklySummariesCollection(db).createIndex({ status: 1, nextAttemptAt: 1 });
+      await weeklySummariesCollection(db).createIndex({ avatarId: 1, sentAt: -1 });
     } catch (error) {
       fastify.log.warn(
         { err: getErrorMessage(error) },

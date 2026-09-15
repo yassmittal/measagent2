@@ -27,6 +27,11 @@ declare module 'fastify' {
       MA_JOB_INTERVAL_SECONDS: number;
       MA_MEMORY_QUIET_SECONDS: number;
       MA_REMINDER_AFTER_SECONDS: number;
+      MA_RESEND_API_KEY: string;
+      MA_RESEND_BASE_URL: string;
+      MA_EMAIL_FROM: string;
+      MA_WEB_BASE_URL: string;
+      MA_API_PUBLIC_URL: string;
     };
   }
 }

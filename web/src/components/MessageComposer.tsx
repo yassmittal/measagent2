@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
+import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
@@ -142,7 +143,18 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         <p className="composer-hint" role="status">
           {voiceNotice}
         </p>
-      ) : null}
+      ) : (
+        // Anonymous visitors never see the consent card, so this line is how they
+        // are told — and it is what makes their conversations visible to the owner
+        // (`OWNER_NOTICE_SHOWN_SINCE` in the api). It stays whenever nothing more
+        // urgent needs the space.
+        <p className="composer-owner-notice">
+          {avatar.name} reads conversations with their avatar ·{' '}
+          <Link href="/privacy" className="composer-owner-notice-link">
+            Privacy
+          </Link>
+        </p>
+      )}
     </footer>
   );
 }

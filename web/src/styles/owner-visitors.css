@@ -1,0 +1,333 @@
+/* The owner's side: who talks to their avatar, and one visitor's conversations. */
+
+.owner-visitors-page {
+  min-height: 100%;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.owner-visitors,
+.owner-visitor {
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.owner-visitors-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-subtle);
+}
+
+.owner-visitors-back:hover {
+  color: var(--text-muted);
+}
+
+.owner-visitors-title {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+
+.owner-visitors-lede {
+  margin: 0 0 var(--sp-2);
+  max-width: var(--measure);
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 25px;
+}
+
+.owner-visitors-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.owner-visitors-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.owner-visitors-range {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.owner-visitors-range-option {
+  padding: 6px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.owner-visitors-range-option:hover {
+  background: var(--fill);
+}
+
+.owner-visitors-range-option[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--accent-weak);
+  color: var(--button-ink);
+}
+
+.owner-visitors-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.owner-visitors-hidden {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.owner-visitor-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--e2);
+  color: var(--text);
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+
+.owner-visitor-row:hover {
+  box-shadow: var(--e4);
+}
+
+.owner-visitor-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.owner-visitor-row-name {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.owner-visitor-row-meta {
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.owner-visitor-row-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: var(--sp-1);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.owner-visitor-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.owner-visitor-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.owner-visitor-name {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.owner-visitor-meta {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.owner-visitor-section-title {
+  margin: 0 0 var(--sp-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.owner-visitor-memory {
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.owner-visitor-memory-text {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.owner-visitor-memory-subtitle {
+  margin: var(--sp-3) 0 var(--sp-1);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.owner-visitor-memory-list {
+  margin: 0;
+  padding-left: var(--sp-5);
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.owner-visitor-conversation {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--hair-t);
+}
+
+.owner-visitor-conversation-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.owner-visitor-conversation-dates {
+  margin: 2px 0 0;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.owner-visitor-row-attention {
+  align-self: flex-start;
+  margin: 2px 0;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: #fdecec;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.owner-visitor-attention {
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid #f0c8ca;
+  border-radius: var(--r-md);
+  background: #fff8f8;
+}
+
+.owner-visitor-attention-title {
+  margin: 0 0 var(--sp-1);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.owner-visitor-attention-reason {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.weekly-summary-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.weekly-summary-settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.weekly-summary-settings-toggle input {
+  margin: 0;
+  flex: none;
+}
+
+.weekly-summary-settings-note {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.weekly-summary-unsubscribe {
+  max-width: var(--col-narrow);
+  margin: 0 auto;
+  padding: var(--sp-10) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.weekly-summary-unsubscribe-button {
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.weekly-summary-unsubscribe-button:hover {
+  background: var(--accent-hover);
+}
+
+.weekly-summary-unsubscribe-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

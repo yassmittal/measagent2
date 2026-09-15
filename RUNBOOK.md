@@ -260,6 +260,31 @@ Memory pass failed for a relationship; it will be retried
 Return reminder failed for a relationship; it will be retried
 ```
 
+A third pass runs after those two, **only when `MA_RESEND_API_KEY` and
+`MA_EMAIL_FROM` are set**:
+
+```
+weekly summary pass
+  open         every avatar whose owner has the email on and accepted the terms:
+               Monday 09:00 in their zone has passed, less than 24h ago → weeklySummaries doc
+  summarizing  the week's visitors (findAvatarVisitors, busiest 20)
+                 ├─ nobody talked → skipped
+                 └─ one MEMORY_MODEL call per visitor, stored as each lands
+  sending      re-check the owner still wants it → Resend (idempotency key = doc id)
+                 └─ sent: per-visitor text dropped, "needs you" flags kept
+```
+
+To see where a week stands, look at `weeklySummaries` in Compass: `status`,
+`attempts`, `nextAttemptAt` and `lastError`. The log says:
+
+```
+Weekly summary failed; it will be retried
+Weekly summary failed for good
+```
+
+A week the api missed entirely (down for all of the 24 hours after it came due)
+is skipped, not sent late.
+
 ---
 
 ## Testing voice without the browser

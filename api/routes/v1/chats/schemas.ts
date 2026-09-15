@@ -28,7 +28,7 @@ const threadMessage = {
   },
 } as const;
 
-export { threadMessage };
+export { threadMessage, threadSummary };
 
 const schemas = Object.freeze({
   sendMessage: {

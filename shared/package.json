@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./avatars": "./src/avatars.ts",
     "./admin": "./src/admin.ts",
-    "./relationships": "./src/relationships.ts"
+    "./relationships": "./src/relationships.ts",
+    "./weekly-summary": "./src/weekly-summary.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

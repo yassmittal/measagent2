@@ -46,7 +46,7 @@ server on 27017 for the whole machine, and this way resetting the database is
 |---|---|
 | Compass URI | `mongodb://127.0.0.1:27018/` |
 | Database | `measagent` |
-| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders` |
+| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders`, `weeklySummaries` |
 | Logs | `bun run db:logs` |
 
 `mongosh` is not installed; Compass covers it, and `mongoexport` (from
@@ -67,7 +67,9 @@ Google sign-in with per-account conversations, and long-term memory with return
 reminders (`STAGE-5.md` has the reasoning). On top of that the product is
 **multi-person** (`MULTI-PERSON.md` has the reasoning): `/` is a directory of
 reviewed avatars, `/[handle]` is the chat with one avatar, `/launch` launches or
-edits your own, and `admin/` reviews what the directory lists. Stage 6 (RAG) is
+edits your own, and `admin/` reviews what the directory lists. Owners **read
+their visitors** at `/launch/visitors` and get a **weekly summary email**
+(`OWNER-VIEW.md` has the reasoning). Stage 6 (RAG) is
 specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
 `STAGE-2.5.md` says why, and records three things about voice that are wrong in
 older docs.
@@ -209,7 +211,7 @@ Comment the *why*, never the *what*.
 ## Data
 
 MongoDB. `users`, `avatars`, `threads`, `messages`, `relationships`,
-`returnReminders`. Every document carries `userId` **from day one** —
+`returnReminders`, `weeklySummaries`. Every document carries `userId` **from day one** —
 it held an anonymous `device:<id>` before accounts existed, which is what made
 the Stage 4 migration one `updateMany` (`lib/chat/thread-ownership.ts`) instead
 of a schema rewrite.
@@ -232,6 +234,22 @@ remembered conversations so the account's own latest one opens.
 The persona prompt is built from the avatar document on every turn
 (`lib/chat/persona.ts`): a request only ever *names* an avatar, never shapes it.
 
+**What an owner may read is decided in one place**, `findAvatarVisitors` in
+`lib/visitors/avatar-visitors.ts`: never their own conversations, signed-in
+visitors only once they have accepted the terms, anonymous visitors only for
+conversations started after `OWNER_NOTICE_SHOWN_SINCE` (when the line under the
+composer told them). The visitors page, one visitor's conversations and the weekly
+summary all start there. A visitor is identified to an owner by the id of their
+first conversation — never a device id, which is what an anonymous visitor
+authenticates with, and never an email address.
+
+The **weekly summary** (`jobs/weekly-summary-pass.ts`) is one document per owner
+per week in `weeklySummaries` (unique `ownerId` + `weekKey`), moved from
+`summarizing` to `sending` to `sent` under a lease, with one small-model call per
+visitor and the document id as Resend's idempotency key. It never runs unless
+`MA_RESEND_API_KEY` and `MA_EMAIL_FROM` are set — keep them empty in any api
+pointed at the real database — and a failing email never fails anything else.
+
 An owner id carries its kind as a prefix, `device:<id>` or `google:<subject>`
 (`lib/auth/owner-id.ts`), and a user's `_id` **is** their owner id, so the value
 on a thread is also the key of the `users` collection.
@@ -243,10 +261,10 @@ on a thread is also the key of the `users` collection.
 the order matters on the request right after a sign-in, when the browser still
 sends both. Handlers call `readCaller`; nothing reads the headers itself.
 
-Every token the api signs carries a `purpose` — `session`, `voice-session` or
-`admin-session` (`lib/auth/token-purpose.ts`) — and each verifier accepts only its
-own. All three share one secret, so without the claim a voice marker would pass
-as a sign-in.
+Every token the api signs carries a `purpose` — `session`, `voice-session`,
+`admin-session` or `weekly-summary-unsubscribe` (`lib/auth/token-purpose.ts`) —
+and each verifier accepts only its own. All of them share one secret, so without
+the claim a voice marker would pass as a sign-in.
 
 Sign-in is **optional**, and every route that takes a device id still does.
 Google's credential is verified by `google-auth-library` in
@@ -261,9 +279,9 @@ Consent lives on the user document with the version accepted
 is a record of which wording was on screen, and moving it re-asks nobody. Whether
 someone has accepted is decided once, by `hasAcceptedTerms` in
 `lib/auth/user-profile.ts`: launching an avatar and being remembered both depend
-on it. The person behind an avatar is meant to read their visitors'
-conversations (an owner view and a weekly summary email are planned), and the
-consent card and privacy notice say so.
+on it, and so does an owner reading their visitors. The person behind an avatar
+reads their visitors' conversations and gets a weekly summary; the consent card,
+the line under the composer and the privacy notice say so.
 
 ## Deploying
 
@@ -282,7 +300,10 @@ server-side only; its server calls the api, so its origin does not go in
 **`api/` → anywhere that runs Bun** (Fly, Railway, EC2). It is not deployable to
 Vercel: `POST /v1/chats` holds an open SSE stream for the length of a turn, and
 Stage 3 adds a long-lived voice gateway. Whatever origin it lands on has to be
-listed in `MA_WEB_ORIGIN` — see `api/.env.example` for the full set of vars.
+listed in `MA_WEB_ORIGIN` — see `api/.env.example` for the full set of vars. The weekly summary
+needs `MA_RESEND_API_KEY`, `MA_EMAIL_FROM` (on a domain verified in Resend),
+`MA_WEB_BASE_URL` and `MA_API_PUBLIC_URL`; without the first two it simply does
+not run.
 
 Local development is covered under **Running locally** above. Without a
 `BEDROCK_API_KEY`, point `BEDROCK_BASE_URL` at any OpenAI-compatible stub to

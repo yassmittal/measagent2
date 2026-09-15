@@ -138,6 +138,13 @@
   .composer-row {
     padding: 0 14px calc(14px + env(safe-area-inset-bottom, 0px));
   }
+  .owner-visitors,
+  .owner-visitor {
+    padding: var(--sp-7) var(--sp-4) var(--sp-9);
+  }
+  .owner-visitor-row {
+    padding: var(--sp-4);
+  }
 }
 
 @media (pointer: coarse) {

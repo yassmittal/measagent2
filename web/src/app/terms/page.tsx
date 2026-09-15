@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { LegalPage } from '@/components/LegalPage';
 import { CONTACT_EMAIL, PRODUCT_NAME } from '@/lib/product';
 
-const UPDATED_AT = '2026-09-14';
+const UPDATED_AT = '2026-09-15';
 
 export const metadata: Metadata = {
   title: 'Terms',
@@ -47,6 +47,12 @@ export default function TermsPage() {
         <li>
           You are responsible for what you write about yourself, and for not using it to
           mislead the people who talk to your avatar.
+        </li>
+        <li>
+          You can read what visitors say to your avatar, so that you hear from the people
+          you could not talk to yourself. Use it for that and nothing else: do not publish
+          it, sell it, or use it to track down or contact anyone beyond what they chose to
+          tell your avatar.
         </li>
         <li>
           Your avatar will always say it is an AI when asked. Nothing you write changes

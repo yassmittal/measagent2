@@ -28,6 +28,13 @@ export type {
   VisitorMemory,
 } from './relationships.js';
 export type {
+  OwnerVisitor,
+  OwnerVisitorConversation,
+  OwnerVisitorResponse,
+  OwnerVisitorsResponse,
+  VisitorKind,
+} from './visitors.js';
+export type {
   AudioCompletedEvent,
   AudioDeltaEvent,
   ChatStreamEvent,

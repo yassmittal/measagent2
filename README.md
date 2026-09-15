@@ -113,6 +113,9 @@ Reset the database completely: `bun run db:stop && rm -rf .mongo`.
 | `MA_SESSION_SECRET` | signs the session tokens the browser carries. `openssl rand -hex 32`. Changing it signs everybody out |
 | `MA_GOOGLE_CLIENT_ID` | the OAuth 2.0 Web application client id. Leave it empty and the service runs fine — everyone just stays anonymous |
 | `MA_ADMIN_USERNAME`, `MA_ADMIN_PASSWORD_HASH` | the admin portal's one login. The hash, not the password, base64-encoded — paste what `bun run admin:hash-password` prints. Empty means admin sign-in is refused |
+| `MA_RESEND_API_KEY`, `MA_EMAIL_FROM` | the owners' weekly summary email, through Resend. **Leave both empty locally**: with either empty no summary is written or sent, and the dev api runs against the real database |
+| `MA_RESEND_BASE_URL` | defaults to Resend's API; only set to point tests at a stub that records emails |
+| `MA_WEB_BASE_URL`, `MA_API_PUBLIC_URL` | where the web app and this api are reachable, for the links and the one-click unsubscribe header in the email |
 | `MA_JOB_INTERVAL_SECONDS`, `MA_MEMORY_QUIET_SECONDS`, `MA_REMINDER_AFTER_SECONDS` | memory timing, defaults 120 / 1200 / 86400: how often the background pass runs, how long a conversation must be quiet before it is remembered, how long a visitor must be away before a reminder is written. Only set to shrink them in tests |
 
 Every variable is read once in `api/plugins/env.ts` and reached through
@@ -146,7 +149,7 @@ shared server on 27017 for the whole machine.
 |---|---|
 | Compass URI | `mongodb://127.0.0.1:27018/` |
 | Database | `measagent` |
-| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders` |
+| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders`, `weeklySummaries` |
 
 Indexes are created on boot by `api/plugins/indexes.ts`. `mongosh` is not
 required; Compass covers it, and `mongoexport` is the quick CLI peek:
@@ -184,6 +187,10 @@ serializer, not just validation, so they are always current.
 | `DELETE /v1/relationships/:avatarId` | that avatar forgets the caller |
 | `DELETE /v1/relationships` | every avatar forgets the caller |
 | `POST /v1/reminders/return` | deliver a waiting return reminder, once |
+| `GET /v1/me/avatar/visitors` | the owner's visitors: who, how much, what the avatar remembers, whether they need the owner |
+| `GET /v1/me/avatar/visitors/:visitorKey` | one visitor's conversations with the owner's avatar, read-only |
+| `GET`/`PATCH /v1/me/weekly-summary` | the owner's weekly email switch and time zone |
+| `POST /v1/weekly-summary/unsubscribe?token=` | stop the weekly email without signing in |
 | `POST /v1/chat/completions` | the OpenAI-compatible endpoint the voice service calls |
 | `POST /v1/admin/sessions` | admin sign-in, rate limited |
 | `GET /v1/admin/avatars?listing=` | the review queue |
@@ -228,9 +235,9 @@ biography and makes no commitments on the person's behalf.
 
 A thread belongs to a visitor **and** an avatar (`userId` + `avatarId`), so a
 browser keeps one continuing conversation per avatar. The person behind an
-avatar is meant to read the conversations visitors have with it — the consent
-card and privacy notice say so — though the owner view and weekly summary email
-that will show them are not built yet.
+avatar reads the conversations visitors have with it — the consent card, the
+line under the composer and the privacy notice say so — at `/launch/visitors`,
+and gets a weekly summary email. See *Owners and the weekly summary* below.
 
 ## Memory and return reminders
 
@@ -260,6 +267,30 @@ A visitor sees what an avatar remembers by selecting their relationship level
 beside its name, and can make that avatar — or every avatar, from Settings —
 forget them. Forgetting keeps the conversations but marks every message read,
 so nothing is summarised back in. A failing memory never fails a turn.
+
+## Owners and the weekly summary
+
+`/launch/visitors` lists everyone who has talked to your avatar, most recent
+first: signed-in visitors by their Google name and photo, anonymous ones as
+"Anonymous visitor 3", with what the avatar remembers and a "Needs you" mark from
+the last weekly email. Opening one shows their conversations, read-only. Visitors'
+email addresses are never shown. The owner's own conversations are left out, and
+so are anonymous conversations from before the notice under the composer existed
+and accounts that never accepted the terms — those are only counted.
+
+```
+Monday 09:00, owner's zone ──► weeklySummaries doc (one per owner per week, unique index)
+background pass (lease)    ──► read the week → one small-model call per visitor, stored as each lands
+                           ──► render text + HTML → Resend, idempotency key = doc id → sent
+provider down / model fails ──► retried after 15 min, 1 h, 4 h, 12 h, then recorded as failed
+```
+
+The model picks a "needs you" reason from a fixed list (wants to reach you,
+business enquiry, waiting on you, complaint, safety concern); anything else is
+dropped, contact details and links are stripped, and a safety concern is always
+described with fixed wording. Owners turn the email off on the visitors page, or
+from the email's link, which asks for a button press so mail scanners cannot do
+it for them. Nothing runs without `MA_RESEND_API_KEY` and `MA_EMAIL_FROM`.
 
 ## The admin portal
 
@@ -422,6 +453,11 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 - **CORS lists methods explicitly** (`api/plugins/cors.ts`). A route with a new
   method is refused at the browser's preflight until it is added there; `curl`
   never sends a preflight, so it will not catch this.
+- **The background passes run in every api, including the dev one on the real
+  database.** Keep `MA_RESEND_API_KEY` empty there, or it will email real owners.
+- **`OWNER_NOTICE_SHOWN_SINCE` is a deploy fact.** Anonymous conversations started
+  before it are never shown to owners. It must not be earlier than the web deploy
+  that put the notice under the composer.
 - **Do not run git commands here.** Leave changes in the working tree; Yash
   handles version control.
 
@@ -454,6 +490,7 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | **3** ✅ | voice in — hold-to-speak dictation | none | STT + TTS |
 | **4** ✅ | Google sign-in, per-user threads, consent | Google | both |
 | **5** ✅ | long-term memory and return reminders | Google | both |
+| **OV** ✅ | owners read their visitors; weekly summary email | Google | both |
 | **6** | RAG over each avatar owner's corpus, web search, feedback | Google | both |
 
 `PLAN.md` has the detail for each, including what Stage 1 deliberately left out.
