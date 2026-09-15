@@ -1,13 +1,15 @@
 # meAsAgent — End-to-End Build Plan
 
-A personal AI avatar: a chat surface where visitors talk to an agent that
-answers as Yash. Written 2026-09-08.
+AI avatars of real people: anyone signed in launches an avatar of themselves,
+and visitors talk to it. Written 2026-09-08 as a personal avatar of Yash; made
+multi-person on 2026-09-14 (§15, and `MULTI-PERSON.md` for the reasoning).
 
 **Named `meAsAgent`.** Deployed at `meAsAgent.vercel.app`; `meAsAgent.com` is the
 eventual domain but is not owned yet, so every URL in code and metadata uses the
 Vercel domain. The placeholder folder `ai-avatar/` has been renamed `meAsAgent/`.
 
-**Status: Stages 1-4 are built.** Stages 5-6 are still plan only. Stage 2.5 was
+**Status: Stages 1-4 are built, and the product is multi-person (§15).** Stages
+5-6 are still plan only. Stage 2.5 was
 investigated and dropped — `STAGE-2.5.md` says why.
 Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
 
@@ -15,8 +17,9 @@ Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
 
 ## 0. The shape of the product
 
-A single chat surface, no landing page. A still portrait and a short bio sit in
-a left panel; the conversation fills the rest. There is no video avatar — the
+A directory of avatars at `/`, and one chat surface per avatar at `/<handle>`. A
+still portrait and a short bio sit in a left panel; the conversation fills the
+rest. There is no video avatar — the
 "avatar" is the portrait plus a voice.
 
 Three decisions set the architecture, and everything else follows from them:
@@ -141,8 +144,10 @@ Nothing in the CSS pulls an external asset — no images, no icon font. Icons ar
 
 ### 3.4 The persona
 
-The persona is Yash, and only Yash: name, likeness, bio and portrait all live
-in `web/src/lib/persona.ts`. Never borrow another person's identity for it.
+*Superseded 2026-09-14.* This section said the persona was Yash and only Yash.
+The rule that replaced it: **an avatar is only ever of the person who launched
+it.** Its name and portrait come from the owner's Google account, what it knows
+comes from what they wrote, and all of it lives in MongoDB (§15).
 
 ---
 
@@ -164,6 +169,12 @@ port.
 | `POST /v1/voice/sessions` | 4 | mint a live-voice routing marker |
 | `POST /v1/feedback` | 6 | thumbs up/down on a message |
 | `GET/POST /v1/consent` | 4 | consent record |
+| `GET  /v1/avatars` | MP | the directory: reviewed, live avatars |
+| `GET  /v1/avatars/:handle` | MP | one avatar's public profile |
+| `GET/POST/PATCH /v1/me/avatar` | MP | launch, read, edit or pause your own avatar |
+| `POST /v1/admin/sessions` | MP | admin portal sign-in |
+| `GET  /v1/admin/avatars` | MP | the review queue, by listing |
+| `PATCH /v1/admin/avatars/:avatarId` | MP | list or decline an avatar |
 | `GET  /v1/relationship` | 5 | long-term memory document |
 | `GET  /v1/reminders/return` | 5 | the "while you were away" follow-up |
 
@@ -182,11 +193,14 @@ Five collections. Names are deliberately boring.
 users           { _id: ownerId, googleSubject, email, name, pictureUrl,
                   createdAt, lastSignedInAt,
                   consent: { acceptedAt, termsVersion } | null }   # Stage 4
-threads         { _id, userId, title, createdAt, updatedAt, lastMessageAt }
+avatars         { _id, ownerId, handle, bio, aboutMe, speakingStyle, avoidTopics,
+                  availability: live|paused, listing: pending|listed|declined,
+                  listingReviewedAt, ownerAttestedAt, createdAt, updatedAt }  # MP
+threads         { _id, userId, avatarId, title, createdAt, updatedAt, lastMessageAt }
 messages        { _id, threadId, userId, role, text, audioStatus,
                   createdAt, feedback: { vote, reason, submittedAt } | null }
-relationships   { _id: userId, summary, interests[], openThreads[],
-                  lastSeenAt, updatedAt }          # Stage 5
+relationships   { _id, userId, avatarId, summary, interests[], openThreads[],
+                  lastSeenAt, updatedAt }          # Stage 5 — per person *per avatar*
 returnReminders { _id, userId, threadId, text, generatedAt, deliveredAt }
 ```
 
@@ -200,8 +214,9 @@ An owner id carries its kind as a prefix — `device:<id>` or `google:<subject>`
 and a signed-in user's `_id` **is** that owner id, so the value on a thread is
 also the key of the `users` collection and no lookup translates between them.
 
-Indexes: `threads(userId, lastMessageAt desc)`, `messages(threadId, createdAt)`,
-`returnReminders(userId, deliveredAt)`.
+Indexes: `threads(userId, avatarId, lastMessageAt desc)`,
+`messages(threadId, createdAt)`, `avatars(ownerId)` and `avatars(handle)` (both
+unique), and at Stage 5 `returnReminders(userId, deliveredAt)`.
 
 ---
 
@@ -362,18 +377,16 @@ no code dependency.
 ## 10. Decisions taken
 
 - **Frontend:** Next.js 16 + React 19.
-- **Persona:** Yash. The avatar is of you — so the RAG corpus is your writing,
-  READMEs, notes and talk transcripts, and the long-term voice target is an
-  ElevenLabs clone of your own voice. This makes §6.1's provider seam
-  worth building on day one rather than deferring it, and makes §9 (corpus
-  collection) a Stage-1-parallel task, not a Stage 6 task.
+- **Persona:** *superseded 2026-09-14.* This was "Yash — the avatar is of you".
+  It is now whoever launched the avatar (§15), so Stage 6's corpus and any future
+  voice clone are per avatar rather than one person's. Stage 2.5's voice cloning
+  was dropped (`STAGE-2.5.md`); every avatar shares the one voice.
 - **Repo:** single repo, `web/` + `api/` + `shared/`.
 
 ## 11. Resolved (2026-09-08)
 
-1. **Landing page** — none. `/` is the chat surface; the only pre-chat screen
-   is the Stage 4 sign-in. A marketing page can be added later at its own route
-   without touching the shell.
+1. **Landing page** — none, at the time. `/` was the chat surface. *Since
+   2026-09-14 `/` is the avatar directory and the chat is `/<handle>`* (§15).
 2. **LLM provider** — **Amazon Bedrock**, through its OpenAI-compatible gateway
    at `https://bedrock-mantle.us-east-1.api.aws/v1` with `BEDROCK_API_KEY`, via
    `ChatOpenAI` from `@langchain/openai`. Identical to how
@@ -520,3 +533,39 @@ credential it did not issue is refused with a 401 and a logged warning.
 the product is one continuing conversation per person), a self-service delete,
 and account deletion. The privacy notice says deletion is by email, and calls
 that a gap rather than dressing it up.
+
+---
+
+## 15. What the multi-person change shipped
+
+Built 2026-09-14. `MULTI-PERSON.md` has every decision and what was rejected.
+
+**Anyone signed in can launch one avatar of themselves.** `/launch` takes a
+handle, a public bio and three notes only the model reads (about me, how I talk,
+topics to avoid). The name and photo are the owner's Google profile and cannot
+be typed in, which is what makes "only an avatar of yourself" enforceable.
+Launching needs the current terms accepted and a stored attestation.
+
+**The persona is data.** `lib/chat/persona.ts` builds the prompt from the avatar
+document on every turn — owner text wrapped in labelled sections, api-owned rules
+last (it says it is an AI when asked, invents no biography, makes no commitments).
+A chat request names an avatar and nothing more.
+
+**Review gates the directory, not the link.** An avatar is live at `/<handle>`
+from launch; `/` lists only avatars an admin approved. Changing the bio sends an
+avatar back to review. Owners can pause; there is no self-service delete. Owners
+cannot read visitors' conversations.
+
+**`admin/` is a separate Next.js app** with one username and password from env.
+Its server holds the admin token in an httpOnly cookie and calls the api; the
+browser never sees the token.
+
+**Tokens carry a purpose.** Session, voice and admin tokens share a secret, and
+before this a voice marker was accepted as a sign-in.
+
+**Verified** against the running api, a stub model that recorded every system
+prompt, and the local database: 34 launch/edit checks, 43 per-avatar chat, voice
+and claiming checks, 26 admin checks and the rate limit, plus a browser pass
+through the directory, an avatar chat against the real model, the paused page,
+the launch and edit page, and the admin portal. The 10 pre-avatar conversations
+were left in place but are no longer reachable: they have no `avatarId`.

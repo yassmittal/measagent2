@@ -4,15 +4,18 @@
   "type": "module",
   "workspaces": [
     "web",
+    "admin",
     "api",
     "shared"
   ],
   "scripts": {
     "stack": "./scripts/dev-stack.sh",
     "talk": "./scripts/voice-talk.sh",
+    "admin:hash-password": "bun ./scripts/hash-admin-password.ts",
     "dev": "bun --filter '@measagent/api' --filter '@measagent/web' dev",
     "dev:web": "bun --filter @measagent/web dev",
     "dev:api": "bun --filter @measagent/api dev",
+    "dev:admin": "bun --filter @measagent/admin dev",
     "db:start": "./scripts/mongodb.sh start",
     "db:stop": "./scripts/mongodb.sh stop",
     "db:status": "./scripts/mongodb.sh status",

@@ -15,8 +15,12 @@ export const VOICE_HISTORY_TURN_LIMIT = 8;
 export const VOICE_MAX_TOKENS = 220;
 export const MAX_SPOKEN_REPLY_LENGTH = 4000;
 
-export const CONSENT_TERMS_VERSION = '2026-09-12';
+export const CONSENT_TERMS_VERSION = '2026-09-14';
 export const SESSION_LIFETIME_DAYS = 30;
 export const THREAD_LIST_LIMIT = 50;
 /** How long a hold-to-speak session's routing marker stays valid. */
 export const VOICE_SESSION_LIFETIME = '2h';
+/** A working session, not a sign-in to keep: short, because it can change what the directory shows. */
+export const ADMIN_SESSION_LIFETIME_HOURS = 12;
+/** Admin sign-in attempts allowed per client address before it is refused for the window. */
+export const ADMIN_SIGN_IN_RATE_LIMIT = Object.freeze({ max: 5, timeWindow: '15 minutes' });

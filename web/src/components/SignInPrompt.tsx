@@ -2,10 +2,15 @@
 
 import Link from 'next/link';
 import { useGoogleSignInButton } from '@/hooks/useGoogleSignInButton';
-import { PERSONA_NAME } from '@/lib/persona';
 import { useSession } from '@/state/SessionProvider';
 
-export function SignInPrompt({ onSignedIn }: { onSignedIn: () => void }) {
+interface SignInPromptProps {
+  title: string;
+  lede: string;
+  onSignedIn: () => void;
+}
+
+export function SignInPrompt({ title, lede, onSignedIn }: SignInPromptProps) {
   const { signInWithGoogleCredential, signInError } = useSession();
 
   const { hostRef, error } = useGoogleSignInButton({
@@ -17,11 +22,8 @@ export function SignInPrompt({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <div className="auth-screen">
-      <h3 className="auth-title">Keep this conversation</h3>
-      <p className="auth-lede">
-        Sign in and everything you have said to {PERSONA_NAME} follows you to your other
-        devices. This conversation comes with you.
-      </p>
+      <h3 className="auth-title">{title}</h3>
+      <p className="auth-lede">{lede}</p>
 
       <div className="auth-button-host" ref={hostRef} />
 

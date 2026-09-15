@@ -1,18 +1,27 @@
-import { AVATAR_PORTRAIT_SRC } from '@/lib/persona';
+import { PLACEHOLDER_PORTRAIT_SRC } from '@/lib/product';
 
 interface AvatarProps {
+  /** Null draws the placeholder portrait. */
+  portraitUrl: string | null;
   size?: number;
   label?: string;
 }
 
-export function Avatar({ size, label }: AvatarProps) {
+export function Avatar({ portraitUrl, size, label }: AvatarProps) {
   const style =
     size !== undefined
       ? ({ '--avatar-size': `${size}px` } as React.CSSProperties)
       : undefined;
 
-  // biome-ignore lint/performance/noImgElement: static SVG — next/image cannot optimise SVG, and the wrapper element it adds would sit between `.avatar` and the image, breaking the `.avatar > img` sizing rule.
-  const portrait = <img src={AVATAR_PORTRAIT_SRC} alt="" />;
+  const portrait = (
+    // biome-ignore lint/performance/noImgElement: a Google-hosted photo or a static SVG — next/image would need a remote pattern for the one and cannot optimise the other, and the wrapper element it adds would break the `.avatar > img` sizing rule.
+    <img
+      src={portraitUrl ?? PLACEHOLDER_PORTRAIT_SRC}
+      alt=""
+      // Google's photo CDN refuses requests that carry a referrer.
+      referrerPolicy="no-referrer"
+    />
+  );
 
   if (label === undefined) {
     return (

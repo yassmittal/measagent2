@@ -21,9 +21,15 @@ export interface ThreadSummary {
 }
 
 export interface SendMessageRequest {
+  /** Which avatar this turn is with. Names the avatar; never shapes it. */
+  avatarId: string;
   chatId?: string;
   text: string;
   speak?: boolean;
+}
+
+export interface ListThreadsQuery {
+  avatarId: string;
 }
 
 export interface LoadThreadResponse {

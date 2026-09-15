@@ -22,6 +22,8 @@ declare module 'fastify' {
       MA_S2S_API_KEY: string;
       MA_SESSION_SECRET: string;
       MA_GOOGLE_CLIENT_ID: string;
+      MA_ADMIN_USERNAME: string;
+      MA_ADMIN_PASSWORD_HASH: string;
     };
   }
 }

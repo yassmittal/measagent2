@@ -2,7 +2,6 @@
 
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { PRODUCT_NAME } from '@/lib/persona';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
 import { PushToTalkBar } from './PushToTalkBar';
@@ -15,6 +14,7 @@ interface MessageComposerProps {
 
 export function MessageComposer({ onHeightChange }: MessageComposerProps) {
   const {
+    avatar,
     turn,
     inputError,
     clearInputError,
@@ -97,10 +97,10 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
             isDictating
               ? 'Listening…'
               : isBusy
-                ? `${PRODUCT_NAME} is replying…`
-                : `Message ${PRODUCT_NAME}…`
+                ? `${avatar.name} is replying…`
+                : `Message ${avatar.name}…`
           }
-          aria-label={`Message ${PRODUCT_NAME}`}
+          aria-label={`Message ${avatar.name}`}
           value={inputText}
           readOnly={isDictating}
           onChange={(event) => {
@@ -128,7 +128,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         </button>
       </form>
 
-      <PushToTalkBar voice={voice} />
+      <PushToTalkBar voice={voice} avatarName={avatar.name} />
 
       {inputError !== null ? (
         <p className="composer-error" role="alert">
@@ -136,7 +136,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
         </p>
       ) : queuedText !== null ? (
         <p className="composer-hint" role="status">
-          Sends when {PRODUCT_NAME} finishes
+          Sends when {avatar.name} finishes
         </p>
       ) : voiceNotice !== null && !isMuted ? (
         <p className="composer-hint" role="status">

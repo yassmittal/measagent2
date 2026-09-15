@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Db } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
+import { hasTokenPurpose, TOKEN_PURPOSE } from '../../lib/auth/token-purpose.js';
+import { findAvatarWithOwner } from '../../lib/avatars/avatar-with-owner.js';
 import { toThreadMessage } from '../../lib/chat/messages.js';
 import { buildPersonaSystemPrompt } from '../../lib/chat/persona.js';
 import { streamReply } from '../../lib/chat/reply-runner.js';
@@ -54,6 +56,9 @@ export async function chatCompletions(
   let session: VoiceSessionClaims;
   try {
     session = this.jwt.verify<VoiceSessionClaims>(routeToken);
+    if (!hasTokenPurpose(session, TOKEN_PURPOSE.voiceSession)) {
+      throw new Error('The token is not a voice session marker');
+    }
   } catch (error) {
     this.log.warn({ err: getErrorMessage(error) }, 'Rejected a live voice route marker');
     return sendOpenAiError(reply, 401, 'Invalid or expired voice session', 'invalid_request_error');
@@ -110,6 +115,14 @@ async function runLiveVoiceTurn(
     throw new Error(`No thread ${session.threadId} for ${ownerId}`);
   }
 
+  // Read per turn rather than trusted from when the session opened, so pausing
+  // an avatar or editing it takes effect mid-session.
+  const avatarWithOwner = await findAvatarWithOwner(db, { _id: thread.avatarId });
+  if (avatarWithOwner?.avatar.availability !== 'live') {
+    throw new Error(`Avatar ${thread.avatarId} is not taking conversations`);
+  }
+  const { avatar, owner } = avatarWithOwner;
+
   const history = await messagesCollection(db)
     .find({ threadId: thread._id })
     .sort({ createdAt: -1 })
@@ -131,7 +144,7 @@ async function runLiveVoiceTurn(
   };
 
   const { text } = await streamReply({
-    systemPrompt: buildPersonaSystemPrompt(),
+    systemPrompt: buildPersonaSystemPrompt({ ...avatar, name: owner.name }),
     history: history.reverse().map(toThreadMessage),
     userPrompt,
     model: buildChatModel({ maxTokens: VOICE_MAX_TOKENS }),

@@ -1,6 +1,7 @@
 'use client';
 
 import type { ThreadMessage } from '@measagent/shared';
+import type { AvatarProfile } from '@measagent/shared/avatars';
 import {
   createContext,
   type ReactNode,
@@ -28,6 +29,8 @@ import {
 import { useSession } from './SessionProvider';
 
 interface ConversationContextValue extends ConversationState {
+  /** Who this conversation is with. Read by everything that names them. */
+  avatar: AvatarProfile;
   sendOrQueueMessage: (text: string) => void;
   cancelActiveTurn: () => void;
   clearInputError: () => void;
@@ -39,7 +42,12 @@ interface ConversationContextValue extends ConversationState {
 
 const ConversationContext = createContext<ConversationContextValue | null>(null);
 
-export function ConversationProvider({ children }: { children: ReactNode }) {
+interface ConversationProviderProps {
+  avatar: AvatarProfile;
+  children: ReactNode;
+}
+
+export function ConversationProvider({ avatar, children }: ConversationProviderProps) {
   const [state, dispatch] = useReducer(conversationReducer, INITIAL_STATE);
   const { identityKey, isSignedIn } = useSession();
   const { enqueueSpan, stopPlayback } = useSpeechPlayback();
@@ -55,13 +63,15 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
   const activeTurnRef = useRef<AbortController | null>(null);
 
+  const avatarId = avatar.id;
+
   useEffect(() => {
     if (identityKey === null) return;
 
     let cancelled = false;
     dispatch({ type: 'identity_changed' });
 
-    loadInitialThread(isSignedIn)
+    loadInitialThread(avatarId, isSignedIn)
       .then((thread) => {
         if (cancelled) return;
         dispatch({
@@ -78,7 +88,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [identityKey, isSignedIn]);
+  }, [avatarId, identityKey, isSignedIn]);
 
   const send = useCallback(
     async (text: string) => {
@@ -100,12 +110,13 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 
       try {
         await sendMessage({
+          avatarId,
           chatId: chatIdRef.current ?? undefined,
           text,
           speak: !isMutedRef.current,
           signal: turnController.signal,
           onEvent: (event) => {
-            if (event.type === 'turn_started') writeActiveChatId(event.chat.id);
+            if (event.type === 'turn_started') writeActiveChatId(avatarId, event.chat.id);
             if (event.type === 'audio_delta') {
               enqueueSpan(event);
               return;
@@ -126,7 +137,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
         if (activeTurnRef.current === turnController) activeTurnRef.current = null;
       }
     },
-    [enqueueSpan, stopPlayback],
+    [avatarId, enqueueSpan, stopPlayback],
   );
 
   const isBusy = isTurnActive(state.turn);
@@ -207,6 +218,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ConversationContextValue>(
     () => ({
       ...state,
+      avatar,
       sendOrQueueMessage,
       cancelActiveTurn,
       clearInputError,
@@ -216,6 +228,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      avatar,
       sendOrQueueMessage,
       cancelActiveTurn,
       clearInputError,

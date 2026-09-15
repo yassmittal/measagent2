@@ -1,12 +1,12 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { ListThreadsResponse } from '@measagent/shared';
+import type { ListThreadsQuery, ListThreadsResponse } from '@measagent/shared';
 import { toThreadSummary } from '../../lib/chat/messages.js';
 import { threadsCollection } from '../../shared/collections.js';
 import { THREAD_LIST_LIMIT } from '../../shared/constants.js';
 import { readCaller } from '../../shared/identity.js';
 
 /**
- * `GET /v1/chats` — this caller's conversations, most recent first.
+ * `GET /v1/chats` — this caller's conversations with one avatar, most recent first.
  *
  * There is no conversation list in the UI; what needs this is a browser that
  * has just signed in on a machine it has never chatted on, and has to find the
@@ -14,7 +14,7 @@ import { readCaller } from '../../shared/identity.js';
  */
 export async function listThreads(
   this: FastifyRequest['server'],
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: ListThreadsQuery }>,
   reply: FastifyReply
 ): Promise<ListThreadsResponse | undefined> {
   const caller = readCaller(request);
@@ -28,7 +28,7 @@ export async function listThreads(
   }
 
   const threads = await threadsCollection(db)
-    .find({ userId: caller.ownerId })
+    .find({ userId: caller.ownerId, avatarId: request.query.avatarId })
     .sort({ lastMessageAt: -1 })
     .limit(THREAD_LIST_LIMIT)
     .toArray();

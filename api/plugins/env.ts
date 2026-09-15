@@ -37,6 +37,11 @@ export default fp(
           // in; with either missing the service still runs, anonymously.
           MA_SESSION_SECRET: { type: 'string', default: '' },
           MA_GOOGLE_CLIENT_ID: { type: 'string', default: '' },
+
+          // The admin portal's single login. Both empty means admin sign-in is
+          // refused, never open. The hash comes from `bun run admin:hash-password`.
+          MA_ADMIN_USERNAME: { type: 'string', default: '' },
+          MA_ADMIN_PASSWORD_HASH: { type: 'string', default: '' },
         },
       },
     });

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from '@/state/SessionProvider';
 import { AccountSettings } from './AccountSettings';
@@ -68,6 +69,14 @@ export function ProfileMenu() {
               <span className="profile-menu-email">{user.email}</span>
             </div>
             <div className="profile-menu-divider" />
+            <Link
+              href="/launch"
+              className="profile-menu-item"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
+            >
+              Your avatar
+            </Link>
             <button
               type="button"
               className="profile-menu-item"
@@ -97,7 +106,11 @@ export function ProfileMenu() {
           onClose={() => setPanelOpen(false)}
         >
           {user === null ? (
-            <SignInPrompt onSignedIn={() => setPanelOpen(false)} />
+            <SignInPrompt
+              title="Sign in"
+              lede="Sign in and your conversations follow you to your other devices, and you can launch an avatar of your own."
+              onSignedIn={() => setPanelOpen(false)}
+            />
           ) : (
             <AccountSettings
               user={user}

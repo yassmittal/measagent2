@@ -36,12 +36,17 @@ const schemas = Object.freeze({
       'response is text/event-stream, so it carries no JSON response schema.',
     body: {
       type: 'object',
-      required: ['text'],
+      required: ['avatarId', 'text'],
       additionalProperties: false,
       properties: {
+        avatarId: {
+          type: 'string',
+          description: 'The avatar this turn is with. Paused avatars refuse with 409.',
+        },
         chatId: {
           type: 'string',
-          description: 'Omit to start a new conversation.',
+          description:
+            'Omit to start a new conversation. Must belong to the caller and to `avatarId`.',
         },
         text: { type: 'string', minLength: 1, maxLength: MAX_PROMPT_LENGTH },
         speak: {
@@ -57,8 +62,14 @@ const schemas = Object.freeze({
     $id: 'list-threads',
     tags,
     description:
-      "This caller's conversations, most recent first. Used to find the " +
-      'conversation to reopen after signing in on a new browser.',
+      "This caller's conversations with one avatar, most recent first. Used to " +
+      'find the conversation to reopen after signing in on a new browser.',
+    querystring: {
+      type: 'object',
+      required: ['avatarId'],
+      additionalProperties: false,
+      properties: { avatarId: { type: 'string' } },
+    },
     response: {
       200: {
         type: 'object',

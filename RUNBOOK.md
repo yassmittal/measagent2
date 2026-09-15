@@ -43,6 +43,7 @@ Four processes. Only the first three are this repo.
 | api | 3010 | Fastify on Bun: persona, history, persistence, the model |
 | web | 3000 | Next.js chat UI |
 | speech-to-speech | 8766 | separate repo: microphone, VAD, Whisper STT, TTS |
+| admin *(optional)* | 3020 | `bun run dev:admin` — not started by `stack`; only needed to review avatars |
 
 ### Order matters, and this is the one thing that bites
 
@@ -76,15 +77,17 @@ browser ──POST /v1/chats (SSE)──► api ──► Bedrock
                                    └─► Kokoro/HF (spoken reply)
 ```
 
-1. The browser POSTs to `/v1/chats` with the text and an `x-device-id` header.
-   That header is who you are — there are no accounts yet, so a device id owns
-   the thread.
-2. The api finds or creates the thread, then writes **both** messages up front:
+1. The browser POSTs to `/v1/chats` with the text, the `avatarId` of the page it
+   is on, and who it is: a session token if signed in, an `x-device-id` header if
+   not.
+2. The api loads that avatar and its owner (a paused avatar is a 409), finds the
+   thread by caller **and** avatar or creates one, then writes **both** messages up front:
    the user's, and an empty assistant message with status `resolving`. Writing
    the reply's id before the model has said anything is what lets the UI keep a
    half-finished reply if the turn is stopped.
-3. It rebuilds the persona system prompt from `lib/chat/persona.ts`, loads recent
-   history from Mongo, and streams from Bedrock.
+3. It builds the persona system prompt from the avatar document
+   (`lib/chat/persona.ts` — the owner's notes in labelled sections, the api's
+   rules last), loads recent history from Mongo, and streams from Bedrock.
 4. The response is **Server-Sent Events**, but read with a plain `fetch` reader,
    not `EventSource` — the request needs a POST body and a custom header, and
    `EventSource` can send neither. Event shapes live in `shared/src/stream.ts`:
@@ -155,7 +158,8 @@ says that it was proved. A hand-written marker now gets a 401.
 Two consequences worth knowing:
 
 - **Nothing else in the incoming `messages` is trusted.** The persona prompt is
-  rebuilt server-side every turn and history is read from Mongo — s2s only
+  rebuilt server-side every turn from the avatar the thread belongs to, re-read
+  each turn so pausing or editing an avatar takes effect mid-session, and history is read from Mongo — s2s only
   supplies the latest transcript. So a spoken turn and a typed turn land in the
   same thread with the same persona.
 - **A request with no marker is the warmup.** The handler answers
@@ -163,7 +167,9 @@ Two consequences worth knowing:
   that fails when the api is down.
 
 The thread must already exist — the marker cannot be minted for a conversation
-that is not there, and the handler looks it up again by thread and owner. So
+that is not there, and the handler looks it up again by thread and owner. It must
+also belong to an avatar: conversations from before avatars existed have no
+`avatarId`, and `bun run talk` skips them. So
 send one message before talking. Markers expire after two hours
 (`VOICE_SESSION_LIFETIME`), which is a voice session's length, not a sign-in's.
 
@@ -257,7 +263,7 @@ ASSISTANT: <audio done>
 ASSISTANT: <response completed>
 ```
 
-Send one message in the web app first, or there is no thread to talk into.
+Send one message to an avatar in the web app first, or there is no thread to talk into.
 
 ---
 
@@ -270,6 +276,13 @@ Send one message in the web app first, or there is no thread to talk into.
 | api returns 401 to s2s | `MA_S2S_API_KEY` in `api/.env` ≠ `--responses_api_api_key` |
 | `Rejected a live voice route marker` | hand-written or expired marker — use `bun run talk`, which gets a real one from the api |
 | `No thread <id> for <owner>` | the marker verified but the conversation moved owner (a sign-in claims it) — open a new voice session |
+| `Avatar <id> is not taking conversations` | the thread's avatar is paused, or the thread predates avatars |
+| `/` shows no avatars | nothing is listed yet — approve one in the admin portal |
+| An avatar page is a 404 | no avatar has that handle; handles are lowercase |
+| Sending a message returns 409 | the avatar is paused |
+| Admin sign-in says it is not configured | `MA_ADMIN_USERNAME` or `MA_ADMIN_PASSWORD_HASH` is empty in `api/.env` — or the api has not been restarted since you set them; `bun --watch` keeps the old environment |
+| Admin sign-in says it is misconfigured | `MA_ADMIN_PASSWORD_HASH` is not the base64 value `bun run admin:hash-password` prints (a raw `$argon2…` hash is mangled by Bun's `.env` loading) |
+| Admin sign-in says "too many attempts" | 5 tries in 15 minutes per address; restarting the api clears it locally |
 | `<response completed>` with no text | same thing: bad marker. Check `.dev/api.log` |
 | Reply arrives as text, no audio | `HF_TOKEN` missing or the TTS provider failed — by design the turn still succeeds |
 | Web loads but every send fails | api down, or `NEXT_PUBLIC_API_BASE_URL` points somewhere else |

@@ -1,7 +1,8 @@
 # meAsAgent
 
-A personal AI avatar — a chat surface where visitors talk to an agent that
-answers as Yash. Text chat, spoken replies, and hold-to-speak voice input.
+AI avatars of real people. Anyone who signs in with Google can launch an avatar
+of themselves; visitors browse the reviewed ones and talk to any of them — text
+chat, spoken replies, and hold-to-speak voice input.
 
 Deployed at **meAsAgent.vercel.app**.
 
@@ -15,13 +16,23 @@ it running.
 
 ```
 web/       Next.js 16 + React 19, deployed to Vercel
+admin/     Next.js 16 admin portal that reviews avatars, deployed on its own
 api/       Fastify 5 on Bun, deployed anywhere that runs Bun
-shared/    TypeScript types imported by both, no build or publish step
-scripts/   project-local MongoDB helper
+shared/    TypeScript types imported by all three, no build or publish step
+scripts/   project-local MongoDB, the dev stack, voice and admin helpers
 ```
 
-Bun workspaces, one lockfile at the root. The browser calls the API directly;
-there is no Next.js route handler in front of it.
+Bun workspaces, one lockfile at the root. The web app's browser calls the API
+directly; there is no Next.js route handler in front of it. The admin portal is
+the opposite: its own server calls the API, so the admin token never reaches a
+browser.
+
+| Page | What it is |
+|---|---|
+| `/` | the directory — every reviewed, live avatar |
+| `/<handle>` | talk to one avatar |
+| `/launch` | launch your own avatar, or edit and pause it |
+| `/privacy`, `/terms` | the legal pages |
 
 One turn of conversation:
 
@@ -56,6 +67,7 @@ bun install                       # once, from the repo root
 
 cp api/.env.example api/.env      # then fill in BEDROCK_API_KEY
 cp web/.env.example web/.env.local
+cp admin/.env.example admin/.env.local   # only if you run the admin portal
 
 bun run db:start                  # MongoDB on 27018
 bun run dev                       # web on :3000, api on :3010
@@ -73,6 +85,8 @@ model itself.
 |---|---|
 | `bun run dev` | web + api together |
 | `bun run dev:web` / `dev:api` | one at a time |
+| `bun run dev:admin` | the admin portal on :3020 |
+| `bun run admin:hash-password` | print a `MA_ADMIN_PASSWORD_HASH` for `api/.env` |
 | `bun run db:start` / `db:stop` / `db:status` / `db:logs` | the local database |
 | `bun run typecheck` | every workspace |
 | `cd web && bun run lint` | Biome — check only |
@@ -98,6 +112,7 @@ Reset the database completely: `bun run db:stop && rm -rf .mongo`.
 | `HF_TOKEN`, `MA_S2S_API_KEY` | voice, from Stage 2 on |
 | `MA_SESSION_SECRET` | signs the session tokens the browser carries. `openssl rand -hex 32`. Changing it signs everybody out |
 | `MA_GOOGLE_CLIENT_ID` | the OAuth 2.0 Web application client id. Leave it empty and the service runs fine — everyone just stays anonymous |
+| `MA_ADMIN_USERNAME`, `MA_ADMIN_PASSWORD_HASH` | the admin portal's one login. The hash, not the password, base64-encoded — paste what `bun run admin:hash-password` prints. Empty means admin sign-in is refused |
 
 Every variable is read once in `api/plugins/env.ts` and reached through
 `fastify.config`. Nothing else touches `process.env`.
@@ -109,6 +124,13 @@ Every variable is read once in `api/plugins/env.ts` and reached through
 | `NEXT_PUBLIC_API_BASE_URL` | the API origin. Public by design — the browser calls it |
 | `NEXT_PUBLIC_SPEECH_TO_SPEECH_URL` | the live voice socket, e.g. `ws://127.0.0.1:8766/v1/realtime` |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | same value as `MA_GOOGLE_CLIENT_ID`. Empty means the sign-in panel says so |
+
+**`admin/.env.local`** — server-side only, nothing here is `NEXT_PUBLIC`.
+
+| Variable | Notes |
+|---|---|
+| `MA_API_BASE_URL` | the API origin the portal's server calls |
+| `MA_WEB_BASE_URL` | where avatar pages live, so a reviewer can open one |
 
 ---
 
@@ -123,7 +145,7 @@ shared server on 27017 for the whole machine.
 |---|---|
 | Compass URI | `mongodb://127.0.0.1:27018/` |
 | Database | `measagent` |
-| Collections | `threads`, `messages` (`relationships`, `returnReminders` at Stage 5) |
+| Collections | `users`, `avatars`, `threads`, `messages` (`relationships`, `returnReminders` at Stage 5) |
 
 Indexes are created on boot by `api/plugins/indexes.ts`. `mongosh` is not
 required; Compass covers it, and `mongoexport` is the quick CLI peek:
@@ -147,14 +169,20 @@ serializer, not just validation, so they are always current.
 
 | Route | Does |
 |---|---|
-| `POST /v1/chats` | send a message; responds with an SSE stream for the turn |
-| `GET /v1/chats` | the caller's conversations, most recent first |
+| `GET /v1/avatars` | the directory: reviewed, live avatars |
+| `GET /v1/avatars/:handle` | one avatar's public profile, listed or not |
+| `GET`/`POST`/`PATCH /v1/me/avatar` | read, launch, or edit and pause your own avatar |
+| `POST /v1/chats` | send a message to an avatar; responds with an SSE stream for the turn |
+| `GET /v1/chats?avatarId=` | the caller's conversations with one avatar, most recent first |
 | `GET /v1/chats/:chatId` | load a thread and its messages |
 | `POST /v1/auth/google` | trade a Google credential for a session token |
 | `GET /v1/auth/session` | the account behind the session token on the request |
 | `GET`/`POST /v1/consent` | read and record acceptance of the terms |
 | `POST /v1/voice/sessions` | mint the routing marker for one live voice session |
 | `POST /v1/chat/completions` | the OpenAI-compatible endpoint the voice service calls |
+| `POST /v1/admin/sessions` | admin sign-in, rate limited |
+| `GET /v1/admin/avatars?listing=` | the review queue |
+| `PATCH /v1/admin/avatars/:avatarId` | list or decline an avatar |
 | `GET /health` | liveness |
 
 Every request says who it is: an `Authorization: Bearer` session token if signed
@@ -169,6 +197,47 @@ both ends speak SSE over a plain chunked `fetch`. Event shapes live in
 spans are interleaved with the text and closed by `audio_done`.
 
 ---
+
+## Avatars
+
+An avatar is one document per Google account in `avatars`: a handle (its URL,
+fixed at launch), a public bio, and three notes only the model reads — about the
+person, how they talk, what to avoid. Its **name and photo are not stored on it**:
+they are read from the owner's user document, which every sign-in refreshes from
+Google, so an avatar can only ever be of the account that launched it.
+
+```
+launch ──► live at /<handle> straight away, listing: pending
+            │
+admin ──────┼──► listed   → appears in the directory at /
+            └──► declined → stays reachable by link, not listed
+owner edits the bio ──► back to pending
+owner pauses ──► page says so; chat and voice refuse
+```
+
+Every turn rebuilds the persona prompt from the avatar document
+(`api/lib/chat/persona.ts`). A chat request only names an avatar; nothing in it
+reaches the prompt. The owner's notes are wrapped in labelled sections and the
+api's own rules come last: the avatar says it is an AI when asked, invents no
+biography and makes no commitments on the person's behalf.
+
+A thread belongs to a visitor **and** an avatar (`userId` + `avatarId`), so a
+browser keeps one continuing conversation per avatar. Owners cannot read the
+conversations visitors have with their avatar.
+
+## The admin portal
+
+`admin/` is a separate Next.js app with one username and password, both from
+`api/.env`. Signing in trades them for a 12-hour admin token, which the portal's
+server keeps in an httpOnly cookie and uses to call the API — the browser never
+holds it. Sign-in is rate limited per address to 5 attempts in 15 minutes. Behind
+a proxy, every attempt arrives from the portal's server, so the limit is shared:
+a burst of wrong passwords locks the real admin out for the window too.
+
+```bash
+bun run admin:hash-password     # paste the printed line into api/.env as-is, then restart the api
+bun run dev:admin               # http://localhost:3020
+```
 
 ## Signing in
 
@@ -306,8 +375,12 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 - **Never ship the trial fonts.** `ABCDiatype-*-Trial.woff2` are Dinamo trial
   licences and must not enter the repo. Geist Sans is loaded via `next/font`
   with a `size-adjust` local fallback so the metrics stay stable.
-- **The persona is Yash, and only Yash.** Name, likeness, bio and portrait all
-  live in `web/src/lib/persona.ts`.
+- **An avatar is only ever of the person who launched it.** Its name and photo
+  come from their Google account. Never hardcode a person or seed an avatar on
+  someone's behalf.
+- **Runtime values in `shared/` need a subpath.** The index re-exports types only;
+  a module with values is imported as `@measagent/shared/avatars`, because the
+  bundlers cannot follow the index's `.js` specifiers to `.ts` source.
 - **Do not run git commands here.** Leave changes in the working tree; Yash
   handles version control.
 
@@ -319,6 +392,10 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 Root Directory `web` with *Include source files outside of the Root Directory*
 enabled, so `bun install` runs against the repo root and `@measagent/shared`
 resolves. Set `NEXT_PUBLIC_API_BASE_URL` to the deployed API origin.
+
+**`admin/` → its own Vercel project**, Root Directory `admin`, same *Include
+source files* setting. Set `MA_API_BASE_URL` and `MA_WEB_BASE_URL`. Its server
+calls the API, so its origin does not go in `MA_WEB_ORIGIN`.
 
 **`api/` → anywhere that runs Bun** (Fly, Railway, EC2). Not Vercel:
 `POST /v1/chats` holds an open stream for the length of a turn, and Stage 3 adds
@@ -336,6 +413,6 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | **3** ✅ | voice in — hold-to-speak dictation | none | STT + TTS |
 | **4** ✅ | Google sign-in, per-user threads, consent | Google | both |
 | **5** | long-term memory and return reminders | Google | both |
-| **6** | RAG over Yash's corpus, web search, feedback | Google | both |
+| **6** | RAG over each avatar owner's corpus, web search, feedback | Google | both |
 
 `PLAN.md` has the detail for each, including what Stage 1 deliberately left out.

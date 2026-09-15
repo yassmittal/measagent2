@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import { forgetGoogleSession } from '@/hooks/useGoogleSignInButton';
-import { writeActiveChatId } from '@/lib/active-chat';
+import { forgetAllActiveChats } from '@/lib/active-chat';
 import { readSessionToken, writeSessionToken } from '@/lib/auth/session-storage';
 import { acceptConsent, loadSignedInUser, signInWithGoogle } from '@/lib/auth-client';
 
@@ -83,7 +83,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(() => {
     writeSessionToken(null);
-    writeActiveChatId(null);
+    forgetAllActiveChats();
     forgetGoogleSession();
     setUser(null);
     setClaimedThreadCount(0);

@@ -25,8 +25,9 @@ export async function loadThread(chatId: string): Promise<LoadThreadResponse | n
   return (await response.json()) as LoadThreadResponse;
 }
 
-export async function listThreads(): Promise<ThreadSummary[]> {
-  const response = await fetch(`${API_BASE_URL}/v1/chats`, {
+export async function listThreads(avatarId: string): Promise<ThreadSummary[]> {
+  const query = new URLSearchParams({ avatarId });
+  const response = await fetch(`${API_BASE_URL}/v1/chats?${query}`, {
     headers: apiIdentityHeaders(),
   });
 

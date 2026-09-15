@@ -16,6 +16,10 @@ export default fp(
     await fastify.register(cors, {
       origin: origins,
       credentials: true,
+      // Listed because the plugin's default stops at GET, HEAD and POST, and a
+      // browser refuses any other method at the preflight — editing an avatar
+      // is a PATCH.
+      methods: ['GET', 'HEAD', 'POST', 'PATCH'],
       allowedHeaders: ['content-type', 'authorization', DEVICE_ID_HEADER],
     });
   },

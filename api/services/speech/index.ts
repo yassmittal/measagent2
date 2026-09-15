@@ -4,8 +4,8 @@ import type { SpeechSynthesizer } from './types.js';
 export type { SpeechSynthesizer, SynthesizedSpeech } from './types.js';
 
 /**
- * The single place a voice provider is chosen. Swapping Stage 2's Kokoro for
- * an ElevenLabs clone of Yash is an edit here and nowhere else.
+ * The single place a voice provider is chosen. Every avatar shares this one
+ * voice for now; giving each avatar its own would start here.
  */
 export function getSpeechSynthesizer(): SpeechSynthesizer {
   return kokoroSpeechSynthesizer;

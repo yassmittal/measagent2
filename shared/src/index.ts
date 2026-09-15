@@ -9,6 +9,7 @@ export type {
 } from './identity.js';
 export type {
   FeedbackVote,
+  ListThreadsQuery,
   ListThreadsResponse,
   LoadThreadResponse,
   MessageRole,

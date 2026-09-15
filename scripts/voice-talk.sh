@@ -39,8 +39,10 @@ read -r THREAD_ID USER_ID <<<"$(
     mongoexport --uri "$MONGO_URI" --collection threads --quiet \
       --query "{\"_id\":\"$REQUESTED_THREAD\"}" --limit 1
   else
+    # Threads from before avatars existed have no avatarId, and the api cannot
+    # build a persona for them — so the newest one that has an avatar.
     mongoexport --uri "$MONGO_URI" --collection threads --quiet \
-      --sort '{lastMessageAt:-1}' --limit 1
+      --query '{"avatarId":{"$exists":true}}' --sort '{lastMessageAt:-1}' --limit 1
   fi | python3 -c '
 import json, sys
 line = sys.stdin.readline().strip()
@@ -73,7 +75,7 @@ def compact(claims):
 
 now = int(time.time())
 signing_input = compact({"alg": "HS256", "typ": "JWT"}) + "." + compact(
-    {"sub": sys.argv[1], "iat": now, "exp": now + 3600}
+    {"sub": sys.argv[1], "purpose": "session", "iat": now, "exp": now + 3600}
 )
 signature = hmac.new(sys.argv[2].encode(), signing_input.encode(), hashlib.sha256).digest()
 print(signing_input + "." + encode(signature))

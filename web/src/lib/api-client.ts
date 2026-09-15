@@ -14,6 +14,20 @@ export class ApiRequestError extends Error {
   }
 }
 
+export async function readApiErrorMessage(
+  response: Response,
+  fallbackMessage: string,
+): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: unknown };
+    return typeof body.message === 'string' && body.message !== ''
+      ? body.message
+      : fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
+
 export function apiIdentityHeaders(): HeadersInit {
   const headers: Record<string, string> = { 'x-device-id': readDeviceId() };
 
@@ -23,11 +37,6 @@ export function apiIdentityHeaders(): HeadersInit {
   return headers;
 }
 
-/**
- * For requests that actually send a JSON body — and only those. Declaring the
- * content type on a bodyless request makes Fastify reject it as a malformed
- * JSON payload before the route is ever reached.
- */
 export function apiJsonHeaders(): HeadersInit {
   return { ...apiIdentityHeaders(), 'Content-Type': 'application/json' };
 }

@@ -6,6 +6,7 @@ import corsPlugin from './plugins/cors.js';
 import envPlugin from './plugins/env.js';
 import indexesPlugin from './plugins/indexes.js';
 import mongodbPlugin from './plugins/mongodb.js';
+import rateLimitPlugin from './plugins/rate-limit.js';
 import sensiblePlugin from './plugins/sensible.js';
 import swaggerPlugin from './plugins/swagger.js';
 import swaggerUIPlugin from './plugins/swaggerUI.js';
@@ -25,6 +26,7 @@ await fastify.register(envPlugin);
 await fastify.register(sensiblePlugin);
 await fastify.register(corsPlugin);
 await fastify.register(authPlugin);
+await fastify.register(rateLimitPlugin);
 
 // 3. Storage.
 await fastify.register(mongodbPlugin);

@@ -2,20 +2,24 @@
 
 import { Mic } from 'lucide-react';
 import type { LiveVoiceSession } from '@/hooks/useLiveVoice';
-import { PERSONA_NAME } from '@/lib/persona';
 import { ListeningWaveform } from './ListeningWaveform';
 
 const HOLD_LABEL = 'Hold to speak';
 
-function describe(voice: LiveVoiceSession): string {
+function describe(voice: LiveVoiceSession, avatarName: string): string {
   if (voice.error !== null) return voice.error;
   if (voice.isHolding) return 'Listening… release to send';
   if (voice.status === 'connecting') return 'Opening the microphone…';
-  if (voice.status === 'speaking') return `${PERSONA_NAME} is speaking…`;
+  if (voice.status === 'speaking') return `${avatarName} is speaking…`;
   return HOLD_LABEL;
 }
 
-export function PushToTalkBar({ voice }: { voice: LiveVoiceSession }) {
+interface PushToTalkBarProps {
+  voice: LiveVoiceSession;
+  avatarName: string;
+}
+
+export function PushToTalkBar({ voice, avatarName }: PushToTalkBarProps) {
   if (!voice.isAvailable) {
     const label = 'Send a message first, then you can talk';
     return (
@@ -47,7 +51,7 @@ export function PushToTalkBar({ voice }: { voice: LiveVoiceSession }) {
       onContextMenu={(event) => event.preventDefault()}
     >
       <Mic size={18} strokeWidth={1.8} aria-hidden="true" />
-      <span className="ptt-bar-label">{describe(voice)}</span>
+      <span className="ptt-bar-label">{describe(voice, avatarName)}</span>
       {isLive ? <ListeningWaveform active={voice.isHolding} /> : null}
     </button>
   );

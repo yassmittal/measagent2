@@ -31,7 +31,6 @@ interface UseLiveVoiceOptions {
   onReplyCompleted: () => void;
 }
 
-
 export function useLiveVoice({
   threadId,
   onUserSpoke,

@@ -4,7 +4,6 @@ import type { ThreadMessage } from '@measagent/shared';
 import { ArrowDown } from 'lucide-react';
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formatDateDivider } from '@/lib/format-date';
-import { EMPTY_THREAD_PROMPT } from '@/lib/persona';
 import { isTurnActive, type TurnState } from '@/state/conversation-reducer';
 import { LiveTurn } from './LiveTurn';
 import { MessageRow } from './MessageRow';
@@ -12,6 +11,8 @@ import { QueuedMessage } from './QueuedMessage';
 import { ThreadClaimedNotice } from './ThreadClaimedNotice';
 
 const PINNED_THRESHOLD_PX = 80;
+
+const EMPTY_THREAD_PROMPT = 'Say hello — this conversation picks up where you left off.';
 
 interface ConversationThreadProps {
   messages: ThreadMessage[];

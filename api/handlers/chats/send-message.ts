@@ -3,6 +3,7 @@ import type { SendMessageRequest, ThreadMessage } from '@measagent/shared';
 import type { Db } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import { deriveThreadTitle, toThreadMessage, toThreadSummary } from '../../lib/chat/messages.js';
+import { findAvatarWithOwner } from '../../lib/avatars/avatar-with-owner.js';
 import { buildPersonaSystemPrompt } from '../../lib/chat/persona.js';
 import { streamReply } from '../../lib/chat/reply-runner.js';
 import { buildChatModel, isChatModelConfigured } from '../../services/language-model.js';
@@ -39,7 +40,25 @@ export async function sendMessage(
     return reply.serviceUnavailable('Storage is not available');
   }
 
-  const thread = await resolveThread(db, ownerId, request.body.chatId ?? null, text);
+  // The request only names the avatar. Everything the model is told about it
+  // is read back from the database here, so no field a visitor can send
+  // reaches the system prompt.
+  const avatarWithOwner = await findAvatarWithOwner(db, { _id: request.body.avatarId });
+  if (avatarWithOwner === null) {
+    return reply.notFound('Avatar not found');
+  }
+  const { avatar, owner } = avatarWithOwner;
+  if (avatar.availability !== 'live') {
+    return reply.conflict(`${owner.name} has paused their avatar`);
+  }
+
+  const thread = await resolveThread(
+    db,
+    ownerId,
+    avatar._id,
+    request.body.chatId ?? null,
+    text
+  );
   if (thread === null) {
     return reply.notFound('Chat not found');
   }
@@ -92,7 +111,7 @@ export async function sendMessage(
 
   try {
     const result = await streamReply({
-      systemPrompt: buildPersonaSystemPrompt(),
+      systemPrompt: buildPersonaSystemPrompt({ ...avatar, name: owner.name }),
       history,
       userPrompt: text,
       model: buildChatModel(),
@@ -136,17 +155,21 @@ export async function sendMessage(
 async function resolveThread(
   db: Db,
   ownerId: string,
+  avatarId: string,
   chatId: string | null,
   firstMessage: string
 ): Promise<ThreadDoc | null> {
+  // Matching the avatar too means a thread id from one avatar cannot be
+  // continued on another avatar's page with the second avatar's persona.
   if (chatId !== null) {
-    return threadsCollection(db).findOne({ _id: chatId, userId: ownerId });
+    return threadsCollection(db).findOne({ _id: chatId, userId: ownerId, avatarId });
   }
 
   const now = new Date();
   const thread: ThreadDoc = {
     _id: uuidv4(),
     userId: ownerId,
+    avatarId,
     title: deriveThreadTitle(firstMessage),
     createdAt: now,
     updatedAt: now,

@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { GoogleSignInRequest, SignInResponse } from '@measagent/shared';
 import type { Db } from 'mongodb';
 import { toAccountOwnerId } from '../../lib/auth/owner-id.js';
+import { TOKEN_PURPOSE } from '../../lib/auth/token-purpose.js';
 import { toUserProfile } from '../../lib/auth/user-profile.js';
 import { claimDeviceThreadsForAccount } from '../../lib/chat/thread-ownership.js';
 import {
@@ -60,7 +61,7 @@ export async function signInWithGoogle(
       : await claimDeviceThreadsForAccount(db, deviceOwnerId, user._id);
 
   return {
-    sessionToken: this.jwt.sign({ sub: user._id }),
+    sessionToken: this.jwt.sign({ sub: user._id, purpose: TOKEN_PURPOSE.session }),
     sessionExpiresAt: new Date(
       Date.now() + SESSION_LIFETIME_DAYS * MILLISECONDS_PER_DAY
     ).toISOString(),

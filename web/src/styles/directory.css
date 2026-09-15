@@ -1,0 +1,111 @@
+/* The front page: every reviewed avatar, and the way to launch your own. */
+
+.avatar-directory-page {
+  min-height: 100%;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.avatar-directory {
+  max-width: var(--col-wide);
+  margin: 0 auto;
+  padding: var(--sp-10) var(--sp-6) var(--sp-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+}
+
+.avatar-directory-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.avatar-directory-title {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+
+.avatar-directory-lede {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 25px;
+}
+
+.avatar-directory-launch {
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.avatar-directory-launch:hover {
+  background: var(--accent-hover);
+}
+
+.avatar-directory-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.avatar-directory-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sp-4);
+}
+
+.avatar-card {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--e2);
+  color: var(--text);
+  transition: box-shadow var(--t-fast) var(--ease);
+}
+
+.avatar-card:hover {
+  box-shadow: var(--e4);
+}
+
+.avatar-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.avatar-card-name {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+}
+
+.avatar-card-bio {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}

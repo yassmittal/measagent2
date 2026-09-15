@@ -15,7 +15,7 @@ export function LegalPage({ title, updatedAt, children }: LegalPageProps) {
       <div className="legal-page-inner">
         <Link href="/" className="legal-back">
           <ArrowLeft size={16} aria-hidden="true" />
-          Back to the conversation
+          Back
         </Link>
         <h1 className="legal-title">{title}</h1>
         <p className="legal-meta">Last updated {formatAbsoluteDate(updatedAt)}</p>

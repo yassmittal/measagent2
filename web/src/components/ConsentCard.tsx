@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { PERSONA_NAME } from '@/lib/persona';
 import { useSession } from '@/state/SessionProvider';
 
 export function ConsentCard() {
@@ -33,8 +32,8 @@ export function ConsentCard() {
       >
         <h2 className="consent-title">Before you start</h2>
         <p className="consent-lede">
-          You are talking to <strong>an AI speaking as {PERSONA_NAME}</strong>, not to{' '}
-          {PERSONA_NAME}. Three things worth knowing:
+          Every avatar here is <strong>an AI speaking as a real person</strong>, not the
+          person themselves. Three things worth knowing:
         </p>
 
         <ol className="consent-list">
@@ -42,7 +41,8 @@ export function ConsentCard() {
             <span className="consent-num">1</span>
             <span>
               What you type and say is stored against your account, and read back to the
-              model on later turns so the conversation makes sense.
+              model on later turns so the conversation makes sense. The person behind an
+              avatar cannot read your conversations with it.
             </span>
           </li>
           <li>

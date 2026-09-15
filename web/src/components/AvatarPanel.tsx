@@ -1,13 +1,17 @@
-import { PERSONA_BIO, PERSONA_NAME } from '@/lib/persona';
+'use client';
+
+import { useConversation } from '@/state/ConversationProvider';
 import { Avatar } from './Avatar';
 
 export function AvatarPanel() {
+  const { avatar } = useConversation();
+
   return (
     <aside className="avatar-panel">
-      <Avatar label={PERSONA_NAME} />
+      <Avatar portraitUrl={avatar.pictureUrl} label={avatar.name} />
       <div className="avatar-panel-id">
-        <span className="avatar-panel-name">{PERSONA_NAME}</span>
-        <p className="avatar-panel-bio">{PERSONA_BIO}</p>
+        <span className="avatar-panel-name">{avatar.name}</span>
+        <p className="avatar-panel-bio">{avatar.bio}</p>
       </div>
     </aside>
   );

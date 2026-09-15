@@ -1,5 +1,9 @@
 import fp from 'fastify-plugin';
-import { messagesCollection, threadsCollection } from '../shared/collections.js';
+import {
+  avatarsCollection,
+  messagesCollection,
+  threadsCollection,
+} from '../shared/collections.js';
 import { getErrorMessage } from '../shared/errors.js';
 
 /**
@@ -14,8 +18,12 @@ export default fp(
     if (db === undefined) return;
 
     try {
-      await threadsCollection(db).createIndex({ userId: 1, lastMessageAt: -1 });
+      await threadsCollection(db).createIndex({ userId: 1, avatarId: 1, lastMessageAt: -1 });
       await messagesCollection(db).createIndex({ threadId: 1, createdAt: 1 });
+      // Both unique indexes are rules, not just speed: one avatar per account,
+      // and a handle — which is a public URL — belongs to exactly one avatar.
+      await avatarsCollection(db).createIndex({ ownerId: 1 }, { unique: true });
+      await avatarsCollection(db).createIndex({ handle: 1 }, { unique: true });
     } catch (error) {
       fastify.log.warn(
         { err: getErrorMessage(error) },

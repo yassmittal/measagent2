@@ -1,12 +1,22 @@
-import { AVATAR_PORTRAIT_SRC, PERSONA_NAME } from '@/lib/persona';
+'use client';
+
+import { PLACEHOLDER_PORTRAIT_SRC } from '@/lib/product';
+import { useConversation } from '@/state/ConversationProvider';
 
 export function MobileHeader() {
+  const { avatar } = useConversation();
+
   return (
     <header className="mobile-header">
-      {/* biome-ignore lint/performance/noImgElement: static SVG portrait — see Avatar.tsx */}
-      <img className="mobile-header-avatar" src={AVATAR_PORTRAIT_SRC} alt="" />
+      {/* biome-ignore lint/performance/noImgElement: a Google-hosted photo or the static SVG placeholder — see Avatar.tsx */}
+      <img
+        className="mobile-header-avatar"
+        src={avatar.pictureUrl ?? PLACEHOLDER_PORTRAIT_SRC}
+        alt=""
+        referrerPolicy="no-referrer"
+      />
       <div className="mobile-header-id">
-        <span className="mobile-header-name">{PERSONA_NAME}</span>
+        <span className="mobile-header-name">{avatar.name}</span>
       </div>
     </header>
   );
