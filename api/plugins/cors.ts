@@ -10,7 +10,7 @@ import { DEVICE_ID_HEADER } from '../shared/identity.js';
 export default fp(
   async (fastify) => {
     const origins = fastify.config.MA_WEB_ORIGIN.split(',')
-      .map((origin) => origin.trim())
+      .map((origin) => origin.trim().toLowerCase())
       .filter((origin) => origin !== '');
 
     await fastify.register(cors, {
