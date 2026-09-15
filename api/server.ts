@@ -14,6 +14,9 @@ import swaggerUIPlugin from './plugins/swaggerUI.js';
 
 const fastify = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
+  // Deployed behind nginx on the same host. Without this every client is
+  // 127.0.0.1, and the admin sign-in rate limit becomes one shared budget.
+  trustProxy: '127.0.0.1',
 });
 
 // Plugins are registered by hand, in dependency order. Autoloading them would
