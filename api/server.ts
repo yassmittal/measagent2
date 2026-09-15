@@ -2,6 +2,7 @@ import closeWithGrace from 'close-with-grace';
 import Fastify from 'fastify';
 import app from './app.js';
 import authPlugin from './plugins/auth.js';
+import backgroundJobsPlugin from './plugins/background-jobs.js';
 import corsPlugin from './plugins/cors.js';
 import envPlugin from './plugins/env.js';
 import indexesPlugin from './plugins/indexes.js';
@@ -31,6 +32,7 @@ await fastify.register(rateLimitPlugin);
 // 3. Storage.
 await fastify.register(mongodbPlugin);
 await fastify.register(indexesPlugin);
+await fastify.register(backgroundJobsPlugin);
 
 // 4. Docs — swagger before swagger-ui.
 await fastify.register(swaggerPlugin);

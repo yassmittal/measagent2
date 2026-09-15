@@ -70,6 +70,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSignInError(null);
     try {
       const result = await signInWithGoogle(idToken);
+      // The conversation this browser remembers was the device's, and signing
+      // in may have merged it into the account's — which no longer leaves it a
+      // conversation of its own. The account's latest one is the one to open.
+      forgetAllActiveChats();
       writeSessionToken(result.sessionToken);
       setUser(result.user);
       setClaimedThreadCount(result.claimedThreadCount);

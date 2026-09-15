@@ -15,7 +15,7 @@ const threadSummary = {
 
 const threadMessage = {
   type: 'object',
-  required: ['id', 'role', 'text', 'status', 'at', 'turnId', 'feedback'],
+  required: ['id', 'role', 'text', 'status', 'at', 'turnId', 'feedback', 'isReturnReminder'],
   properties: {
     id: { type: 'string' },
     role: { type: 'string', enum: ['user', 'assistant'] },
@@ -24,8 +24,11 @@ const threadMessage = {
     at: { type: 'string' },
     turnId: { type: 'string', nullable: true },
     feedback: { type: 'string', enum: ['up', 'down'], nullable: true },
+    isReturnReminder: { type: 'boolean' },
   },
 } as const;
+
+export { threadMessage };
 
 const schemas = Object.freeze({
   sendMessage: {

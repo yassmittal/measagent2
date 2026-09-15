@@ -42,6 +42,14 @@ export default fp(
           // refused, never open. The hash comes from `bun run admin:hash-password`.
           MA_ADMIN_USERNAME: { type: 'string', default: '' },
           MA_ADMIN_PASSWORD_HASH: { type: 'string', default: '' },
+
+          // Stage 5 — long-term memory. Tuned down to seconds in tests so a
+          // pass can be watched instead of waited for.
+          MA_JOB_INTERVAL_SECONDS: { type: 'number', default: 120 },
+          /** How long a conversation must be quiet before it is summarised. */
+          MA_MEMORY_QUIET_SECONDS: { type: 'number', default: 1200 },
+          /** How long a visitor must have been away before a return reminder is written. */
+          MA_REMINDER_AFTER_SECONDS: { type: 'number', default: 86400 },
         },
       },
     });

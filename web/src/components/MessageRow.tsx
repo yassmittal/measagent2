@@ -34,6 +34,9 @@ export function MessageRow({ message, entering }: MessageRowProps) {
     >
       <div className="msg-andrew-col">
         <div className="msg-andrew" data-status={message.status}>
+          {message.isReturnReminder ? (
+            <p className="msg-return-reminder-tag">While you were away</p>
+          ) : null}
           <MessageText text={message.text} />
           {message.status === 'interrupted' ? (
             <p className="msg-interrupted-tag">The reply got cut off here.</p>

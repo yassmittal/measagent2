@@ -2,6 +2,8 @@ import fp from 'fastify-plugin';
 import {
   avatarsCollection,
   messagesCollection,
+  relationshipsCollection,
+  returnRemindersCollection,
   threadsCollection,
 } from '../shared/collections.js';
 import { getErrorMessage } from '../shared/errors.js';
@@ -24,6 +26,21 @@ export default fp(
       // and a handle — which is a public URL — belongs to exactly one avatar.
       await avatarsCollection(db).createIndex({ ownerId: 1 }, { unique: true });
       await avatarsCollection(db).createIndex({ handle: 1 }, { unique: true });
+      // Unique for the same reason: two first turns racing each other must not
+      // leave a visitor with two memories of the same avatar.
+      await relationshipsCollection(db).createIndex(
+        { userId: 1, avatarId: 1 },
+        { unique: true }
+      );
+      await relationshipsCollection(db).createIndex({ memoryDueAt: 1 });
+      await relationshipsCollection(db).createIndex({ reminderDueAt: 1 });
+      // One pending reminder per visitor per avatar, enforced here rather than
+      // by a read-then-insert that two instances could both pass.
+      await returnRemindersCollection(db).createIndex(
+        { userId: 1, avatarId: 1 },
+        { unique: true, partialFilterExpression: { deliveredAt: null }, name: 'one_pending_per_pair' }
+      );
+      await returnRemindersCollection(db).createIndex({ userId: 1, deliveredAt: 1 });
     } catch (error) {
       fastify.log.warn(
         { err: getErrorMessage(error) },

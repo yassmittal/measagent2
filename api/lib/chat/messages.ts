@@ -10,6 +10,7 @@ export function toThreadMessage(doc: MessageDoc): ThreadMessage {
     at: doc.createdAt.toISOString(),
     turnId: doc.turnId,
     feedback: doc.feedback?.vote ?? null,
+    isReturnReminder: doc.origin === 'return_reminder',
   };
 }
 

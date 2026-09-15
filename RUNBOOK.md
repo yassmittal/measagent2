@@ -86,8 +86,11 @@ browser ──POST /v1/chats (SSE)──► api ──► Bedrock
    the reply's id before the model has said anything is what lets the UI keep a
    half-finished reply if the turn is stopped.
 3. It builds the persona system prompt from the avatar document
-   (`lib/chat/persona.ts` — the owner's notes in labelled sections, the api's
+   (`lib/chat/persona.ts` — the owner's notes in labelled sections, then what
+   this avatar remembers about this visitor inside `<visitor_memory>`, the api's
    rules last), loads recent history from Mongo, and streams from Bedrock.
+   Memory is read only for a signed-in visitor who has accepted the terms, and
+   if reading it fails the turn goes ahead without it.
 4. The response is **Server-Sent Events**, but read with a plain `fetch` reader,
    not `EventSource` — the request needs a POST body and a custom header, and
    `EventSource` can send neither. Event shapes live in `shared/src/stream.ts`:
@@ -101,7 +104,11 @@ browser ──POST /v1/chats (SSE)──► api ──► Bedrock
    speaking before the answer has finished generating. **A failing voice never
    fails a turn** — every failure path downgrades to `voice_unavailable` and the
    text still arrives.
-6. In the browser, every one of those events lands in a single reducer
+6. Once the reply is stored, the api notes the turn for memory
+   (`handlers/chats/turn-memory.ts`): the visitor's `relationship` with this
+   avatar is marked due for summarising once the conversation goes quiet, and any
+   reminder scheduled for them is cancelled, because they are here.
+7. In the browser, every one of those events lands in a single reducer
    (`state/conversation-reducer.ts`). One reducer, not several `useState`s, so
    nothing can disagree about the same turn.
 
@@ -161,7 +168,8 @@ Two consequences worth knowing:
   rebuilt server-side every turn from the avatar the thread belongs to, re-read
   each turn so pausing or editing an avatar takes effect mid-session, and history is read from Mongo — s2s only
   supplies the latest transcript. So a spoken turn and a typed turn land in the
-  same thread with the same persona.
+  same thread with the same persona — and the same memory, read and recorded by
+  the same `turn-memory.ts` the typed path uses.
 - **A request with no marker is the warmup.** The handler answers
   `"Hello! I'm ready."` without touching the database. That is exactly the call
   that fails when the api is down.
@@ -221,6 +229,39 @@ service, so there is nothing here to abort.
 
 ---
 
+## Flow 4 — between conversations
+
+Nothing is summarised during a turn. A timer inside the api
+(`plugins/background-jobs.ts`, every `MA_JOB_INTERVAL_SECONDS`) runs two passes,
+and each piece of work is claimed with a lease on the `relationships` document
+first, so any number of api instances can run them without doing anything twice.
+
+```
+memory pass    relationships where memoryDueAt has passed (the conversation went quiet)
+                 ├─ visitor has not accepted the terms → nothing, cleared
+                 ├─ daily budget spent (20 per visitor) → tried again tomorrow
+                 └─ unread messages → memory writer (MEMORY_MODEL) → memory stored,
+                    messages marked memorizedAt; open threads schedule a reminder
+reminder pass  relationships where reminderDueAt has passed (away 24h with open threads)
+                 ├─ came back since, or avatar paused → rescheduled or cleared
+                 └─ the avatar writes one follow-up in its own persona → returnReminders
+```
+
+The visitor's next visit to that avatar calls `POST /v1/reminders/return`, which
+claims the reminder atomically and adds it to their latest conversation as a
+message tagged "While you were away". A reminder not delivered within 14 days
+lapses.
+
+A failing writer stores nothing and marks nothing read; the relationship is tried
+again after another quiet period. The failure is only in the log:
+
+```
+Memory pass failed for a relationship; it will be retried
+Return reminder failed for a relationship; it will be retried
+```
+
+---
+
 ## Testing voice without the browser
 
 ```bash
@@ -275,7 +316,8 @@ Send one message to an avatar in the web app first, or there is no thread to tal
 | s2s answers but nothing is saved | `ma-route:` marker missing or malformed — the api treated it as a warmup |
 | api returns 401 to s2s | `MA_S2S_API_KEY` in `api/.env` ≠ `--responses_api_api_key` |
 | `Rejected a live voice route marker` | hand-written or expired marker — use `bun run talk`, which gets a real one from the api |
-| `No thread <id> for <owner>` | the marker verified but the conversation moved owner (a sign-in claims it) — open a new voice session |
+| `No thread <id> for <owner>` | the marker verified but the conversation moved owner, or was merged into the account's conversation by a sign-in — open a new voice session |
+| After signing in, an older conversation seems to be missing | it should not happen since claiming merges; conversations split before that fix stay split in the database (one per row in `threads` for the same `userId` + `avatarId`) |
 | `Avatar <id> is not taking conversations` | the thread's avatar is paused, or the thread predates avatars |
 | `/` shows no avatars | nothing is listed yet — approve one in the admin portal |
 | An avatar page is a 404 | no avatar has that handle; handles are lowercase |
@@ -289,6 +331,11 @@ Send one message to an avatar in the web app first, or there is no thread to tal
 | The sign-in panel says it is not switched on | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is empty in `web/.env.local` |
 | Sign-in returns 503 | `MA_GOOGLE_CLIENT_ID` or `MA_SESSION_SECRET` is empty in `api/.env` |
 | Everyone is signed out at once | `MA_SESSION_SECRET` changed — every token signed with the old one is now invalid |
+| An avatar never remembers anything | the visitor is anonymous or has not accepted the terms; or the conversation has not been quiet for `MA_MEMORY_QUIET_SECONDS` yet; or `BEDROCK_API_KEY` is empty, which stops the background passes entirely |
+| `Memory pass failed for a relationship` | the memory writer errored or returned something other than the JSON memory — nothing was stored, it retries after a quiet period |
+| `Memory budget spent for today` | that visitor has used 20 summaries today (`MEMORY_DAILY_SUMMARY_LIMIT`); it resumes after midnight UTC |
+| No level beside the avatar's name | signed out, or the terms are not accepted — the level only shows while memory is on |
+| Forgetting fails in the browser but works with `curl` | `DELETE` missing from the CORS methods in `api/plugins/cors.ts` |
 
 `bun run stack` reads `MA_S2S_API_KEY` out of `api/.env` and passes it to s2s, so
 the two cannot drift apart — that is why the key is not written in the command.

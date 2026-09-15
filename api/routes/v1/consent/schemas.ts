@@ -11,8 +11,8 @@ const schemas = Object.freeze({
     $id: 'load-consent',
     tags,
     description:
-      'When this account accepted the current terms, or null if it has not. ' +
-      'An acceptance of superseded wording reads as null.',
+      'When this account accepted the terms, or null if it has not. Accepting ' +
+      'once is enough: a later change of wording does not ask again.',
     response: { 200: consentResponse },
   },
 

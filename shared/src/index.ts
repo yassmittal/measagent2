@@ -19,6 +19,15 @@ export type {
   ThreadSummary,
 } from './messages.js';
 export type {
+  DeliverReturnReminderRequest,
+  DeliverReturnReminderResponse,
+} from './reminders.js';
+export type {
+  RelationshipLevel,
+  RelationshipResponse,
+  VisitorMemory,
+} from './relationships.js';
+export type {
   AudioCompletedEvent,
   AudioDeltaEvent,
   ChatStreamEvent,

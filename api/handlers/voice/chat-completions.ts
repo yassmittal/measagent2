@@ -12,7 +12,7 @@ import { messagesCollection, threadsCollection } from '../../shared/collections.
 import { VOICE_HISTORY_TURN_LIMIT, VOICE_MAX_TOKENS } from '../../shared/constants.js';
 import type { MessageDoc } from '../../shared/documents.js';
 import { getErrorMessage } from '../../shared/errors.js';
-
+import { prepareTurnMemory } from '../chats/turn-memory.js';
 
 interface ChatCompletionsBody {
   model?: string;
@@ -128,6 +128,9 @@ async function runLiveVoiceTurn(
     .sort({ createdAt: -1 })
     .limit(VOICE_HISTORY_TURN_LIMIT)
     .toArray();
+  // The same memory a typed turn gets. With only a few turns of history on the
+  // voice path, it matters more here, not less.
+  const memory = await prepareTurnMemory(fastify, db, ownerId, avatar._id);
 
   const now = new Date();
   const turnId = uuidv4();
@@ -139,12 +142,17 @@ async function runLiveVoiceTurn(
     text: userPrompt,
     status: 'complete',
     turnId,
+    origin: 'turn',
     createdAt: now,
     feedback: null,
+    memorizedAt: null,
   };
 
   const { text } = await streamReply({
-    systemPrompt: buildPersonaSystemPrompt({ ...avatar, name: owner.name }),
+    systemPrompt: buildPersonaSystemPrompt(
+      { ...avatar, name: owner.name },
+      { visitorMemory: memory.visitorMemory }
+    ),
     history: history.reverse().map(toThreadMessage),
     userPrompt,
     model: buildChatModel({ maxTokens: VOICE_MAX_TOKENS }),
@@ -159,8 +167,10 @@ async function runLiveVoiceTurn(
     text,
     status: 'complete',
     turnId,
+    origin: 'turn',
     createdAt: new Date(now.getTime() + 1),
     feedback: null,
+    memorizedAt: null,
   };
 
   await messagesCollection(db).insertMany([userMessage, replyMessage]);
@@ -168,6 +178,7 @@ async function runLiveVoiceTurn(
     { _id: thread._id },
     { $set: { lastMessageAt: replyMessage.createdAt, updatedAt: replyMessage.createdAt } }
   );
+  await memory.recordTurn();
 
   return text;
 }

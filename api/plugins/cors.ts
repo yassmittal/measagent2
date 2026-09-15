@@ -18,8 +18,8 @@ export default fp(
       credentials: true,
       // Listed because the plugin's default stops at GET, HEAD and POST, and a
       // browser refuses any other method at the preflight — editing an avatar
-      // is a PATCH.
-      methods: ['GET', 'HEAD', 'POST', 'PATCH'],
+      // is a PATCH, and forgetting is a DELETE.
+      methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'],
       allowedHeaders: ['content-type', 'authorization', DEVICE_ID_HEADER],
     });
   },

@@ -3,14 +3,15 @@ import type { GoogleSignInRequest, SignInResponse } from '@measagent/shared';
 import type { Db } from 'mongodb';
 import { toAccountOwnerId } from '../../lib/auth/owner-id.js';
 import { TOKEN_PURPOSE } from '../../lib/auth/token-purpose.js';
-import { toUserProfile } from '../../lib/auth/user-profile.js';
+import { hasAcceptedTerms, toUserProfile } from '../../lib/auth/user-profile.js';
 import { claimDeviceThreadsForAccount } from '../../lib/chat/thread-ownership.js';
+import { scheduleMemoryForClaimedAvatars } from '../../lib/memory/relationships.js';
 import {
   type GoogleIdentity,
   verifyGoogleIdToken,
 } from '../../services/google-identity.js';
 import { usersCollection } from '../../shared/collections.js';
-import { CONSENT_TERMS_VERSION, SESSION_LIFETIME_DAYS } from '../../shared/constants.js';
+import { SESSION_LIFETIME_DAYS } from '../../shared/constants.js';
 import type { UserDoc } from '../../shared/documents.js';
 import { getErrorMessage } from '../../shared/errors.js';
 import { readDeviceOwnerId } from '../../shared/identity.js';
@@ -55,18 +56,30 @@ export async function signInWithGoogle(
   // anonymously moves onto the account now — before the token it is about to
   // receive makes it stop sending that device id as its owner.
   const deviceOwnerId = readDeviceOwnerId(request);
-  const claimedThreadCount =
+  const claimed =
     deviceOwnerId === null
-      ? 0
+      ? null
       : await claimDeviceThreadsForAccount(db, deviceOwnerId, user._id);
+
+  // A device is never remembered, so there is no second memory to merge — the
+  // claimed messages are simply unread, and the account's own memory of those
+  // avatars reads them next. Someone signing in for the first time has not
+  // accepted the terms yet, and their first remembered turn schedules it instead.
+  if (claimed !== null && claimed.avatarIds.length > 0 && hasAcceptedTerms(user)) {
+    try {
+      await scheduleMemoryForClaimedAvatars(db, user._id, claimed.avatarIds, new Date());
+    } catch (error) {
+      this.log.error({ err: error }, 'Failed to schedule memory for claimed conversations');
+    }
+  }
 
   return {
     sessionToken: this.jwt.sign({ sub: user._id, purpose: TOKEN_PURPOSE.session }),
     sessionExpiresAt: new Date(
       Date.now() + SESSION_LIFETIME_DAYS * MILLISECONDS_PER_DAY
     ).toISOString(),
-    user: toUserProfile(user, CONSENT_TERMS_VERSION),
-    claimedThreadCount,
+    user: toUserProfile(user),
+    claimedThreadCount: claimed?.threadCount ?? 0,
   };
 }
 

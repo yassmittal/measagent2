@@ -4,9 +4,8 @@ import { MongoServerError } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import { isReservedAvatarHandle } from '../../lib/avatars/handle.js';
 import { toOwnAvatar } from '../../lib/avatars/own-avatar.js';
-import { toUserProfile } from '../../lib/auth/user-profile.js';
+import { hasAcceptedTerms } from '../../lib/auth/user-profile.js';
 import { avatarsCollection, usersCollection } from '../../shared/collections.js';
-import { CONSENT_TERMS_VERSION } from '../../shared/constants.js';
 import type { AvatarDoc } from '../../shared/documents.js';
 import { readSessionOwnerId } from '../../shared/identity.js';
 
@@ -51,7 +50,7 @@ export async function launchAvatar(
   }
   // Launching publishes something under this person's name, so unlike talking
   // it waits for the terms — checked here, not just hidden behind the card.
-  if (toUserProfile(owner, CONSENT_TERMS_VERSION).consentAcceptedAt === null) {
+  if (!hasAcceptedTerms(owner)) {
     return reply.forbidden('Accept the terms before launching an avatar');
   }
 

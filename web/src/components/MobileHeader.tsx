@@ -2,6 +2,7 @@
 
 import { PLACEHOLDER_PORTRAIT_SRC } from '@/lib/product';
 import { useConversation } from '@/state/ConversationProvider';
+import { RelationshipLevel } from './RelationshipLevel';
 
 export function MobileHeader() {
   const { avatar } = useConversation();
@@ -17,6 +18,7 @@ export function MobileHeader() {
       />
       <div className="mobile-header-id">
         <span className="mobile-header-name">{avatar.name}</span>
+        <RelationshipLevel />
       </div>
     </header>
   );

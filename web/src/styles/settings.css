@@ -279,3 +279,23 @@ a.profile-menu-item {
 .settings-signout:hover {
   background: var(--fill-strong, var(--surface));
 }
+
+.settings-forget {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--danger);
+  font-size: 14px;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.settings-forget:hover {
+  background: var(--fill-strong, var(--surface));
+}
+
+.settings-forget:disabled {
+  color: var(--text-subtle);
+  cursor: default;
+}

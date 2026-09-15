@@ -11,6 +11,8 @@ export interface ThreadMessage {
   at: string;
   turnId: string | null;
   feedback: FeedbackVote | null;
+  /** A follow-up the avatar left while the visitor was away, rather than a reply to them. */
+  isReturnReminder: boolean;
 }
 
 export interface ThreadSummary {

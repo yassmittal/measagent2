@@ -113,6 +113,7 @@ Reset the database completely: `bun run db:stop && rm -rf .mongo`.
 | `MA_SESSION_SECRET` | signs the session tokens the browser carries. `openssl rand -hex 32`. Changing it signs everybody out |
 | `MA_GOOGLE_CLIENT_ID` | the OAuth 2.0 Web application client id. Leave it empty and the service runs fine — everyone just stays anonymous |
 | `MA_ADMIN_USERNAME`, `MA_ADMIN_PASSWORD_HASH` | the admin portal's one login. The hash, not the password, base64-encoded — paste what `bun run admin:hash-password` prints. Empty means admin sign-in is refused |
+| `MA_JOB_INTERVAL_SECONDS`, `MA_MEMORY_QUIET_SECONDS`, `MA_REMINDER_AFTER_SECONDS` | memory timing, defaults 120 / 1200 / 86400: how often the background pass runs, how long a conversation must be quiet before it is remembered, how long a visitor must be away before a reminder is written. Only set to shrink them in tests |
 
 Every variable is read once in `api/plugins/env.ts` and reached through
 `fastify.config`. Nothing else touches `process.env`.
@@ -145,7 +146,7 @@ shared server on 27017 for the whole machine.
 |---|---|
 | Compass URI | `mongodb://127.0.0.1:27018/` |
 | Database | `measagent` |
-| Collections | `users`, `avatars`, `threads`, `messages` (`relationships`, `returnReminders` at Stage 5) |
+| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders` |
 
 Indexes are created on boot by `api/plugins/indexes.ts`. `mongosh` is not
 required; Compass covers it, and `mongoexport` is the quick CLI peek:
@@ -179,6 +180,10 @@ serializer, not just validation, so they are always current.
 | `GET /v1/auth/session` | the account behind the session token on the request |
 | `GET`/`POST /v1/consent` | read and record acceptance of the terms |
 | `POST /v1/voice/sessions` | mint the routing marker for one live voice session |
+| `GET /v1/relationships/:avatarId` | what one avatar remembers about the signed-in caller, and their message count |
+| `DELETE /v1/relationships/:avatarId` | that avatar forgets the caller |
+| `DELETE /v1/relationships` | every avatar forgets the caller |
+| `POST /v1/reminders/return` | deliver a waiting return reminder, once |
 | `POST /v1/chat/completions` | the OpenAI-compatible endpoint the voice service calls |
 | `POST /v1/admin/sessions` | admin sign-in, rate limited |
 | `GET /v1/admin/avatars?listing=` | the review queue |
@@ -222,8 +227,39 @@ api's own rules come last: the avatar says it is an AI when asked, invents no
 biography and makes no commitments on the person's behalf.
 
 A thread belongs to a visitor **and** an avatar (`userId` + `avatarId`), so a
-browser keeps one continuing conversation per avatar. Owners cannot read the
-conversations visitors have with their avatar.
+browser keeps one continuing conversation per avatar. The person behind an
+avatar is meant to read the conversations visitors have with it — the consent
+card and privacy notice say so — though the owner view and weekly summary email
+that will show them are not built yet.
+
+## Memory and return reminders
+
+Each avatar remembers each signed-in visitor who has accepted the terms,
+separately: what they said about themselves, what they care about, and what they
+left unfinished. Anonymous conversations are never remembered.
+
+```
+turn (typed or spoken) ──► relationship: lastSeenAt, memoryDueAt = now + 20 min quiet
+                                   │
+background pass ───────────────────┤  conversation quiet → the memory writer (a small
+(timer in the api, every 2 min,    │  Bedrock model) rewrites the memory from the old
+ work claimed by a MongoDB lease)  │  memory + unread messages; messages marked read
+                                   │
+                                   └─ open threads + away 24h → the avatar writes one
+                                      short follow-up, kept for 14 days
+next visit ──► POST /v1/reminders/return ──► delivered once, into the latest conversation
+next turn  ──► memory goes into the persona prompt inside <visitor_memory>
+```
+
+Remembered text was written from what a visitor said, so it is treated as a way
+in: the writer is told to keep facts only and drop instructions to the avatar,
+the server strips tags and caps lengths, and the prompt frames the section as
+information, never instructions, with the closing rules after it.
+
+A visitor sees what an avatar remembers by selecting their relationship level
+beside its name, and can make that avatar — or every avatar, from Settings —
+forget them. Forgetting keeps the conversations but marks every message read,
+so nothing is summarised back in. A failing memory never fails a turn.
 
 ## The admin portal
 
@@ -243,14 +279,16 @@ bun run dev:admin               # http://localhost:3020
 
 Signing in is optional. Anyone can talk to the avatar straight away as an
 anonymous `device:<id>`, and signing in with Google **claims that device's
-conversations onto the account** — one `updateMany`, because `userId` has been
-on every document since the first commit. The thread says so afterwards rather
-than moving quietly.
+conversations onto the account**. Because the app shows one continuing
+conversation per avatar, a device conversation with an avatar the account already
+talks to is **merged into** the account's conversation (messages keep their own
+times, so it reads in order); otherwise it simply moves over. The thread says so
+afterwards rather than moving quietly.
 
 ```
 browser ──Google credential──► POST /v1/auth/google
                                    │  google-auth-library verifies it
-                                   │  upsert the user, claim the device's threads
+                                   │  upsert the user, claim (merge) the device's threads
                                    ▼
 browser ◄──── our own signed session token (30 days) ────┘
         └── every later request: Authorization: Bearer …
@@ -264,9 +302,9 @@ Three decisions worth knowing:
   `api/plugins/auth.ts` is where a denylist would go if that changes.
 - **Bearer header, not a cookie.** The api is on another origin from the web
   app, and cross-site cookies are being removed from browsers.
-- **Consent is per account and versioned.** Bumping `CONSENT_TERMS_VERSION` in
-  `api/shared/constants.ts` makes every stored acceptance read as unaccepted, so
-  everyone is asked again.
+- **Consent is per account, asked once.** The version accepted is stored as a
+  record, but moving `CONSENT_TERMS_VERSION` in `api/shared/constants.ts` does not
+  ask anyone again. Memory only exists for accounts that have accepted.
 
 **Setting it up:** create an OAuth 2.0 *Web application* client in the Google
 Cloud console, add `http://localhost:3000` (and your deployed origin) to its
@@ -381,6 +419,9 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 - **Runtime values in `shared/` need a subpath.** The index re-exports types only;
   a module with values is imported as `@measagent/shared/avatars`, because the
   bundlers cannot follow the index's `.js` specifiers to `.ts` source.
+- **CORS lists methods explicitly** (`api/plugins/cors.ts`). A route with a new
+  method is refused at the browser's preflight until it is added there; `curl`
+  never sends a preflight, so it will not catch this.
 - **Do not run git commands here.** Leave changes in the working tree; Yash
   handles version control.
 
@@ -412,7 +453,7 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | **2** ✅ | voice out — the avatar speaks | none | TTS |
 | **3** ✅ | voice in — hold-to-speak dictation | none | STT + TTS |
 | **4** ✅ | Google sign-in, per-user threads, consent | Google | both |
-| **5** | long-term memory and return reminders | Google | both |
+| **5** ✅ | long-term memory and return reminders | Google | both |
 | **6** | RAG over each avatar owner's corpus, web search, feedback | Google | both |
 
 `PLAN.md` has the detail for each, including what Stage 1 deliberately left out.

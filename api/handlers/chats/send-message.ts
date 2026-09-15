@@ -14,6 +14,7 @@ import type { MessageDoc, ThreadDoc } from '../../shared/documents.js';
 import { getErrorMessage } from '../../shared/errors.js';
 import { readCaller } from '../../shared/identity.js';
 import { createReplyVoice } from './reply-voice.js';
+import { prepareTurnMemory } from './turn-memory.js';
 
 export async function sendMessage(
   this: FastifyRequest['server'],
@@ -64,6 +65,7 @@ export async function sendMessage(
   }
 
   const history = await loadRecentMessages(db, thread._id);
+  const memory = await prepareTurnMemory(this, db, ownerId, avatar._id);
 
   const now = new Date();
   const turnId = uuidv4();
@@ -75,8 +77,10 @@ export async function sendMessage(
     text,
     status: 'complete',
     turnId,
+    origin: 'turn',
     createdAt: now,
     feedback: null,
+    memorizedAt: null,
   };
   const replyMessage: MessageDoc = {
     _id: uuidv4(),
@@ -86,8 +90,10 @@ export async function sendMessage(
     text: '',
     status: 'resolving',
     turnId,
+    origin: 'turn',
     createdAt: new Date(now.getTime() + 1),
     feedback: null,
+    memorizedAt: null,
   };
 
   await messagesCollection(db).insertMany([userMessage, replyMessage]);
@@ -111,7 +117,10 @@ export async function sendMessage(
 
   try {
     const result = await streamReply({
-      systemPrompt: buildPersonaSystemPrompt({ ...avatar, name: owner.name }),
+      systemPrompt: buildPersonaSystemPrompt(
+        { ...avatar, name: owner.name },
+        { visitorMemory: memory.visitorMemory }
+      ),
       history,
       userPrompt: text,
       model: buildChatModel(),
@@ -134,6 +143,7 @@ export async function sendMessage(
     await touchThread(db, thread._id, new Date());
 
     stream.send({ type: 'turn_completed', message: toThreadMessage(finished) });
+    await memory.recordTurn();
 
     await voice.finish();
   } catch (error) {

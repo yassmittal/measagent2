@@ -510,3 +510,10 @@
   line-height: 1.4;
   margin: var(--sp-1) 0 0;
 }
+
+.msg-return-reminder-tag {
+  color: var(--text-subtle);
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 var(--sp-1);
+}

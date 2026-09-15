@@ -1,6 +1,6 @@
 'use client';
 
-import type { ThreadMessage } from '@measagent/shared';
+import type { RelationshipResponse, ThreadMessage } from '@measagent/shared';
 import type { AvatarProfile } from '@measagent/shared/avatars';
 import {
   createContext,
@@ -14,6 +14,7 @@ import {
   useState,
 } from 'react';
 import { type LiveVoiceSession, useLiveVoice } from '@/hooks/useLiveVoice';
+import { useRelationship } from '@/hooks/useRelationship';
 import { useSpeechPlayback } from '@/hooks/useSpeechPlayback';
 import { writeActiveChatId } from '@/lib/active-chat';
 import { loadThread, sendMessage } from '@/lib/chat-client';
@@ -23,6 +24,7 @@ import {
   type ConversationState,
   conversationReducer,
   INITIAL_STATE,
+  isPendingMessage,
   isTurnActive,
   pendingMessageId,
 } from './conversation-reducer';
@@ -38,6 +40,10 @@ interface ConversationContextValue extends ConversationState {
   voice: LiveVoiceSession;
   isMuted: boolean;
   toggleMuted: () => void;
+  /** What this avatar remembers about a signed-in visitor; null when signed out or not yet loaded. */
+  relationship: RelationshipResponse | null;
+  reloadRelationship: () => void;
+  forgetThisAvatar: () => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextValue | null>(null);
@@ -49,7 +55,7 @@ interface ConversationProviderProps {
 
 export function ConversationProvider({ avatar, children }: ConversationProviderProps) {
   const [state, dispatch] = useReducer(conversationReducer, INITIAL_STATE);
-  const { identityKey, isSignedIn } = useSession();
+  const { identityKey, isSignedIn, user } = useSession();
   const { enqueueSpan, stopPlayback } = useSpeechPlayback();
 
   const [isMuted, setMuted] = useState(false);
@@ -100,6 +106,7 @@ export function ConversationProvider({ avatar, children }: ConversationProviderP
         at: new Date().toISOString(),
         turnId: null,
         feedback: null,
+        isReturnReminder: false,
       };
       dispatch({ type: 'send_started', optimisticMessage });
 
@@ -196,6 +203,7 @@ export function ConversationProvider({ avatar, children }: ConversationProviderP
           at: new Date().toISOString(),
           turnId: null,
           feedback: null,
+          isReturnReminder: false,
         },
       });
     },
@@ -205,6 +213,16 @@ export function ConversationProvider({ avatar, children }: ConversationProviderP
       void refreshThread();
     },
   });
+
+  const storedUserMessageCount = state.messages.filter(
+    (message) => message.role === 'user' && !isPendingMessage(message),
+  ).length;
+  const { relationship, reloadRelationship, forgetThisAvatar } = useRelationship(
+    avatarId,
+    isSignedIn,
+    user?.consentAcceptedAt != null,
+    storedUserMessageCount,
+  );
 
   const toggleMuted = useCallback(() => {
     setMuted((wasMuted) => {
@@ -225,6 +243,9 @@ export function ConversationProvider({ avatar, children }: ConversationProviderP
       voice,
       isMuted,
       toggleMuted,
+      relationship,
+      reloadRelationship,
+      forgetThisAvatar,
     }),
     [
       state,
@@ -235,6 +256,9 @@ export function ConversationProvider({ avatar, children }: ConversationProviderP
       voice,
       isMuted,
       toggleMuted,
+      relationship,
+      reloadRelationship,
+      forgetThisAvatar,
     ],
   );
 

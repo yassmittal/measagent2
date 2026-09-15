@@ -199,6 +199,7 @@ function stoppedReplyOf(turn: TurnState, at: string): ThreadMessage[] {
       at,
       turnId: turn.turnId,
       feedback: null,
+      isReturnReminder: false,
     },
   ];
 }

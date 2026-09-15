@@ -1,5 +1,12 @@
 import type { Collection, Db } from 'mongodb';
-import type { AvatarDoc, MessageDoc, ThreadDoc, UserDoc } from './documents.js';
+import type {
+  AvatarDoc,
+  MessageDoc,
+  RelationshipDoc,
+  ReturnReminderDoc,
+  ThreadDoc,
+  UserDoc,
+} from './documents.js';
 
 /**
  * Collection names are looked up here rather than typed at each call site, so a
@@ -26,3 +33,9 @@ export const usersCollection = (db: Db): Collection<UserDoc> =>
 
 export const avatarsCollection = (db: Db): Collection<AvatarDoc> =>
   db.collection<AvatarDoc>(COLLECTIONS.avatars);
+
+export const relationshipsCollection = (db: Db): Collection<RelationshipDoc> =>
+  db.collection<RelationshipDoc>(COLLECTIONS.relationships);
+
+export const returnRemindersCollection = (db: Db): Collection<ReturnReminderDoc> =>
+  db.collection<ReturnReminderDoc>(COLLECTIONS.returnReminders);

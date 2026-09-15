@@ -2,7 +2,6 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { ConsentResponse } from '@measagent/shared';
 import { toUserProfile } from '../../lib/auth/user-profile.js';
 import { usersCollection } from '../../shared/collections.js';
-import { CONSENT_TERMS_VERSION } from '../../shared/constants.js';
 import { readSessionOwnerId } from '../../shared/identity.js';
 
 export async function loadConsent(
@@ -25,5 +24,5 @@ export async function loadConsent(
     return reply.unauthorized('That account no longer exists');
   }
 
-  return { consentAcceptedAt: toUserProfile(user, CONSENT_TERMS_VERSION).consentAcceptedAt };
+  return { consentAcceptedAt: toUserProfile(user).consentAcceptedAt };
 }

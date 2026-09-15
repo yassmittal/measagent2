@@ -8,8 +8,8 @@ multi-person on 2026-09-14 (§15, and `MULTI-PERSON.md` for the reasoning).
 eventual domain but is not owned yet, so every URL in code and metadata uses the
 Vercel domain. The placeholder folder `ai-avatar/` has been renamed `meAsAgent/`.
 
-**Status: Stages 1-4 are built, and the product is multi-person (§15).** Stages
-5-6 are still plan only. Stage 2.5 was
+**Status: Stages 1-5 are built, and the product is multi-person (§15).** Stage
+6 is still plan only. Stage 2.5 was
 investigated and dropped — `STAGE-2.5.md` says why.
 Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
 
@@ -48,7 +48,7 @@ auth, as requested.
 | **2** ✅ | Voice out (avatar speaks) | none | TTS | in-thread |
 | **3** ✅ | Voice in (hold-to-speak dictation) | none | STT + TTS | in-thread |
 | **4** ✅ | Google sign-in, per-user threads, consent screen | Google | both | per-user threads |
-| **5** | Long-term memory (`relationship`) + return reminders | Google | both | cross-thread |
+| **5** ✅ | Long-term memory (`relationship`) + return reminders | Google | both | cross-thread |
 | **6** | RAG over your own corpus, Tavily search, feedback/analytics | Google | both | full |
 
 Stage 1's layout was settled before Stage 2 began, on purpose: retrofitting
@@ -175,8 +175,10 @@ port.
 | `POST /v1/admin/sessions` | MP | admin portal sign-in |
 | `GET  /v1/admin/avatars` | MP | the review queue, by listing |
 | `PATCH /v1/admin/avatars/:avatarId` | MP | list or decline an avatar |
-| `GET  /v1/relationship` | 5 | long-term memory document |
-| `GET  /v1/reminders/return` | 5 | the "while you were away" follow-up |
+| `GET  /v1/relationships/:avatarId` | 5 | what one avatar remembers about the caller, and their message count |
+| `DELETE /v1/relationships/:avatarId` | 5 | that avatar forgets the caller |
+| `DELETE /v1/relationships` | 5 | every avatar forgets the caller |
+| `POST /v1/reminders/return` | 5 | deliver the "while you were away" follow-up, once — a POST because reading it spends it |
 
 **Streaming:** the reply stream should be SSE from `POST /v1/chats`. Note the
 original does *not* use `EventSource` — there is no `text/event-stream` in
@@ -187,21 +189,26 @@ their bundle, they read a chunked `fetch` body. Do the same: `fetch` +
 
 ## 5. Data model (MongoDB)
 
-Five collections. Names are deliberately boring.
+Six collections. Names are deliberately boring.
 
 ```
 users           { _id: ownerId, googleSubject, email, name, pictureUrl,
                   createdAt, lastSignedInAt,
-                  consent: { acceptedAt, termsVersion } | null }   # Stage 4
+                  consent: { acceptedAt, termsVersion } | null,    # Stage 4
+                  memoryBudget: { day, used } }                    # Stage 5
 avatars         { _id, ownerId, handle, bio, aboutMe, speakingStyle, avoidTopics,
                   availability: live|paused, listing: pending|listed|declined,
                   listingReviewedAt, ownerAttestedAt, createdAt, updatedAt }  # MP
 threads         { _id, userId, avatarId, title, createdAt, updatedAt, lastMessageAt }
-messages        { _id, threadId, userId, role, text, audioStatus,
-                  createdAt, feedback: { vote, reason, submittedAt } | null }
+messages        { _id, threadId, userId, role, text, status, turnId,
+                  origin: turn|return_reminder, createdAt,
+                  feedback: { vote, reason, submittedAt } | null,
+                  memorizedAt | null }                             # Stage 5
 relationships   { _id, userId, avatarId, summary, interests[], openThreads[],
-                  lastSeenAt, updatedAt }          # Stage 5 — per person *per avatar*
-returnReminders { _id, userId, threadId, text, generatedAt, deliveredAt }
+                  lastSeenAt, memoryDueAt, reminderDueAt, leaseUntil,
+                  createdAt, updatedAt }           # Stage 5 — per person *per avatar*
+returnReminders { _id, userId, avatarId, threadId, text, generatedAt,
+                  expiresAt, deliveredAt }         # Stage 5
 ```
 
 Stage 1 has no `userId`; use a single anonymous device id from `localStorage`
@@ -216,7 +223,10 @@ also the key of the `users` collection and no lookup translates between them.
 
 Indexes: `threads(userId, avatarId, lastMessageAt desc)`,
 `messages(threadId, createdAt)`, `avatars(ownerId)` and `avatars(handle)` (both
-unique), and at Stage 5 `returnReminders(userId, deliveredAt)`.
+unique), and at Stage 5 `relationships(userId, avatarId)` (unique),
+`relationships(memoryDueAt)`, `relationships(reminderDueAt)`,
+`returnReminders(userId, avatarId)` unique where `deliveredAt` is null (one pending
+reminder per pair), and `returnReminders(userId, deliveredAt)`.
 
 ---
 
@@ -569,3 +579,48 @@ and claiming checks, 26 admin checks and the rate limit, plus a browser pass
 through the directory, an avatar chat against the real model, the paused page,
 the launch and edit page, and the admin portal. The 10 pre-avatar conversations
 were left in place but are no longer reachable: they have no `avatarId`.
+*(Deleted at Stage 5.)*
+
+*Superseded at Stage 5:* "owners cannot read visitors' conversations" is no
+longer the promise. The person behind an avatar is meant to read them (§16).
+
+---
+
+## 16. What Stage 5 actually shipped
+
+Built 2026-09-15. `STAGE-5.md` has every decision and what was rejected.
+
+**Memory per visitor per avatar, for signed-in visitors who accepted the terms.**
+Anonymous conversations are never remembered. After a conversation has been
+quiet for 20 minutes, a background pass asks a small Bedrock model
+(`mistral.ministral-3-14b-instruct`) to rewrite that pair's memory — a summary,
+up to 10 interests, up to 5 open threads — from the old memory plus the unread
+messages. Messages carry `memorizedAt`, which is what makes claiming a merge and
+forgetting final.
+
+**Memory in the prompt is data.** It sits inside `<visitor_memory>`, framed as
+things the visitor said, with tags stripped and the closing rules after it and
+naming it. The writer is told to drop instructions to the avatar, credentials and
+other people's contact details.
+
+**Return reminders are in-app.** A visitor who left something unfinished and has
+been away a day gets one follow-up written in the avatar's voice, delivered once
+into their latest conversation the next time they open that avatar.
+
+**Background work is a timer in the api**, with work claimed by a lease in
+MongoDB, so any number of instances can run it. No new dependency.
+
+**Visitors see and control it.** The relationship level (messages sent: levels at
+10/25/50/100/200) opens what the avatar remembers, with a forget button; Settings
+forgets everything.
+
+**Consent is asked once**, and now says the person behind an avatar reads the
+conversations with it.
+
+**Verified** against two api instances on one test database and a stub model that
+recorded every prompt: 54 memory checks (write and read, isolation between visitors
+and avatars, the lease, prompt injection, failing and garbage writers, the budget,
+claiming, typed/spoken parity), 26 relationship and forgetting checks, 46 reminder
+checks (scheduling, isolation, delivered exactly once under a race, expiry, paused
+avatars, forgetting, failures), and a browser pass. Four real Bedrock calls chose
+the writer model.

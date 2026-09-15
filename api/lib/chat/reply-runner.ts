@@ -1,5 +1,5 @@
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import type { AIMessageChunk, BaseMessage } from '@langchain/core/messages';
+import type { BaseMessage } from '@langchain/core/messages';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { ThreadMessage } from '@measagent/shared';
 
@@ -31,12 +31,12 @@ export interface ReplyRunResult {
 
 /**
  * Content may arrive as a plain string or as an array of content parts;
- * only text parts are forwarded.
+ * only text parts are kept.
  */
-function chunkText(chunk: AIMessageChunk): string {
-  if (typeof chunk.content === 'string') return chunk.content;
-  if (!Array.isArray(chunk.content)) return '';
-  return chunk.content
+export function readMessageText(message: Pick<BaseMessage, 'content'>): string {
+  if (typeof message.content === 'string') return message.content;
+  if (!Array.isArray(message.content)) return '';
+  return message.content
     .filter((part) => typeof part === 'object' && part !== null && part.type === 'text')
     .map((part) => (part as { text?: string }).text ?? '')
     .join('');
@@ -76,7 +76,7 @@ export async function streamReply(input: ReplyRunInput): Promise<ReplyRunResult>
       interrupted = true;
       break;
     }
-    const delta = chunkText(chunk);
+    const delta = readMessageText(chunk);
     if (delta === '') continue;
     text += delta;
     onDelta(delta);

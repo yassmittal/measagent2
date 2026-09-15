@@ -24,6 +24,9 @@ declare module 'fastify' {
       MA_GOOGLE_CLIENT_ID: string;
       MA_ADMIN_USERNAME: string;
       MA_ADMIN_PASSWORD_HASH: string;
+      MA_JOB_INTERVAL_SECONDS: number;
+      MA_MEMORY_QUIET_SECONDS: number;
+      MA_REMINDER_AFTER_SECONDS: number;
     };
   }
 }

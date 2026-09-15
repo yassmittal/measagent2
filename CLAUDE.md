@@ -46,7 +46,7 @@ server on 27017 for the whole machine, and this way resetting the database is
 |---|---|
 | Compass URI | `mongodb://127.0.0.1:27018/` |
 | Database | `measagent` |
-| Collections | `users`, `avatars`, `threads`, `messages` |
+| Collections | `users`, `avatars`, `threads`, `messages`, `relationships`, `returnReminders` |
 | Logs | `bun run db:logs` |
 
 `mongosh` is not installed; Compass covers it, and `mongoexport` (from
@@ -61,13 +61,14 @@ mongoexport --uri "mongodb://127.0.0.1:27018/measagent" --collection messages --
 
 ## Stage
 
-Stages 1-4 are done: the chat shell with working text chat, spoken replies
+Stages 1-5 are done: the chat shell with working text chat, spoken replies
 streamed as `audio_delta` spans alongside the text, hold-to-speak voice input,
-and Google sign-in with per-account conversations. On top of that the product is
+Google sign-in with per-account conversations, and long-term memory with return
+reminders (`STAGE-5.md` has the reasoning). On top of that the product is
 **multi-person** (`MULTI-PERSON.md` has the reasoning): `/` is a directory of
 reviewed avatars, `/[handle]` is the chat with one avatar, `/launch` launches or
-edits your own, and `admin/` reviews what the directory lists. Stages 5-6 (long-term memory,
-RAG) are specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
+edits your own, and `admin/` reviews what the directory lists. Stage 6 (RAG) is
+specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
 `STAGE-2.5.md` says why, and records three things about voice that are wrong in
 older docs.
 
@@ -99,6 +100,16 @@ string would not be an owner id at all. Ownership is proved once when the marker
 is minted; `chat-completions.ts` verifies the signature and trusts nothing else
 in the request but the latest transcript.
 
+Stage 5's memory is **per visitor per avatar**, and only for signed-in visitors
+who have accepted the terms. Nothing about it happens inside a turn except one
+read and one bookkeeping write, both in `handlers/chats/turn-memory.ts`, which
+typed chat and live voice share — **a failing memory never fails a turn**, the
+same rule as voice. The summarising and the reminders run in a timer inside the
+api (`plugins/background-jobs.ts` → `jobs/`), with work claimed by a lease in
+MongoDB so several instances never do it twice. Remembered text reaches the
+prompt only inside `<visitor_memory>`, framed as information and never
+instructions, with the closing rules still last.
+
 Stage 2's spoken replies live in three places and nowhere else: `services/speech/` is the provider
 seam, `lib/speech/` is the pure text handling, `handlers/chats/reply-voice.ts`
 orchestrates a turn. **A failing voice must never fail a turn** — every path
@@ -117,11 +128,14 @@ yet (message actions, settings, feedback, auth); when you build one of those,
 render the DOM the existing rules already expect rather than writing new CSS.
 `grep -rn '\.class-name' web/src/styles/` shows what a rule needs.
 
-Two rules that are not negotiable:
+Rules that are not negotiable:
 
 - **Never ship the trial fonts.** `ABCDiatype-*-Trial.woff2` are Dinamo trial
   licences and must not enter the repo. Geist Sans is loaded via `next/font`
   with a `size-adjust` local fallback so metrics stay stable.
+- **Remembered text is data, never instructions.** It goes into the prompt only
+  through `buildVisitorMemorySection` in `lib/chat/persona.ts`, and the writer in
+  `lib/memory/memory-writer.ts` is told to drop instructions to the avatar.
 - **An avatar is only ever of the person who launched it.** Its name and photo
   are read from the owner's Google account and cannot be set any other way;
   nothing in the code may hardcode a person, and no avatar is created on
@@ -137,8 +151,9 @@ routes/<resource>/schemas.ts   JSON schemas, frozen, exported as one object
 handlers/<resource>/*.ts       request orchestration
 lib/<domain>/*.ts              pure domain logic — MUST NOT import fastify
 services/*.ts                  external I/O (LLM, TTS, STT tokens)
+jobs/*.ts                      background passes run by plugins/background-jobs.ts
 shared/*.ts                    cross-cutting helpers
-plugins/*.ts                   env, mongo, cors, docs, indexes
+plugins/*.ts                   env, mongo, cors, docs, indexes, background jobs
 ```
 
 - Every route gets a JSON schema, response schemas included — they are the
@@ -193,8 +208,8 @@ Comment the *why*, never the *what*.
 
 ## Data
 
-MongoDB. `users`, `avatars`, `threads`, `messages` now; `relationships` and
-`returnReminders` at Stage 5. Every document carries `userId` **from day one** —
+MongoDB. `users`, `avatars`, `threads`, `messages`, `relationships`,
+`returnReminders`. Every document carries `userId` **from day one** —
 it held an anonymous `device:<id>` before accounts existed, which is what made
 the Stage 4 migration one `updateMany` (`lib/chat/thread-ownership.ts`) instead
 of a schema rewrite.
@@ -203,7 +218,17 @@ An **avatar** is one document per account (unique `ownerId`, unique `handle`).
 It does not copy the owner's name or photo — `lib/avatars/avatar-with-owner.ts`
 reads them from `users`, so always load an avatar through there. A **thread**
 carries both `userId` (who is talking) and `avatarId` (who they are talking to);
-every thread query filters on both, and Stage 5's memory keys on the same pair.
+every thread query filters on both. A `relationship` (what one avatar remembers
+about one visitor) keys on the same pair, and so does a `returnReminder`.
+Messages carry `memorizedAt`, null until the memory pass has read them: claiming
+hands over unread messages, and forgetting marks everything read, so neither
+needs a memory of its own to move.
+
+**Claiming merges.** The web app opens one conversation per visitor per avatar,
+so `claimDeviceThreadsForAccount` merges a device conversation into the account's
+existing conversation with the same avatar instead of adding a second one beside
+it — a second one would hide the first. Sign-in also clears the browser's
+remembered conversations so the account's own latest one opens.
 The persona prompt is built from the avatar document on every turn
 (`lib/chat/persona.ts`): a request only ever *names* an avatar, never shapes it.
 
@@ -232,9 +257,13 @@ origin from the web app. There is no sign-out route: the token is not stored
 here, so signing out is the browser discarding it.
 
 Consent lives on the user document with the version accepted
-(`CONSENT_TERMS_VERSION`); an acceptance of superseded wording reads as no
-acceptance, which is decided once in `lib/auth/user-profile.ts` rather than at
-each call site.
+(`CONSENT_TERMS_VERSION`). **Accepted once is accepted for good** — the version
+is a record of which wording was on screen, and moving it re-asks nobody. Whether
+someone has accepted is decided once, by `hasAcceptedTerms` in
+`lib/auth/user-profile.ts`: launching an avatar and being remembered both depend
+on it. The person behind an avatar is meant to read their visitors'
+conversations (an owner view and a weekly summary email are planned), and the
+consent card and privacy notice say so.
 
 ## Deploying
 
