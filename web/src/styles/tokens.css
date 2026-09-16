@@ -27,6 +27,8 @@
   --accent: #1877f2;
   --send: var(--accent);
   --accent-hover: #1568d8;
+  /* A step darker than the hover: white text on it clears WCAG AA at 15px. */
+  --accent-strong: #125bbd;
   --accent-weak: rgba(24, 118, 242, 0.1);
   --accent-soft: #cfe0f6;
   --button-bg: #d8efff;

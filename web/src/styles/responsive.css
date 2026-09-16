@@ -60,6 +60,9 @@
 }
 
 @media (max-width: 540px) {
+  .composer-made-with {
+    display: none;
+  }
   .feedback-modal-scrim {
     padding: var(--sp-4);
   }

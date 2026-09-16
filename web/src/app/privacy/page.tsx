@@ -1,21 +1,22 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/LegalPage';
+import { PRIVACY_UPDATED_AT } from '@/content/legal-dates';
 import { CONTACT_EMAIL, PRODUCT_NAME } from '@/lib/product';
+import { buildPageMetadata } from '@/lib/seo/page-metadata';
 
-const UPDATED_AT = '2026-09-15';
-
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: '/privacy',
   title: 'Privacy',
-  description: `What ${PRODUCT_NAME} stores, why, and how to have it deleted.`,
-};
+  description: `What ${PRODUCT_NAME} stores when you talk to or launch an AI avatar, who sees it, and how to have it deleted.`,
+});
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updatedAt={UPDATED_AT}>
+    <LegalPage title="Privacy notice" updatedAt={PRIVACY_UPDATED_AT}>
       <p>
-        {PRODUCT_NAME} hosts AI avatars of real people: you can talk to one, or launch one
-        of yourself. This page says what it keeps and who else sees it. It is written to
-        be read, not to be survived.
+        {PRODUCT_NAME} hosts AI avatars of real people and of the things they run: you can
+        talk to one, or launch one of yourself. This page says what it keeps and who else
+        sees it. It is written to be read, not to be survived.
       </p>
 
       <h2>What is stored when you talk to an avatar</h2>
@@ -61,9 +62,11 @@ export default function PrivacyPage() {
       <h2>What is stored when you launch an avatar</h2>
       <ul>
         <li>
-          <strong>What you write about yourself.</strong> Your handle, your bio, and the
-          notes on who you are, how you talk and what to avoid. Only the bio is shown to
-          visitors; the rest is read by the model to answer as you.
+          <strong>What you write about yourself.</strong> Your handle, your bio, the
+          topics people can ask about and your website if you add them, and the notes on
+          who you are, how you talk and what to avoid. The bio, the topics and the website
+          are shown on your avatar&apos;s page; the notes are read only by the model, to
+          answer as you.
         </li>
         <li>
           <strong>Your name and photo, in public.</strong> They come from your Google
@@ -71,7 +74,16 @@ export default function PrivacyPage() {
           been reviewed. Your email address is never shown.
         </li>
         <li>
-          <strong>When you confirmed the avatar is of you.</strong>
+          <strong>In search engines, once it is listed.</strong> A reviewed, listed
+          avatar&apos;s page — its name, photo, bio, topics and website — can appear in
+          search engines such as Google and Bing. You can turn that off when you launch or
+          edit your avatar; its link keeps working either way. A search engine can take a
+          while to drop a page after it is hidden. Conversations are never public pages
+          and never appear there.
+        </li>
+        <li>
+          <strong>When you confirmed the avatar is of you</strong>, or of something you
+          run, and which of the two it is.
         </li>
         <li>
           <strong>Nothing extra to read your visitors.</strong> The conversations people

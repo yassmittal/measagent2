@@ -2,6 +2,7 @@ import type { AvatarProfile } from '@measagent/shared/avatars';
 import type { Db, Filter } from 'mongodb';
 import { avatarsCollection, usersCollection } from '../../shared/collections.js';
 import type { AvatarDoc, UserDoc } from '../../shared/documents.js';
+import { isAvatarSearchIndexable, readAvatarPublicDetails } from './avatar-public-details.js';
 
 /**
  * An avatar is never complete on its own: its name and portrait live on the
@@ -51,6 +52,9 @@ export function toAvatarProfile({ avatar, owner }: AvatarWithOwner): AvatarProfi
     name: owner.name,
     pictureUrl: owner.pictureUrl,
     bio: avatar.bio,
+    ...readAvatarPublicDetails(avatar),
     availability: avatar.availability,
+    isSearchIndexable: isAvatarSearchIndexable(avatar),
+    updatedAt: avatar.updatedAt.toISOString(),
   };
 }

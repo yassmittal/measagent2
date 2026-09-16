@@ -252,3 +252,99 @@
   line-height: 1.4;
   color: var(--success);
 }
+
+/* Fields added for search: the subject, topics, website and the search setting. */
+
+.avatar-form-input {
+  width: 100%;
+  padding: var(--sp-3);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+}
+
+.avatar-form-input:focus-visible {
+  border-color: var(--accent);
+}
+
+.avatar-form-choices {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.avatar-form-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.avatar-form-choice input {
+  margin: 4px 0 0;
+  flex: none;
+}
+
+.avatar-form-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.avatar-form-toggle input {
+  margin: 4px 0 0;
+  flex: none;
+}
+
+.avatar-form-toggle-hint {
+  display: block;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-subtle);
+}
+
+/* The launch page's explanation, below the form, for anyone not signed in yet. */
+
+.launch-explainer {
+  max-width: var(--col-narrow);
+  margin: 0 auto;
+  padding: 0 var(--sp-6) var(--sp-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.launch-explainer-heading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.launch-explainer-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.launch-explainer-link {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.launch-explainer-link:hover {
+  color: var(--accent);
+}

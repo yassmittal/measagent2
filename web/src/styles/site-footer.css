@@ -1,0 +1,56 @@
+/* The footer on the front page and every content page. */
+
+.site-footer {
+  max-width: var(--col-wide);
+  margin: 0 auto;
+  padding: 0 var(--sp-6) var(--sp-10);
+}
+
+.site-footer-inner {
+  padding-top: var(--sp-8);
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-6);
+}
+
+.site-footer-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.site-footer-heading {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.site-footer-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.site-footer-link {
+  display: block;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.site-footer-link:hover {
+  color: var(--text);
+}
+
+.site-footer-note {
+  margin: var(--sp-7) 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

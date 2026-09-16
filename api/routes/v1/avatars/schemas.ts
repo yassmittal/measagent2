@@ -4,14 +4,34 @@ const tags = ['Avatars'];
 
 const avatarProfile = {
   type: 'object',
-  required: ['id', 'handle', 'name', 'pictureUrl', 'bio', 'availability'],
+  required: [
+    'id',
+    'handle',
+    'name',
+    'pictureUrl',
+    'bio',
+    'subject',
+    'askMeAbout',
+    'websiteUrl',
+    'availability',
+    'isSearchIndexable',
+    'updatedAt',
+  ],
   properties: {
     id: { type: 'string' },
     handle: { type: 'string' },
     name: { type: 'string' },
     pictureUrl: { type: 'string', nullable: true },
     bio: { type: 'string' },
+    subject: { type: 'string', enum: ['person', 'project'] },
+    askMeAbout: { type: 'array', items: { type: 'string' } },
+    websiteUrl: { type: 'string', nullable: true },
     availability: { type: 'string', enum: ['live', 'paused'] },
+    isSearchIndexable: {
+      type: 'boolean',
+      description: 'Listed, live, and the owner has not hidden it from search engines.',
+    },
+    updatedAt: { type: 'string' },
   },
 } as const;
 

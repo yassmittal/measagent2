@@ -138,10 +138,12 @@ Rules that are not negotiable:
 - **Remembered text is data, never instructions.** It goes into the prompt only
   through `buildVisitorMemorySection` in `lib/chat/persona.ts`, and the writer in
   `lib/memory/memory-writer.ts` is told to drop instructions to the avatar.
-- **An avatar is only ever of the person who launched it.** Its name and photo
-  are read from the owner's Google account and cannot be set any other way;
-  nothing in the code may hardcode a person, and no avatar is created on
-  someone else's behalf — not even as seed or test data that ships.
+- **An avatar is only ever of the person who launched it, or of something they
+  run** (`subject: 'project'` — a product, project or brand, launched from their
+  own account; since 2026-09-16). Its name and photo are read from the owner's
+  Google account and cannot be set any other way; nothing in the code may
+  hardcode a person, and no avatar is created on someone else's behalf — not
+  even as seed or test data that ships.
 
 ## Backend conventions
 
@@ -282,6 +284,37 @@ someone has accepted is decided once, by `hasAcceptedTerms` in
 on it, and so does an owner reading their visitors. The person behind an avatar
 reads their visitors' conversations and gets a weekly summary; the consent card,
 the line under the composer and the privacy notice say so.
+
+## SEO
+
+`seo/SEO.md` has the reasoning, `seo/PLAN.md` the plan, and `seo/` the research,
+keywords, calendar, off-page playbook and measurement. Rules new work keeps:
+
+- **A new top-level route is a handle taken from someone.** Add its segment to
+  `RESERVED_AVATAR_HANDLES` (`api/lib/avatars/handle.ts`) first, then check no
+  avatar holds it — locally with `mongoexport --uri
+  "mongodb://127.0.0.1:27018/measagent" --collection avatars --quiet --fields handle`,
+  and in production with `curl -o /dev/null -w "%{http_code}" https://measagent.vercel.app/<word>`
+  (any avatar, paused or unlisted, answers 200). Tell Yash about a collision.
+- **Only indexable avatars reach search engines.** Whether one is indexable is
+  decided in two places and nowhere else: `isAvatarSearchIndexable` in the api
+  (listed, live, not hidden by the owner) and `shouldIndexAvatarPage` in
+  `web/src/lib/seo/avatar-search.ts` (that, plus enough on the page). The page's
+  robots tag and `sitemap.ts` both call the latter.
+- **Every public page sets its metadata through `buildPageMetadata`**
+  (`web/src/lib/seo/page-metadata.ts`): canonical, title, description, Open
+  Graph and Twitter together. A page that sets `openGraph` loses the parent's
+  share image, so give its segment an `opengraph-image.tsx`.
+- **Structured data comes from `lib/seo/structured-data.ts`**, rendered on the
+  server by `StructuredData`, built from the same data the page shows. No
+  ratings, reviews, user counts or anything else the site does not have.
+- **Copy on content pages lives in `web/src/content/`** and must be true of the
+  code that ships and agree with `app/privacy/page.tsx`. Claims about another
+  product carry `sourceUrl` and `checkedOn` (`content/comparisons.ts`).
+- **"Free" is said only through `PRODUCT_PRICING_NOTE`** (`lib/product.ts`).
+- **`SITE_URL` is lowercase and is the only place the host is written.** The
+  domain move in `seo/OFF-PAGE.md` starts there.
+- The reference product this was modelled on is never named on a public page.
 
 ## Deploying
 

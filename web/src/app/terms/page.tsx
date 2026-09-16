@@ -1,23 +1,24 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/LegalPage';
-import { CONTACT_EMAIL, PRODUCT_NAME } from '@/lib/product';
+import { TERMS_UPDATED_AT } from '@/content/legal-dates';
+import { CONTACT_EMAIL, PRODUCT_NAME, PRODUCT_PRICING_NOTE } from '@/lib/product';
+import { buildPageMetadata } from '@/lib/seo/page-metadata';
 
-const UPDATED_AT = '2026-09-15';
-
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: '/terms',
   title: 'Terms',
-  description: `The terms for using ${PRODUCT_NAME}.`,
-};
+  description: `The terms for talking to AI avatars on ${PRODUCT_NAME} and for launching one of your own.`,
+});
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms" updatedAt={UPDATED_AT}>
+    <LegalPage title="Terms" updatedAt={TERMS_UPDATED_AT}>
       <h2>What this is</h2>
       <p>
-        {PRODUCT_NAME} hosts AI avatars of real people. Each avatar answers as the person
-        who launched it, but it is not that person, and it is not supervised by anyone
-        while you use it. It will get things wrong, and it can state something false with
-        complete confidence.
+        {PRODUCT_NAME} hosts AI avatars of real people and of the things they run. Each
+        avatar answers as the person or thing it was launched for, but it is not that
+        person, and it is not supervised by anyone while you use it. It will get things
+        wrong, and it can state something false with complete confidence.
       </p>
       <p>
         Nothing an avatar says is professional advice — not legal, medical, financial or
@@ -41,8 +42,10 @@ export default function TermsPage() {
       <h2>Launching an avatar</h2>
       <ul>
         <li>
-          An avatar can only be of you. Its name and photo come from the Google account
-          you launch it with, and you confirm it is of you when you launch it.
+          An avatar can only be of you, or of something you run — a product, project or
+          brand. It is never of another person. Its name and photo come from the Google
+          account you launch it with, and you confirm which of the two it is when you
+          launch it.
         </li>
         <li>
           You are responsible for what you write about yourself, and for not using it to
@@ -60,7 +63,8 @@ export default function TermsPage() {
         </li>
         <li>
           An avatar appears in the directory only once it has been reviewed, and it can be
-          declined, unlisted or taken down.
+          declined, unlisted or taken down. A listed avatar&apos;s page can appear in
+          search engines unless you turn that off.
         </li>
       </ul>
 
@@ -74,7 +78,7 @@ export default function TermsPage() {
       <h2>Availability</h2>
       <p>
         This is a small project. It may be slow, it may be down, and it may change or stop
-        entirely without notice.
+        entirely without notice. {PRODUCT_PRICING_NOTE}
       </p>
 
       <h2>Questions</h2>

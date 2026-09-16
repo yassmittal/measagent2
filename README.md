@@ -444,9 +444,11 @@ Icons come from `lucide-react`; dates are formatted with `date-fns` in
 - **Never ship the trial fonts.** `ABCDiatype-*-Trial.woff2` are Dinamo trial
   licences and must not enter the repo. Geist Sans is loaded via `next/font`
   with a `size-adjust` local fallback so the metrics stay stable.
-- **An avatar is only ever of the person who launched it.** Its name and photo
-  come from their Google account. Never hardcode a person or seed an avatar on
-  someone's behalf.
+- **An avatar is only ever of the person who launched it, or of something they
+  run.** Its name and photo come from their Google account. Never hardcode a
+  person or seed an avatar on someone's behalf.
+- **A new top-level route takes a handle from someone.** Reserve the word in
+  `api/lib/avatars/handle.ts` and check nobody holds it first (`CLAUDE.md` § SEO).
 - **Runtime values in `shared/` need a subpath.** The index re-exports types only;
   a module with values is imported as `@measagent/shared/avatars`, because the
   bundlers cannot follow the index's `.js` specifiers to `.ts` source.

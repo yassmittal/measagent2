@@ -2,10 +2,13 @@
 
 import type { UserProfile } from '@measagent/shared';
 import {
+  AVATAR_ASK_ME_ABOUT_MAX_TOPICS,
   AVATAR_HANDLE_PATTERN,
   AVATAR_TEXT_LIMITS,
+  AVATAR_WEBSITE_URL_PATTERN,
   type AvatarListing,
   type AvatarPersonaFields,
+  type AvatarSubject,
   type OwnAvatar,
 } from '@measagent/shared/avatars';
 import Link from 'next/link';
@@ -21,7 +24,27 @@ interface AvatarFormProps {
   onSaved: (avatar: OwnAvatar) => void;
 }
 
-type AvatarDraft = AvatarPersonaFields & { handle: string };
+type AvatarTextDraft = AvatarPersonaFields & {
+  handle: string;
+  /** Comma-separated as typed; split into topics when saved. */
+  askMeAboutText: string;
+  websiteUrl: string;
+};
+
+interface AvatarDraft extends AvatarTextDraft {
+  subject: AvatarSubject;
+  isShownInSearch: boolean;
+}
+
+const ASK_ME_ABOUT_SEPARATOR = ',';
+
+function splitAskMeAboutTopics(askMeAboutText: string): string[] {
+  return askMeAboutText
+    .split(ASK_ME_ABOUT_SEPARATOR)
+    .map((topic) => topic.trim())
+    .filter((topic) => topic !== '')
+    .slice(0, AVATAR_ASK_ME_ABOUT_MAX_TOPICS);
+}
 
 const SITE_HOST = new URL(SITE_URL).host;
 
@@ -29,7 +52,8 @@ const LISTING_EXPLANATIONS: Record<AvatarListing, string> = {
   pending:
     'Waiting for review before it appears in the directory. Its link works already.',
   listed: 'Listed in the directory.',
-  declined: 'Not listed in the directory. Changing the bio asks for another review.',
+  declined:
+    'Not listed in the directory. Changing the bio, topics or website asks for another review.',
 };
 
 export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
@@ -39,6 +63,10 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
     aboutMe: avatar?.aboutMe ?? '',
     speakingStyle: avatar?.speakingStyle ?? '',
     avoidTopics: avatar?.avoidTopics ?? '',
+    askMeAboutText: avatar?.askMeAbout.join(`${ASK_ME_ABOUT_SEPARATOR} `) ?? '',
+    websiteUrl: avatar?.websiteUrl ?? '',
+    subject: avatar?.subject ?? 'person',
+    isShownInSearch: !(avatar?.isHiddenFromSearch ?? false),
   }));
   const [isSaving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,7 +74,10 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
 
   const isLaunched = avatar !== null;
 
-  const updateDraft = (field: keyof AvatarDraft, value: string) => {
+  const updateDraft = <Field extends keyof AvatarDraft>(
+    field: Field,
+    value: AvatarDraft[Field],
+  ) => {
     setDraft((current) => ({ ...current, [field]: value }));
     setSavedMessage(null);
   };
@@ -67,13 +98,18 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { handle, ...personaFields } = draft;
+    const { handle, askMeAboutText, isShownInSearch, ...editableFields } = draft;
+    const avatarFields = {
+      ...editableFields,
+      askMeAbout: splitAskMeAboutTopics(askMeAboutText),
+      isHiddenFromSearch: !isShownInSearch,
+    };
 
     if (isLaunched) {
-      void runSave(() => updateOwnAvatar(personaFields), 'Saved.');
+      void runSave(() => updateOwnAvatar(avatarFields), 'Saved.');
     } else {
       void runSave(
-        () => launchAvatar({ handle, ...personaFields, isOwnerAttested: true }),
+        () => launchAvatar({ handle, ...avatarFields, isOwnerAttested: true }),
         'Launched.',
       );
     }
@@ -149,6 +185,30 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
         </label>
       )}
 
+      <fieldset className="avatar-form-choices">
+        <legend className="avatar-form-label">This avatar is of</legend>
+        <label className="avatar-form-choice">
+          <input
+            type="radio"
+            name="subject"
+            value="person"
+            checked={draft.subject === 'person'}
+            onChange={() => updateDraft('subject', 'person')}
+          />
+          <span>Me</span>
+        </label>
+        <label className="avatar-form-choice">
+          <input
+            type="radio"
+            name="subject"
+            value="project"
+            checked={draft.subject === 'project'}
+            onChange={() => updateDraft('subject', 'project')}
+          />
+          <span>Something I run — a product, project or brand</span>
+        </label>
+      </fieldset>
+
       <AvatarTextField
         label="Bio"
         hint="Shown to visitors under your name. Changing it sends your avatar back to review."
@@ -157,6 +217,45 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
         onChange={(value) => updateDraft('bio', value)}
         isRequired
       />
+      <label className="avatar-form-field">
+        <span className="avatar-form-label">Ask me about</span>
+        <input
+          className="avatar-form-input"
+          name="askMeAbout"
+          value={draft.askMeAboutText}
+          onChange={(event) => updateDraft('askMeAboutText', event.target.value)}
+          placeholder="Hiring, our roadmap, getting started"
+          maxLength={
+            (AVATAR_TEXT_LIMITS.askMeAboutTopic + 2) * AVATAR_ASK_ME_ABOUT_MAX_TOPICS
+          }
+        />
+        <span className="avatar-form-hint">
+          Optional. Up to {AVATAR_ASK_ME_ABOUT_MAX_TOPICS} short topics, separated by
+          commas, shown on your page. Changing them sends your avatar back to review.
+        </span>
+      </label>
+
+      <label className="avatar-form-field">
+        <span className="avatar-form-label">Your website</span>
+        <input
+          className="avatar-form-input"
+          name="websiteUrl"
+          type="url"
+          inputMode="url"
+          value={draft.websiteUrl}
+          onChange={(event) => updateDraft('websiteUrl', event.target.value.trim())}
+          placeholder="https://"
+          pattern={AVATAR_WEBSITE_URL_PATTERN}
+          title="A full address starting with https://"
+          maxLength={AVATAR_TEXT_LIMITS.websiteUrl}
+          autoComplete="url"
+          spellCheck={false}
+        />
+        <span className="avatar-form-hint">
+          Optional. Linked from your page. Changing it sends your avatar back to review.
+        </span>
+      </label>
+
       <AvatarTextField
         label="About you"
         hint="What your avatar knows: your work, interests, what you are building. Only the model reads this."
@@ -179,12 +278,29 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
         onChange={(value) => updateDraft('avoidTopics', value)}
       />
 
+      <label className="avatar-form-toggle">
+        <input
+          type="checkbox"
+          name="isShownInSearch"
+          checked={draft.isShownInSearch}
+          onChange={(event) => updateDraft('isShownInSearch', event.target.checked)}
+        />
+        <span>
+          Show my avatar in search engines (Google, Bing) once it’s listed.
+          <span className="avatar-form-toggle-hint">
+            Turning this off hides your page from search results. The link still works.
+          </span>
+        </span>
+      </label>
+
       {isLaunched ? null : (
         <label className="avatar-form-attest">
           <input type="checkbox" name="isOwnerAttested" required />
           <span>
-            This avatar is of me, {owner.name}. It will say it is an AI whenever it is
-            asked.
+            {draft.subject === 'person'
+              ? `This avatar is of me, ${owner.name}.`
+              : 'I run what this avatar speaks for, and I’m launching it from my own account. It is not an avatar of another person.'}{' '}
+            It will say it is an AI whenever it is asked.
           </span>
         </label>
       )}

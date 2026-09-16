@@ -4,6 +4,7 @@ import type {
   AvatarAvailability,
   AvatarListing,
   AvatarPersonaFields,
+  AvatarSubject,
 } from '@measagent/shared/avatars';
 
 /**
@@ -106,6 +107,15 @@ export interface AvatarDoc extends AvatarPersonaFields {
   listing: AvatarListing;
   listingReviewedAt: Date | null;
   ownerAttestedAt: Date;
+  /*
+   * The four fields below arrived after the first avatars launched, so older
+   * documents lack them. Read them through `lib/avatars/avatar-public-details.ts`,
+   * which supplies the defaults, rather than migrating every document.
+   */
+  subject?: AvatarSubject;
+  askMeAbout?: string[];
+  websiteUrl?: string | null;
+  isHiddenFromSearch?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

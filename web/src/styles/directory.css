@@ -41,7 +41,7 @@
 .avatar-directory-launch {
   padding: 10px 20px;
   border-radius: var(--r-pill);
-  background: var(--accent);
+  background: var(--accent-hover);
   color: #fff;
   font-size: 15px;
   font-weight: 500;
@@ -50,7 +50,7 @@
 }
 
 .avatar-directory-launch:hover {
-  background: var(--accent-hover);
+  background: var(--accent-strong);
 }
 
 .avatar-directory-empty {
@@ -108,4 +108,54 @@
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* The explanation under the grid: the front page's only prose. */
+
+.directory-intro {
+  max-width: var(--col-narrow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--hairline);
+}
+
+.directory-intro-heading {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.018em;
+}
+
+.directory-intro-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.directory-intro-steps {
+  margin: 0;
+  padding-left: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.directory-intro-step {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.directory-intro-link {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.directory-intro-link:hover {
+  color: var(--accent);
 }

@@ -7,6 +7,7 @@
 @import "../styles/tokens.css";
 @import "../styles/base.css";
 @import "../styles/avatar.css";
+@import "../styles/avatar-profile.css";
 @import "../styles/thread.css";
 @import "../styles/journey.css";
 @import "../styles/composer.css";
@@ -18,5 +19,8 @@
 @import "../styles/relationship.css";
 @import "../styles/avatar-editor.css";
 @import "../styles/directory.css";
+@import "../styles/site-footer.css";
+@import "../styles/content-page.css";
+@import "../styles/avatar-share-card.css";
 @import "../styles/owner-visitors.css";
 @import "../styles/responsive.css";

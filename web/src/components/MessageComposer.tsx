@@ -3,6 +3,7 @@
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { PRODUCT_NAME } from '@/lib/product';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
 import { PushToTalkBar } from './PushToTalkBar';
@@ -153,6 +154,14 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
           <Link href="/privacy" className="composer-owner-notice-link">
             Privacy
           </Link>
+          {/* Hidden on phones, where it would wrap the notice onto a second line
+              and push the composer up. */}
+          <span className="composer-made-with">
+            {' · '}
+            <Link href="/" className="composer-owner-notice-link">
+              Made with {PRODUCT_NAME}
+            </Link>
+          </span>
         </p>
       )}
     </footer>

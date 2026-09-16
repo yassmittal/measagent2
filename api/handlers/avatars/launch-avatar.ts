@@ -2,6 +2,11 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { LaunchAvatarRequest, OwnAvatarResponse } from '@measagent/shared/avatars';
 import { MongoServerError } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  isAcceptableWebsiteUrl,
+  normalizeAskMeAboutTopics,
+  normalizeWebsiteUrl,
+} from '../../lib/avatars/avatar-public-details.js';
 import { isReservedAvatarHandle } from '../../lib/avatars/handle.js';
 import { toOwnAvatar } from '../../lib/avatars/own-avatar.js';
 import { hasAcceptedTerms } from '../../lib/auth/user-profile.js';
@@ -15,8 +20,8 @@ const MONGO_DUPLICATE_KEY = 11000;
  * `POST /v1/me/avatar` — launch the signed-in account's avatar.
  *
  * Only an account can launch, because the only rule that keeps this an avatar
- * *of yourself* is that its name and face come from the Google account behind
- * it. It is live at its link straight away and listed in the directory only
+ * *of yourself* — or of something you run — is that its name and face come
+ * from the Google account behind it. It is live at its link straight away and listed in the directory only
  * once it has been reviewed.
  */
 export async function launchAvatar(
@@ -37,6 +42,11 @@ export async function launchAvatar(
   const { handle } = request.body;
   if (isReservedAvatarHandle(handle)) {
     return reply.badRequest(`"${handle}" is reserved. Choose another handle.`);
+  }
+
+  const websiteUrl = normalizeWebsiteUrl(request.body.websiteUrl ?? null);
+  if (websiteUrl !== null && !isAcceptableWebsiteUrl(websiteUrl)) {
+    return reply.badRequest('`websiteUrl` must be a full https:// address');
   }
 
   const db = this.mongo.db;
@@ -63,6 +73,10 @@ export async function launchAvatar(
     aboutMe: request.body.aboutMe.trim(),
     speakingStyle: request.body.speakingStyle.trim(),
     avoidTopics: request.body.avoidTopics.trim(),
+    subject: request.body.subject,
+    askMeAbout: normalizeAskMeAboutTopics(request.body.askMeAbout ?? []),
+    websiteUrl,
+    isHiddenFromSearch: request.body.isHiddenFromSearch ?? false,
     availability: 'live',
     listing: 'pending',
     listingReviewedAt: null,

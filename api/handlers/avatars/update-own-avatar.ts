@@ -1,5 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { OwnAvatarResponse, UpdateOwnAvatarRequest } from '@measagent/shared/avatars';
+import {
+  isAcceptableWebsiteUrl,
+  normalizeWebsiteUrl,
+} from '../../lib/avatars/avatar-public-details.js';
 import { buildOwnAvatarChanges, toOwnAvatar } from '../../lib/avatars/own-avatar.js';
 import { avatarsCollection, usersCollection } from '../../shared/collections.js';
 import { readSessionOwnerId } from '../../shared/identity.js';
@@ -22,6 +26,13 @@ export async function updateOwnAvatar(
 
   if (request.body.bio !== undefined && request.body.bio.trim() === '') {
     return reply.badRequest('`bio` must not be empty');
+  }
+
+  if (request.body.websiteUrl !== undefined) {
+    const websiteUrl = normalizeWebsiteUrl(request.body.websiteUrl);
+    if (websiteUrl !== null && !isAcceptableWebsiteUrl(websiteUrl)) {
+      return reply.badRequest('`websiteUrl` must be a full https:// address');
+    }
   }
 
   const db = this.mongo.db;

@@ -49,13 +49,18 @@ export function ReviewCard({ avatar }: { avatar: AvatarForReview }) {
             <a href={`${WEB_BASE_URL}/${avatar.handle}`} target="_blank" rel="noreferrer">
               /{avatar.handle}
             </a>{' '}
-            · {avatar.availability}
+            · {avatar.availability} ·{' '}
+            {avatar.subject === 'project' ? 'something they run' : 'themselves'}
+            {avatar.isHiddenFromSearch ? ' · hidden from search' : ''}
           </p>
         </div>
       </header>
 
       <dl className="review-card-fields">
         <ReviewField label="Bio" text={avatar.bio} />
+        {/* Public on the avatar's page, so a change to either sends it back here. */}
+        <ReviewField label="Ask me about" text={avatar.askMeAbout.join(' · ')} />
+        <ReviewField label="Website" text={avatar.websiteUrl ?? ''} />
         <ReviewField label="About" text={avatar.aboutMe} />
         <ReviewField label="How they talk" text={avatar.speakingStyle} />
         <ReviewField label="Topics to avoid" text={avatar.avoidTopics} />

@@ -16,7 +16,7 @@ export const VOICE_MAX_TOKENS = 220;
 export const MAX_SPOKEN_REPLY_LENGTH = 4000;
 
 /** Recorded with each acceptance. Moving it does not re-ask anyone who already accepted. */
-export const CONSENT_TERMS_VERSION = '2026-09-15';
+export const CONSENT_TERMS_VERSION = '2026-09-16';
 
 /**
  * When anonymous visitors started being told, under the composer, that the

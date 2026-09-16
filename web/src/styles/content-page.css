@@ -1,0 +1,285 @@
+/* How it works, the persona pages, guides and comparisons. */
+
+.content-page {
+  min-height: 100%;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.content-page-inner {
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+}
+
+.content-breadcrumbs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.content-breadcrumbs-item + .content-breadcrumbs-item::before {
+  content: "/";
+  margin-right: var(--sp-2);
+  color: var(--n400);
+}
+
+.content-breadcrumbs-link {
+  color: var(--text-muted);
+}
+
+.content-breadcrumbs-link:hover {
+  color: var(--text);
+}
+
+.content-article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+}
+
+.content-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.content-eyebrow {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.content-title {
+  margin: 0;
+  font-size: 31px;
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+
+.content-lede {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.content-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.content-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.content-section-heading {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+}
+
+.content-paragraph {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.content-list,
+.content-steps {
+  margin: 0;
+  padding-left: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.content-list-item,
+.content-steps-item {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding-top: var(--sp-7);
+  border-top: 1px solid var(--hairline);
+}
+
+.faq-list-heading {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+}
+
+.faq-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.faq-question {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.faq-answer {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.content-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--e2);
+}
+
+.content-cta-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.content-cta-button {
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  background: var(--accent-hover);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.content-cta-button:hover {
+  background: var(--accent-strong);
+}
+
+.content-related {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.content-related-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.content-related-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.content-related-link {
+  color: var(--accent-strong);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.content-related-link:hover {
+  text-decoration: underline;
+}
+
+/* A comparison's table scrolls inside itself on a phone rather than widening the page. */
+
+.comparison-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.comparison-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.comparison-table-caption {
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: left;
+}
+
+.comparison-table-head {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text);
+  font-weight: 500;
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.comparison-table-feature {
+  width: 22%;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text);
+  font-weight: 500;
+  text-align: left;
+  vertical-align: top;
+}
+
+.comparison-table-cell {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+.comparison-table-source {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.comparison-table-source:hover {
+  color: var(--text);
+}

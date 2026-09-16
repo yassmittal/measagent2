@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { loadOwnAvatar } from '@/lib/avatar-client';
 import { useSession } from '@/state/SessionProvider';
 import { AvatarForm } from './AvatarForm';
+import { AvatarShareCard } from './AvatarShareCard';
 import { SignInPrompt } from './SignInPrompt';
 
 type OwnAvatarLoad =
@@ -50,7 +51,7 @@ export function AvatarEditor() {
       {sessionStatus === 'anonymous' ? (
         <SignInPrompt
           title="Launch your avatar"
-          lede="An AI that talks as you, for anyone you share the link with. It takes its name and photo from the Google account you sign in with, so it can only ever be of you."
+          lede="An AI that talks as you, for anyone you share the link with. It takes its name and photo from the Google account you sign in with, so it can only ever be of you or of something you run."
           onSignedIn={() => {}}
         />
       ) : null}
@@ -82,6 +83,12 @@ export function AvatarEditor() {
           avatar={ownAvatarLoad.avatar}
           onSaved={(avatar) => setOwnAvatarLoad({ status: 'loaded', avatar })}
         />
+      ) : null}
+
+      {user !== null &&
+      ownAvatarLoad.status === 'loaded' &&
+      ownAvatarLoad.avatar !== null ? (
+        <AvatarShareCard avatar={ownAvatarLoad.avatar} />
       ) : null}
     </main>
   );
