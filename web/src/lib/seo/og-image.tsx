@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { AvatarProfile } from '@measagent/shared/avatars';
 import { ImageResponse } from 'next/og';
+import { toLargeGooglePhotoUrl } from '@/lib/google-photo';
 import { PRODUCT_NAME, SITE_URL } from '@/lib/product';
 
 /**
@@ -44,14 +45,6 @@ function nameFontSize(name: string): number {
   if (length <= 16) return 76;
   if (length <= 28) return 60;
   return 48;
-}
-
-/**
- * Google serves profile photos at the size asked for in the URL. The stored
- * URL asks for 96px, which would blur at share-image size.
- */
-function toLargeGooglePhotoUrl(pictureUrl: string): string {
-  return pictureUrl.replace(/=s\d+-c$/, '=s512-c');
 }
 
 let placeholderPortraitDataUrl: Promise<string> | null = null;

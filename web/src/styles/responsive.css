@@ -170,3 +170,35 @@
     opacity: 0.7;
   }
 }
+
+/* The featured avatar stacks on phones: the arch above, the ask box full width. */
+@media (max-width: 640px) {
+  .avatar-directory {
+    padding: var(--sp-9) var(--sp-4) var(--sp-9);
+    gap: var(--sp-8);
+  }
+
+  .featured-avatar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-5);
+    padding: var(--sp-4);
+    border-radius: 24px;
+  }
+
+  .featured-avatar-portrait {
+    flex: none;
+    width: 170px;
+    height: 210px;
+    margin: 0 auto;
+  }
+
+  .featured-avatar-body {
+    align-items: center;
+    text-align: center;
+  }
+
+  .featured-avatar-topics {
+    justify-content: center;
+  }
+}

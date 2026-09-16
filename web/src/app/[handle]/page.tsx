@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { StructuredData } from '@/components/StructuredData';
+import { ASK_DRAFT_PARAM, readAskDraft } from '@/lib/ask-draft';
 import { loadAvatarProfile } from '@/lib/avatar-profiles';
 import {
   buildAvatarPageDescription,
@@ -55,9 +56,11 @@ export default async function AvatarPage(props: PageProps<'/[handle]'>) {
     );
   }
 
+  const initialDraft = readAskDraft((await props.searchParams)[ASK_DRAFT_PARAM]);
+
   return (
     <>
-      <AppShell avatar={avatar} />
+      <AppShell avatar={avatar} initialDraft={initialDraft} />
       <StructuredData
         nodes={[
           buildAvatarProfilePageNode(avatar),

@@ -6,7 +6,7 @@ import { AvatarPanel } from './AvatarPanel';
 import { ConversationThread } from './ConversationThread';
 import { MessageComposer } from './MessageComposer';
 
-export function ChatCanvas() {
+export function ChatCanvas({ initialDraft }: { initialDraft: string }) {
   const { messages, turn, isLoading, queuedText } = useConversation();
   const [composerHeight, setComposerHeight] = useState<number | null>(null);
 
@@ -30,7 +30,7 @@ export function ChatCanvas() {
           isLoading={isLoading}
           queuedText={queuedText}
         />
-        <MessageComposer onHeightChange={onHeightChange} />
+        <MessageComposer initialDraft={initialDraft} onHeightChange={onHeightChange} />
       </main>
     </div>
   );

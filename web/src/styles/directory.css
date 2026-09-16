@@ -12,36 +12,41 @@
   padding: var(--sp-10) var(--sp-6) var(--sp-10);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-8);
+  gap: var(--sp-9);
 }
 
 .avatar-directory-head {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-4);
+  align-items: center;
+  gap: var(--sp-5);
+  text-align: center;
+}
+
+.avatar-directory-wordmark {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
 }
 
 .avatar-directory-title {
   margin: 0;
-  font-size: 31px;
-  line-height: 1.12;
-  font-weight: 500;
-  letter-spacing: -0.022em;
-}
-
-.avatar-directory-lede {
-  margin: 0;
-  max-width: var(--measure);
-  color: var(--text-muted);
-  font-size: 16px;
-  line-height: 25px;
+  max-width: 17em;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5.2vw, 56px);
+  line-height: 1.06;
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .avatar-directory-launch {
-  padding: 10px 20px;
-  border-radius: var(--r-pill);
-  background: var(--accent-hover);
+  padding: 12px 22px;
+  border-radius: var(--r-md);
+  background: var(--accent);
   color: #fff;
   font-size: 15px;
   font-weight: 500;
@@ -58,6 +63,164 @@
   color: var(--text-muted);
   font-size: 15px;
   line-height: 1.5;
+  text-align: center;
+}
+
+/* One avatar you can ask from the front page: an arched portrait beside its
+   name and an ask box, so the first thing a visitor does is talk. */
+
+.featured-avatar {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--hairline);
+  border-radius: 28px;
+  background: var(--surface);
+}
+
+.featured-avatar-portrait {
+  flex: 0 0 220px;
+  height: 270px;
+  border-radius: 999px 999px var(--r-lg) var(--r-lg);
+  background: var(--avatar-bg);
+  overflow: hidden;
+}
+
+.featured-avatar-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.featured-avatar-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.featured-avatar-eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.featured-avatar-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+.featured-avatar-name-link {
+  color: var(--text);
+}
+
+.featured-avatar-bio {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.featured-avatar-ask {
+  width: 100%;
+  margin-top: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 6px 6px var(--sp-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+.featured-avatar-ask:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+
+.featured-avatar-ask-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.featured-avatar-ask-input:focus-visible {
+  box-shadow: none;
+}
+
+.featured-avatar-ask-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.featured-avatar-ask-send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: #fff;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.featured-avatar-ask-send:hover {
+  background: var(--accent-strong);
+}
+
+.featured-avatar-topics {
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.featured-avatar-topic {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  transition: background var(--t-fast) var(--ease);
+}
+
+.featured-avatar-topic:hover {
+  background: var(--fill);
+}
+
+.avatar-directory-all {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.avatar-directory-all-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .avatar-directory-grid {
@@ -75,15 +238,16 @@
   align-items: flex-start;
   gap: var(--sp-4);
   padding: var(--sp-5);
+  border: 1px solid var(--hairline);
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: var(--e2);
   color: var(--text);
-  transition: box-shadow var(--t-fast) var(--ease);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 
 .avatar-card:hover {
-  box-shadow: var(--e4);
+  border-color: var(--n400);
+  box-shadow: var(--e3);
 }
 
 .avatar-card-text {
@@ -122,9 +286,10 @@
 }
 
 .directory-intro-heading {
+  font-family: var(--font-display);
   margin: 0;
   font-size: 19px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.3;
   letter-spacing: -0.018em;
 }

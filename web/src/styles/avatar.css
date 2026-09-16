@@ -61,11 +61,12 @@
 }
 
 .avatar-panel-name {
+  font-family: var(--font-display);
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-  font-size: 23px;
-  font-weight: 500;
+  font-size: 28px;
+  font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }

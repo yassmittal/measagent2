@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Geist, Newsreader } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { StructuredData } from '@/components/StructuredData';
 import {
@@ -14,6 +14,13 @@ import { SessionProvider } from '@/state/SessionProvider';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
+// The display serif for titles and names. `opsz` lets the same file draw
+// tighter, finer letterforms at headline sizes than at 20px.
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  variable: '--font-newsreader',
+  axes: ['opsz'],
+});
 
 const DEFAULT_TITLE = `${PRODUCT_NAME} — AI avatars of real people`;
 
@@ -50,13 +57,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FBFBFB',
+  themeColor: '#FAF6F0',
   colorScheme: 'light',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={`${geist.variable} ${newsreader.variable}`}>
       {/* `#root` is the height chain the stylesheet hangs `100dvh` off: the
           thread scrolls inside it, so every layer above must have a height. */}
       <body>

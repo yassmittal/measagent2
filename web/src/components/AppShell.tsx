@@ -7,13 +7,19 @@ import { ConsentCard } from './ConsentCard';
 import { MobileHeader } from './MobileHeader';
 import { ProfileMenu } from './ProfileMenu';
 
-export function AppShell({ avatar }: { avatar: AvatarProfile }) {
+interface AppShellProps {
+  avatar: AvatarProfile;
+  /** A question brought from the front page; empty when there is none. */
+  initialDraft: string;
+}
+
+export function AppShell({ avatar, initialDraft }: AppShellProps) {
   return (
     <ConversationProvider avatar={avatar}>
       <div className="shell">
         <MobileHeader />
         <ProfileMenu />
-        <ChatCanvas />
+        <ChatCanvas initialDraft={initialDraft} />
         <ConsentCard />
       </div>
     </ConversationProvider>

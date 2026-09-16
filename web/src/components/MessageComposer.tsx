@@ -2,7 +2,8 @@
 
 import { ArrowUp, Volume2, VolumeX } from 'lucide-react';
 import Link from 'next/link';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ASK_DRAFT_PARAM } from '@/lib/ask-draft';
 import { PRODUCT_NAME } from '@/lib/product';
 import { useConversation } from '@/state/ConversationProvider';
 import { isTurnActive } from '@/state/conversation-reducer';
@@ -11,10 +12,11 @@ import { PushToTalkBar } from './PushToTalkBar';
 const MAX_INPUT_HEIGHT_PX = 216;
 
 interface MessageComposerProps {
+  initialDraft: string;
   onHeightChange: (height: number) => void;
 }
 
-export function MessageComposer({ onHeightChange }: MessageComposerProps) {
+export function MessageComposer({ initialDraft, onHeightChange }: MessageComposerProps) {
   const {
     avatar,
     turn,
@@ -28,7 +30,7 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     toggleMuted,
   } = useConversation();
 
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(initialDraft);
   const rowRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -60,6 +62,21 @@ export function MessageComposer({ onHeightChange }: MessageComposerProps) {
     input.style.height = 'auto';
     input.style.height = `${Math.min(input.scrollHeight, MAX_INPUT_HEIGHT_PX)}px`;
   }, [inputText]);
+
+  // A question brought from the front page waits here, focused, for the visitor
+  // to send — never sent for them. The parameter is dropped from the address so
+  // a reload does not put an already-sent question back.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once, for the draft the page opened with.
+  useEffect(() => {
+    if (initialDraft === '') return;
+    const input = inputRef.current;
+    input?.focus();
+    input?.setSelectionRange(input.value.length, input.value.length);
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete(ASK_DRAFT_PARAM);
+    window.history.replaceState(window.history.state, '', url);
+  }, []);
 
   const submitDraft = () => {
     if (!canSend) return;
