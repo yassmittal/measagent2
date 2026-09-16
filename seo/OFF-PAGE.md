@@ -12,10 +12,9 @@ run: no account was connected, nothing was submitted or posted.
 1. <https://search.google.com/search-console> → **Add property** → **URL prefix**
    → `https://measagent.vercel.app/`. (A *Domain* property needs DNS, which a
    `vercel.app` subdomain does not give you.)
-2. Verify with the **HTML tag** method: copy the `content` value of the
-   `google-site-verification` meta tag it shows you, and tell me. It goes in
-   `web/src/app/layout.tsx` as `verification: { google: '…' }` in `metadata`,
-   one line, then deploy and press **Verify**.
+2. ~~Verify~~ **Done 2026-09-17** with the HTML file method:
+   `web/public/google2d0134d554a0af0d.html`. Keep that file for as long as the
+   property exists.
 3. **Sitemaps** → submit `sitemap.xml`. Expect "Success" and 13+ discovered URLs.
 4. **URL Inspection** → request indexing, in this order: `/`, `/how-it-works`,
    `/guides/make-an-ai-version-of-yourself`, `/compare/delphi`, then each
@@ -25,8 +24,8 @@ run: no account was connected, nothing was submitted or posted.
 ### Bing Webmaster Tools
 
 1. <https://www.bing.com/webmasters> → **Import from Google Search Console** (fastest),
-   or add the site and verify with the `msvalidate.01` meta tag (same place:
-   `verification: { other: { 'msvalidate.01': '…' } }`).
+   or add the site and verify with Bing's `BingSiteAuth.xml` file dropped into
+   `web/public/`, the same way the Google file was.
 2. Submit `https://measagent.vercel.app/sitemap.xml`.
 3. Other engines and AI search products draw on Bing's index (DuckDuckGo most visibly), so this is worth the ten minutes.
 

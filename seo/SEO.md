@@ -45,11 +45,16 @@ Seven pages explain the product in the words people search for.
    `/launch` and choose "Something I run".** Until they do, their pages are
    marked up as a `Person`. Editing only the subject does not send them back to
    review.
-5. **Connect Search Console and Bing** (`OFF-PAGE.md` §1). Send me the
-   verification codes and I'll add the one-line `verification` metadata.
-6. **Send me your public profile URLs** (GitHub, X, LinkedIn, site) if you want
-   them as `sameAs` on the Organization. `PRODUCT_PROFILE_URLS` is empty rather
-   than guessed.
+5. **Search Console is verified** (2026-09-17) with the HTML file
+   `web/public/google2d0134d554a0af0d.html`, live in production. **Never delete
+   that file** — Google re-checks it, and the property is lost without it. Still
+   to do there: submit the sitemap and request indexing (`OFF-PAGE.md` §1), and
+   add the site to Bing (import it from Search Console).
+6. **Your profiles are in.** GitHub, X, LinkedIn and yashmittal.xyz (from
+   `os-personal/memory/things-to-remember.md`) are the `sameAs` of the founder and
+   article author in structured data, and the guide and comparison bylines link
+   to yashmittal.xyz. The Organization gets no `sameAs` until the product has
+   profiles of its own — pointing it at a person's accounts would mislabel them.
 
 ---
 
@@ -305,7 +310,7 @@ My first pass at the new CSS failed contrast in nine places; all are fixed.
 
 ## Still open
 
-- **Search Console verification codes, and your profile URLs** (steps 5 and 6).
+- **Sitemap submission, indexing requests and Bing** (step 5).
 - **The three non-person avatars' subject** (step 4). An admin control to set it
   wasn't built; tell me if you want one.
 - **The persona pages have no measurable search demand** (`KEYWORDS.md`). They

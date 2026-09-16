@@ -315,6 +315,8 @@ keywords, calendar, off-page playbook and measurement. Rules new work keeps:
 - **`SITE_URL` is lowercase and is the only place the host is written.** The
   domain move in `seo/OFF-PAGE.md` starts there.
 - The reference product this was modelled on is never named on a public page.
+- **`web/public/google2d0134d554a0af0d.html` verifies Search Console.** Never
+  delete or rename it.
 
 ## Deploying
 

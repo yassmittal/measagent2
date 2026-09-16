@@ -2,9 +2,10 @@ import type { AvatarProfile } from '@measagent/shared/avatars';
 import type { ArticleCopy, FaqEntry, SitePath } from '@/content/content-types';
 import {
   PRODUCT_BUILDER_NAME,
+  PRODUCT_BUILDER_PROFILE_URLS,
+  PRODUCT_BUILDER_WEBSITE_URL,
   PRODUCT_NAME,
   PRODUCT_PRICING_NOTE,
-  PRODUCT_PROFILE_URLS,
   PRODUCT_TAGLINE,
   SITE_URL,
 } from '@/lib/product';
@@ -33,6 +34,7 @@ export function toAbsoluteUrl(path: string): string {
 }
 
 const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+const BUILDER_ID = `${SITE_URL}/#builder`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
 const LOGO_URL = `${SITE_URL}/brand/logo-512.png`;
 
@@ -43,8 +45,21 @@ export function buildOrganizationNode(): StructuredDataNode {
     name: PRODUCT_NAME,
     url: SITE_URL,
     logo: { '@type': 'ImageObject', url: LOGO_URL, width: 512, height: 512 },
-    founder: { '@type': 'Person', name: PRODUCT_BUILDER_NAME },
-    ...(PRODUCT_PROFILE_URLS.length > 0 ? { sameAs: [...PRODUCT_PROFILE_URLS] } : {}),
+    founder: buildBuilderNode(),
+  };
+}
+
+/**
+ * The person who builds the site — the founder and the byline on articles. Not
+ * an avatar: this is the operator, like the contact address on the legal pages.
+ */
+function buildBuilderNode(): StructuredDataNode {
+  return {
+    '@type': 'Person',
+    '@id': BUILDER_ID,
+    name: PRODUCT_BUILDER_NAME,
+    url: PRODUCT_BUILDER_WEBSITE_URL,
+    sameAs: [...PRODUCT_BUILDER_PROFILE_URLS],
   };
 }
 
@@ -147,7 +162,7 @@ export function buildArticleNode(article: ArticleCopy): StructuredDataNode {
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     inLanguage: 'en',
-    author: { '@type': 'Person', name: PRODUCT_BUILDER_NAME },
+    author: buildBuilderNode(),
     publisher: { '@id': ORGANIZATION_ID },
   };
 }

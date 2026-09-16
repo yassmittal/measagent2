@@ -3,7 +3,11 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { ContentPageCopy, ContentSection } from '@/content/content-types';
 import { formatAbsoluteDate } from '@/lib/format-date';
-import { PRODUCT_BUILDER_NAME, PRODUCT_NAME } from '@/lib/product';
+import {
+  PRODUCT_BUILDER_NAME,
+  PRODUCT_BUILDER_WEBSITE_URL,
+  PRODUCT_NAME,
+} from '@/lib/product';
 import type { BreadcrumbItem } from '@/lib/seo/structured-data';
 import { FaqList } from './FaqList';
 import { SiteFooter } from './SiteFooter';
@@ -53,9 +57,19 @@ export function ContentPage({
             <h1 className="content-title">{copy.heading}</h1>
             <p className="content-lede">{copy.lede}</p>
             <p className="content-meta">
-              {hasByline
-                ? `By ${PRODUCT_BUILDER_NAME}, who builds ${PRODUCT_NAME} · `
-                : ''}
+              {hasByline ? (
+                <>
+                  By{' '}
+                  <a
+                    href={PRODUCT_BUILDER_WEBSITE_URL}
+                    className="content-byline-link"
+                    rel="author"
+                  >
+                    {PRODUCT_BUILDER_NAME}
+                  </a>
+                  , who builds {PRODUCT_NAME} ·{' '}
+                </>
+              ) : null}
               Updated{' '}
               <time dateTime={copy.updatedAt}>{formatAbsoluteDate(copy.updatedAt)}</time>
             </p>

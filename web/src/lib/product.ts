@@ -30,8 +30,16 @@ export const CONTACT_EMAIL = 'yashmittalmm@gmail.com';
 export const PRODUCT_BUILDER_NAME = 'Yash Mittal';
 
 /**
- * Public profiles of the product and its builder, used as `sameAs` so search
- * engines can tell this meAsAgent apart from other things with a similar name.
- * Empty until real URLs are supplied; an invented one would be worse than none.
+ * The builder's own public profiles: the founder and author in structured data
+ * point here, so search engines can tie the byline to one real person. The
+ * product has no profiles of its own yet; when it does, they belong on the
+ * Organization, not in this list.
  */
-export const PRODUCT_PROFILE_URLS: readonly string[] = [];
+export const PRODUCT_BUILDER_WEBSITE_URL = 'https://www.yashmittal.xyz';
+
+export const PRODUCT_BUILDER_PROFILE_URLS: readonly string[] = [
+  PRODUCT_BUILDER_WEBSITE_URL,
+  'https://github.com/yassmittal',
+  'https://x.com/yash_mittal_dev',
+  'https://www.linkedin.com/in/yashmittal01',
+];

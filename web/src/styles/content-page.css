@@ -83,6 +83,16 @@
   line-height: 1.5;
 }
 
+.content-byline-link {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.content-byline-link:hover {
+  color: var(--text);
+}
+
 .content-section {
   display: flex;
   flex-direction: column;
