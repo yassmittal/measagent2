@@ -1,27 +1,40 @@
 import type { AvatarProfile } from '@measagent/shared/avatars';
 import Link from 'next/link';
 import { HOME_INTRODUCTION, HOME_LAUNCH_NOTE } from '@/content/home';
-import { pickFeaturedAvatar } from '@/lib/featured-avatar';
+import { pickHeroAvatars } from '@/lib/hero-avatars';
 import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/product';
 import { AvatarCard } from './AvatarCard';
-import { FeaturedAvatar } from './FeaturedAvatar';
+import { AvatarHero } from './AvatarHero';
 
 export function AvatarDirectory({ avatars }: { avatars: AvatarProfile[] }) {
-  const featuredAvatar = pickFeaturedAvatar(avatars);
+  const heroAvatars = pickHeroAvatars(avatars);
+  const taglineWords = PRODUCT_TAGLINE.split(' ');
 
   return (
     <main className="avatar-directory">
       <header className="avatar-directory-head">
         <p className="avatar-directory-wordmark">{PRODUCT_NAME}</p>
+        {heroAvatars.length > 0 ? <AvatarHero avatars={heroAvatars} /> : null}
         {/* The tagline is the heading: it says what the site is, where the
-            product name alone would not. */}
-        <h1 className="avatar-directory-title">{PRODUCT_TAGLINE}</h1>
+            product name alone would not. Each word is its own span so it can
+            come into focus in turn; the text a crawler reads is unchanged. */}
+        <h1 className="avatar-directory-title">
+          {taglineWords.map((word, index) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: the tagline is a constant, and a word can repeat in it.
+              key={index}
+              className="avatar-directory-title-word"
+              style={{ '--word-index': index } as React.CSSProperties}
+            >
+              {word}
+              {index < taglineWords.length - 1 ? ' ' : null}
+            </span>
+          ))}
+        </h1>
         <Link href="/launch" className="avatar-directory-launch">
           Launch your avatar
         </Link>
       </header>
-
-      {featuredAvatar !== null ? <FeaturedAvatar avatar={featuredAvatar} /> : null}
 
       {avatars.length === 0 ? (
         <p className="avatar-directory-empty">

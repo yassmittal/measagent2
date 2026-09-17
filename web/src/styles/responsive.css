@@ -171,34 +171,54 @@
   }
 }
 
-/* The featured avatar stacks on phones: the arch above, the ask box full width. */
+/* On phones the hero shrinks, and there is no room beside it for the
+   streams: arcs cut off by the screen edge read as clutter, not flow. */
 @media (max-width: 640px) {
   .avatar-directory {
-    padding: var(--sp-9) var(--sp-4) var(--sp-9);
+    padding: var(--sp-8) var(--sp-4) var(--sp-9);
     gap: var(--sp-8);
   }
 
-  .featured-avatar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--sp-5);
-    padding: var(--sp-4);
-    border-radius: 24px;
+  .avatar-hero-card {
+    width: 240px;
+    height: 320px;
   }
 
-  .featured-avatar-portrait {
-    flex: none;
-    width: 170px;
-    height: 210px;
-    margin: 0 auto;
+  .avatar-hero-streams {
+    display: none;
   }
 
-  .featured-avatar-body {
-    align-items: center;
-    text-align: center;
+  .avatar-hero-caption {
+    bottom: 66px;
   }
 
-  .featured-avatar-topics {
-    justify-content: center;
+  .avatar-hero-name {
+    font-size: 25px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-directory-wordmark,
+  .avatar-directory-title-word,
+  .avatar-directory-launch,
+  .avatar-hero-card,
+  .avatar-hero-caption,
+  .avatar-card {
+    animation: none;
+  }
+
+  .avatar-hero-portrait {
+    transition: none;
+  }
+
+  /* The streams are nothing but motion; standing still they only pile up. */
+  .avatar-hero-streams {
+    display: none;
+  }
+
+  .avatar-card:hover,
+  .avatar-directory-launch:hover,
+  .avatar-hero-ask-send:hover {
+    transform: none;
   }
 }
