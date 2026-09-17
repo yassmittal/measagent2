@@ -21,17 +21,17 @@ export default function TermsPage() {
         wrong, and it can state something false with complete confidence.
       </p>
       <p>
-        Nothing an avatar says is professional advice — not legal, medical, financial or
-        employment advice — and nothing it says is a commitment by the person it
-        represents or by anyone they work with.
+        Nothing an avatar says is professional advice. That means no legal, medical,
+        financial or job advice. Nothing it says is a promise from the person behind it or
+        anyone they work with.
       </p>
 
       <h2>Using it</h2>
       <ul>
         <li>Do not use it to break the law or to harm anyone.</li>
         <li>
-          Do not send anything you would not want stored — secrets, credentials, or other
-          people&apos;s personal information.
+          Do not send anything you would not want stored, like secrets, passwords, or
+          other people&apos;s personal information.
         </li>
         <li>
           Do not try to reach the service through anything but this site, and do not
@@ -42,8 +42,8 @@ export default function TermsPage() {
       <h2>Launching an avatar</h2>
       <ul>
         <li>
-          An avatar can only be of you, or of something you run — a product, project or
-          brand. It is never of another person. Its name and photo come from the Google
+          An avatar can only be you, or something you run, like a product, project or
+          brand. It is never another person. Its name and photo come from the Google
           account you launch it with, and you confirm which of the two it is when you
           launch it.
         </li>
@@ -62,9 +62,9 @@ export default function TermsPage() {
           that.
         </li>
         <li>
-          An avatar appears in the directory only once it has been reviewed, and it can be
-          declined, unlisted or taken down. A listed avatar&apos;s page can appear in
-          search engines unless you turn that off.
+          Your avatar shows up on the front page as soon as you launch it. We can take it
+          off the front page if it breaks these terms. Its page can appear in search
+          engines unless you turn that off.
         </li>
       </ul>
 

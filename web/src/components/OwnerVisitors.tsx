@@ -8,6 +8,8 @@ import { ApiRequestError } from '@/lib/api-client';
 import { loadOwnVisitors } from '@/lib/visitor-client';
 import { useSession } from '@/state/SessionProvider';
 import { OwnerVisitorRow } from './OwnerVisitorRow';
+import { OwnerVisitorsSkeleton } from './OwnerVisitorsSkeleton';
+import { PageIntroSkeleton } from './PageIntroSkeleton';
 import { SignInPrompt } from './SignInPrompt';
 import { WeeklySummarySettings } from './WeeklySummarySettings';
 
@@ -75,6 +77,8 @@ export function OwnerVisitors() {
         Your avatar
       </Link>
 
+      {sessionStatus === 'loading' ? <PageIntroSkeleton /> : null}
+
       {sessionStatus === 'anonymous' ? (
         <SignInPrompt
           title="Your visitors"
@@ -88,10 +92,13 @@ export function OwnerVisitors() {
           <h1 className="owner-visitors-title">Your visitors</h1>
           <p className="owner-visitors-lede">
             Everyone who has talked to your avatar, what they talked about, and what it
-            remembers about them. You can read these conversations; your visitors were
-            told so.
+            remembers about them. They were told that you can read these chats.
           </p>
         </>
+      ) : null}
+
+      {sessionStatus !== 'anonymous' && visitorsLoad.status === 'loading' ? (
+        <OwnerVisitorsSkeleton />
       ) : null}
 
       {visitorsLoad.status === 'no-avatar' ? (
@@ -137,12 +144,16 @@ export function OwnerVisitors() {
             <p className="owner-visitors-empty">
               {range === 'week'
                 ? 'Nobody has talked to your avatar this week.'
-                : 'Nobody has talked to your avatar yet. Share its link to change that.'}
+                : 'Nobody has talked to your avatar yet. Share your link to get started.'}
             </p>
           ) : (
             <ul className="owner-visitors-list">
-              {shownVisitors.map((visitor) => (
-                <li key={visitor.key}>
+              {shownVisitors.map((visitor, visitorIndex) => (
+                <li
+                  key={visitor.key}
+                  // Staggers the rows' entrance; see `.owner-visitors-list > li`.
+                  style={{ '--visitor-index': visitorIndex } as React.CSSProperties}
+                >
                   <OwnerVisitorRow visitor={visitor} />
                 </li>
               ))}
@@ -152,8 +163,8 @@ export function OwnerVisitors() {
           {visitorsLoad.response.hiddenConversationCount > 0 ? (
             <p className="owner-visitors-hidden">
               {describeHiddenConversations(visitorsLoad.response.hiddenConversationCount)}{' '}
-              not shown: anonymous ones from before visitors were told you read them, and
-              ones from accounts that have not accepted the terms.
+              hidden. Some are from people without an account, from before we told people
+              you read chats. Others are from people who haven’t accepted the terms.
             </p>
           ) : null}
         </>

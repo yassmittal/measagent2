@@ -11,6 +11,7 @@ import { useSession } from '@/state/SessionProvider';
 import { Avatar } from './Avatar';
 import { MessageRow } from './MessageRow';
 import { describeVisitorActivity } from './OwnerVisitorRow';
+import { OwnerVisitorSkeleton } from './OwnerVisitorSkeleton';
 import { SignInPrompt } from './SignInPrompt';
 
 type VisitorLoad =
@@ -67,6 +68,10 @@ export function OwnerVisitorConversations({ visitorKey }: { visitorKey: string }
           lede="Sign in with the Google account you launched your avatar with to read these conversations."
           onSignedIn={() => {}}
         />
+      ) : null}
+
+      {sessionStatus !== 'anonymous' && visitorLoad.status === 'loading' ? (
+        <OwnerVisitorSkeleton />
       ) : null}
 
       {visitorLoad.status === 'failed' ? (

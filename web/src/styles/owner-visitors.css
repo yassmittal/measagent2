@@ -75,7 +75,10 @@
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.4;
-  transition: background var(--t-fast) var(--ease);
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
 }
 
 .owner-visitors-range-option:hover {
@@ -105,6 +108,7 @@
 }
 
 .owner-visitor-row {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--sp-4);
@@ -332,4 +336,35 @@
 .weekly-summary-unsubscribe-button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Arriving: stand-ins while the owner's data loads, then the real rows rise in. */
+
+.owner-visitors-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  animation: content-reveal var(--t-slow) var(--ease) var(--skeleton-delay) backwards;
+}
+
+.owner-visitor-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  animation: content-reveal var(--t-slow) var(--ease) var(--skeleton-delay) backwards;
+}
+
+.owner-visitors-list > li {
+  animation: content-reveal var(--t-slow) var(--ease) backwards;
+  animation-delay: calc(min(var(--visitor-index, 0), 8) * 40ms);
+}
+
+.owner-visitor-head,
+.owner-visitor-attention,
+.owner-visitor-memory,
+.owner-visitor-conversation,
+.weekly-summary-settings,
+.owner-visitors-empty,
+.owner-visitors-error {
+  animation: content-reveal var(--t-slow) var(--ease) backwards;
 }

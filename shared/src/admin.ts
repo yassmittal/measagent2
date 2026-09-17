@@ -26,7 +26,7 @@ export interface AvatarsForReviewResponse {
   avatars: AvatarForReview[];
 }
 
-/** A review decides whether an avatar is listed; putting it back to pending is the owner's edit, not a review. */
+/** An admin lists or unlists an avatar. Nothing sets one back to pending. */
 export interface ReviewAvatarRequest {
   listing: Exclude<AvatarListing, 'pending'>;
 }

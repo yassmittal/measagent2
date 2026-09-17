@@ -38,17 +38,17 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
     competitorName: 'Delphi',
     metaTitle: 'meAsAgent vs Delphi: an honest comparison',
     metaDescription:
-      'meAsAgent and Delphi both make an AI version of you. What each does, what each costs, and which fits — with every Delphi claim sourced and dated.',
+      'meAsAgent and Delphi both make an AI version of you. What each one does, what it costs, and which fits you. Every Delphi claim is sourced and dated.',
     eyebrow: 'Compare',
     heading: 'meAsAgent vs Delphi',
-    lede: `Delphi and ${PRODUCT_NAME} both give you an AI that answers people as you. Delphi builds a “Digital Mind” from work you have already created — writing, talks, frameworks — with paid plans for more training material and integrations. ${PRODUCT_NAME} answers from a few notes you write, remembers visitors who sign in, and lets you read every conversation. If your answers live in a large body of existing work, Delphi fits better; if you want something running in minutes and want to hear what people asked, ${PRODUCT_NAME} does.`,
+    lede: `Delphi and ${PRODUCT_NAME} both give you an AI that answers people as you. Delphi builds a “Digital Mind” from things you’ve already made, like writing, talks and frameworks, with paid plans for more material and integrations. ${PRODUCT_NAME} answers from a few notes you write, remembers people who sign in, and lets you read every chat. If your answers live in a lot of existing work, Delphi fits better. If you want something running in minutes and want to see what people asked, ${PRODUCT_NAME} fits better.`,
     sections: [
       {
         heading: 'Choose Delphi if',
         paragraphs: [],
         bulletPoints: [
-          'Your knowledge is already written or recorded, and you want answers drawn from it.',
-          'You need integrations or embedding on other sites — Delphi lists Slack and embedding locations on its paid plans.',
+          'Your knowledge is already written or recorded, and you want answers to come from it.',
+          'You need integrations or want it on other sites. Delphi lists Slack and embedding on its paid plans.',
           'You want answers “at any hour, in your voice”, as Delphi’s home page puts it.',
         ],
       },
@@ -56,16 +56,16 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
         heading: `Choose ${PRODUCT_NAME} if`,
         paragraphs: [],
         bulletPoints: [
-          'You would rather write a few notes than gather material to train on.',
-          'You want to read every conversation and get a weekly email about who needs you.',
-          'You want returning visitors remembered between conversations.',
+          'You’d rather write a few notes than collect material to train on.',
+          'You want to read every chat and get a weekly email about who wants to hear from you.',
+          'You want people who come back to be remembered.',
           `You want it free while ${PRODUCT_NAME} is in early access.`,
         ],
       },
       {
         heading: 'How this comparison was made',
         paragraphs: [
-          `Every claim about Delphi links to the page it was read from, with the date. Claims about ${PRODUCT_NAME} describe the product as it ships on the date at the top of this page. Delphi changes its plans and pages; if something here is out of date, write to the address in the privacy notice and it will be corrected.`,
+          `Every claim about Delphi links to the page it came from, with the date. Claims about ${PRODUCT_NAME} describe it as of the date at the top of this page. Delphi changes its plans and pages. If something here is out of date, email the address in the privacy notice and we’ll fix it.`,
         ],
       },
     ],
@@ -74,14 +74,14 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
         feature: 'What it answers from',
         ours: 'A public bio and three notes you write: about you, how you talk, topics to avoid.',
         theirs: {
-          text: '“Turn your writing, talks, and frameworks into a digital mind” — you connect work you have created.',
+          text: '“Turn your writing, talks, and frameworks into a digital mind.” You connect work you’ve made.',
           sourceUrl: DELPHI_HOME_URL,
           checkedOn: DELPHI_CHECKED_ON,
         },
       },
       {
         feature: 'Voice',
-        ours: 'Visitors can speak and hear replies aloud, in one synthetic voice shared by every avatar.',
+        ours: 'People can speak and hear replies out loud, in one computer voice shared by every avatar.',
         theirs: {
           text: '“Voice Calling + Chat” is listed on every plan, from Free up.',
           sourceUrl: DELPHI_PRICING_URL,
@@ -89,8 +89,8 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
         },
       },
       {
-        feature: 'Hearing what visitors asked',
-        ours: 'You read every conversation, and a weekly email flags who asked for you personally.',
+        feature: 'Seeing what people asked',
+        ours: 'You read every chat, and a weekly email points out who asked for you directly.',
         theirs: {
           text: 'The home page says it “reveals rising trends, hidden signals, and the exact moments worth acting on”.',
           sourceUrl: DELPHI_HOME_URL,
@@ -98,8 +98,8 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
         },
       },
       {
-        feature: 'Remembering returning visitors',
-        ours: 'Yes, for visitors who sign in and accept the terms; they can make it forget.',
+        feature: 'Remembering people who come back',
+        ours: 'Yes, for people who sign in and accept the terms. They can make it forget.',
         theirs: {
           text: 'Not stated on the home or pricing page.',
           sourceUrl: DELPHI_PRICING_URL,
@@ -110,7 +110,7 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
         feature: 'Where it lives',
         ours: 'A page at its own link. No embedding or integrations yet.',
         theirs: {
-          text: 'Slack integration and embedding locations on paid plans; SMS, WhatsApp and API access on the top plan.',
+          text: 'Slack and embedding on paid plans. SMS, WhatsApp and API access on the top plan.',
           sourceUrl: DELPHI_PRICING_URL,
           checkedOn: DELPHI_CHECKED_ON,
         },
@@ -129,7 +129,7 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
       {
         question: 'Is meAsAgent a Delphi alternative?',
         answer:
-          'For a conversational AI of yourself, yes. It does less — no training on your existing work, no voice cloning, no integrations — and in return takes minutes to launch, shows you every conversation, and is free while in early access.',
+          'For an AI of yourself that people can chat with, yes. It does less: no training on your existing work, no voice cloning, no integrations. In return it takes minutes to launch, shows you every chat, and is free while in early access.',
       },
       {
         question: 'Does Delphi have a free plan?',
@@ -145,7 +145,7 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
       { href: '/launch', label: 'Launch your avatar' },
     ],
     publishedAt: '2026-09-16',
-    updatedAt: '2026-09-16',
+    updatedAt: '2026-09-17',
   },
 };
 

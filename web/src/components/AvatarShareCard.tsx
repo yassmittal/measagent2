@@ -31,8 +31,8 @@ export function AvatarShareCard({ avatar }: { avatar: OwnAvatar }) {
         Share your avatar
       </h2>
       <p className="avatar-share-card-text">
-        Put your link where people already try to reach you — your bio, your email
-        signature, your website. This is how it looks when shared.
+        Put your link where people already try to reach you, like your bio, your email
+        signature or your website. This is how it looks when you share it.
       </p>
       {/* biome-ignore lint/performance/noImgElement: the generated share image is already sized for this; next/image would re-encode a PNG made on demand. */}
       <img

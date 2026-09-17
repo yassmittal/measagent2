@@ -87,6 +87,8 @@
   --t-slow: 0.35s;
   --t-slower: 0.5s;
   --t-wash: 0.6s;
+  /* How long a skeleton waits before showing, so a fast response never flashes one. */
+  --skeleton-delay: 0.12s;
 }
 
 @font-face {

@@ -3,6 +3,7 @@ import {
   type AttentionCategory,
   type AttentionFlag,
 } from '@measagent/shared/weekly-summary';
+import { PLAIN_WRITING_RULES } from '../chat/plain-writing.js';
 import { removeWriterTags, type TranscriptMessage } from '../memory/memory-writer.js';
 
 /**
@@ -65,6 +66,9 @@ Return a single JSON object and nothing else:
   - "complaint": the visitor complained about the avatar or about ${avatarName};
   - "safety_concern": the visitor may be at risk or described a threat to someone.
   and reason is one sentence, at most ${VISITOR_WEEK_LIMITS.reasonLength} characters, saying what the visitor wants.
+
+Write it the way you would text a friend:
+${PLAIN_WRITING_RULES}
 
 Never quote the visitor. Never include email addresses, phone numbers, links, passwords, card or account numbers, or anyone's contact details. Ordinary curiosity, small talk and questions the avatar answered do not need ${avatarName}.
 

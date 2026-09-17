@@ -8,6 +8,7 @@ import {
   PRODUCT_NAME,
   PRODUCT_TAGLINE,
   SITE_URL,
+  withProductName,
 } from '@/lib/product';
 import { buildOrganizationNode, buildWebSiteNode } from '@/lib/seo/structured-data';
 import { SessionProvider } from '@/state/SessionProvider';
@@ -22,7 +23,7 @@ const newsreader = Newsreader({
   axes: ['opsz'],
 });
 
-const DEFAULT_TITLE = `${PRODUCT_NAME} — AI avatars of real people`;
+const DEFAULT_TITLE = `${PRODUCT_NAME} | AI avatars of real people`;
 
 /**
  * The defaults every page inherits. Pages set their own title, description,
@@ -31,7 +32,7 @@ const DEFAULT_TITLE = `${PRODUCT_NAME} — AI avatars of real people`;
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: DEFAULT_TITLE, template: `%s — ${PRODUCT_NAME}` },
+  title: { default: DEFAULT_TITLE, template: withProductName('%s') },
   description: PRODUCT_TAGLINE,
   applicationName: PRODUCT_NAME,
   authors: [{ name: PRODUCT_BUILDER_NAME }],

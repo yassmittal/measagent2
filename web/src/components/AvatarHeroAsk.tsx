@@ -1,8 +1,8 @@
 'use client';
 
 import type { AvatarProfile } from '@measagent/shared/avatars';
-import { ArrowUp } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowUp, LoaderCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTypedPlaceholder } from '@/hooks/useTypedPlaceholder';
 import { ASK_DRAFT_PARAM } from '@/lib/ask-draft';
 import { readAvatarCallName } from '@/lib/hero-avatars';
@@ -47,8 +47,25 @@ export function AvatarHeroAsk({ avatar, onDraftChange }: AvatarHeroAskProps) {
   ]);
   const placeholder = useTypedPlaceholder(phrases, isFocused || hasText);
 
+  // The form navigates the whole page, which can take a moment to answer; the
+  // send button spins meanwhile. Coming back through the history restores this
+  // page as it was left, so the spinner is cleared there.
+  const [isSubmitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    const clearSubmittingOnReturn = (event: PageTransitionEvent) => {
+      if (event.persisted) setSubmitting(false);
+    };
+    window.addEventListener('pageshow', clearSubmittingOnReturn);
+    return () => window.removeEventListener('pageshow', clearSubmittingOnReturn);
+  }, []);
+
   return (
-    <form action={`/${avatar.handle}`} method="get" className="avatar-hero-ask">
+    <form
+      action={`/${avatar.handle}`}
+      method="get"
+      className="avatar-hero-ask"
+      onSubmit={() => setSubmitting(true)}
+    >
       <input
         name={ASK_DRAFT_PARAM}
         className="avatar-hero-ask-input"
@@ -64,8 +81,17 @@ export function AvatarHeroAsk({ avatar, onDraftChange }: AvatarHeroAskProps) {
           onDraftChange(hasDraft);
         }}
       />
-      <button type="submit" className="avatar-hero-ask-send" aria-label="Ask">
-        <ArrowUp size={17} aria-hidden="true" />
+      <button
+        type="submit"
+        className="avatar-hero-ask-send"
+        aria-label={isSubmitting ? 'Opening the conversation' : 'Ask'}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <LoaderCircle className="spinner" size={17} aria-hidden="true" />
+        ) : (
+          <ArrowUp size={17} aria-hidden="true" />
+        )}
       </button>
     </form>
   );

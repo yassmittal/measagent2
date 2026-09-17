@@ -39,7 +39,7 @@ const schemas = Object.freeze({
   listAvatarDirectory: {
     $id: 'list-avatar-directory',
     tags,
-    description: 'Every reviewed, live avatar, most recently approved first.',
+    description: 'Every listed, live avatar, newest first.',
     response: {
       200: {
         type: 'object',

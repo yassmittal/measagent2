@@ -6,6 +6,7 @@ import { useSession } from '@/state/SessionProvider';
 import { AccountSettings } from './AccountSettings';
 import { SettingsPanel } from './SettingsPanel';
 import { SignInPrompt } from './SignInPrompt';
+import { Skeleton } from './Skeleton';
 
 export function ProfileMenu() {
   const { status, user, signOut } = useSession();
@@ -33,9 +34,16 @@ export function ProfileMenu() {
     };
   }, [isMenuOpen]);
 
-  // Nothing is drawn until the api has said who this is: a control that showed
+  // No control is drawn until the api has said who this is: one that showed
   // "sign in" and then flipped to a photo is worse than one that arrives late.
-  if (status === 'loading') return null;
+  // A neutral circle holds its place meanwhile, so the corner is never empty.
+  if (status === 'loading') {
+    return (
+      <div className="profile" aria-hidden="true">
+        <Skeleton height={36} shape="circle" />
+      </div>
+    );
+  }
 
   const openSettings = () => {
     setMenuOpen(false);

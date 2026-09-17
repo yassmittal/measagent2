@@ -3,6 +3,7 @@ import { ATTENTION_CATEGORY_LABELS } from '@measagent/shared/weekly-summary';
 import Link from 'next/link';
 import { formatDateDivider } from '@/lib/format-date';
 import { Avatar } from './Avatar';
+import { LinkPendingIndicator } from './LinkPendingIndicator';
 
 export function OwnerVisitorRow({ visitor }: { visitor: OwnerVisitor }) {
   return (
@@ -20,6 +21,7 @@ export function OwnerVisitorRow({ visitor }: { visitor: OwnerVisitor }) {
           <span className="owner-visitor-row-summary">{visitor.memory.summary}</span>
         ) : null}
       </span>
+      <LinkPendingIndicator />
     </Link>
   );
 }

@@ -99,7 +99,7 @@ const schemas = Object.freeze({
     description:
       'Launch an avatar of the signed-in account. Its name and portrait come ' +
       'from the Google account and cannot be set here. It is live at its handle ' +
-      'immediately and listed in the directory only once reviewed.',
+      'and listed in the directory immediately.',
     body: {
       type: 'object',
       required: [
@@ -132,8 +132,7 @@ const schemas = Object.freeze({
     $id: 'update-own-avatar',
     tags,
     description:
-      'Edit or pause the signed-in account\'s avatar. The handle cannot change. ' +
-      'Changing the bio, Ask me about or website sends the avatar back to review.',
+      "Edit or pause the signed-in account's avatar. The handle cannot change.",
     body: {
       type: 'object',
       additionalProperties: false,

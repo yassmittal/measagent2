@@ -3,13 +3,10 @@
 import { useEffect, useState } from 'react';
 
 const PHRASES = [
-  'Thinking about the best way to explain this…',
-  'Sketching the intuition first…',
-  'Breaking this down step by step…',
-  'Reasoning from first principles…',
-  'Connecting this to what you already know…',
-  'Thinking about what really matters here…',
-  'Thinking this through carefully…',
+  'Thinking…',
+  'Give me a second…',
+  'Good question, let me think…',
+  'Working out what to say…',
   'Finding a good example…',
 ] as const;
 

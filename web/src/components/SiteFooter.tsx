@@ -24,7 +24,7 @@ export function SiteFooter() {
         ))}
       </nav>
       <p className="site-footer-note">
-        {PRODUCT_NAME} · AI avatars say they are AI whenever they are asked.
+        {PRODUCT_NAME} · Every avatar says it’s an AI if you ask.
       </p>
     </footer>
   );

@@ -50,8 +50,8 @@ export function buildSummaryEmail(input: SummaryEmailInput): SummaryEmail {
   const describeVisitor = (visitor: SummaryEmailVisitor) =>
     `${visitor.isNew ? 'new' : 'returning'} · ${plural(visitor.messageCount, 'message')}`;
   const moreLine =
-    uncoveredCount > 0 ? `And ${plural(uncoveredCount, 'more visitor')} — see them all.` : null;
-  const footer = `You get this because you launched an avatar. The people who talk to it were told that you read their conversations. Treat what they said with care.`;
+    uncoveredCount > 0 ? `And ${plural(uncoveredCount, 'more visitor')}. See them all below.` : null;
+  const footer = `You get this email because you launched an avatar. The people who talk to it know you can read their chats, so please treat what they said with care.`;
 
   const text = [
     `Hi ${input.ownerName},`,
@@ -63,7 +63,7 @@ export function buildSummaryEmail(input: SummaryEmailInput): SummaryEmail {
           'NEEDS YOU',
           ...flagged.map(
             (visitor) =>
-              `- ${visitor.name} — ${ATTENTION_CATEGORY_LABELS[visitor.needsAttention?.category ?? 'deferred_to_you']}: ${visitor.needsAttention?.reason}\n  ${visitor.visitorUrl}`
+              `- ${visitor.name}: ${ATTENTION_CATEGORY_LABELS[visitor.needsAttention?.category ?? 'deferred_to_you']}: ${visitor.needsAttention?.reason}\n  ${visitor.visitorUrl}`
           ),
         ]
       : []),

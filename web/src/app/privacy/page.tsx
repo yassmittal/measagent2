@@ -14,9 +14,9 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy notice" updatedAt={PRIVACY_UPDATED_AT}>
       <p>
-        {PRODUCT_NAME} hosts AI avatars of real people and of the things they run: you can
-        talk to one, or launch one of yourself. This page says what it keeps and who else
-        sees it. It is written to be read, not to be survived.
+        {PRODUCT_NAME} hosts AI avatars of real people and the things they run. You can
+        talk to one, or launch one of yourself. This page explains what we keep and who
+        else sees it, in plain words.
       </p>
 
       <h2>What is stored when you talk to an avatar</h2>
@@ -70,16 +70,15 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Your name and photo, in public.</strong> They come from your Google
-          account and appear on your avatar&apos;s page, and in the directory once it has
-          been reviewed. Your email address is never shown.
+          account. They appear on your avatar&apos;s page and on the front page. Your
+          email address is never shown.
         </li>
         <li>
-          <strong>In search engines, once it is listed.</strong> A reviewed, listed
-          avatar&apos;s page — its name, photo, bio, topics and website — can appear in
-          search engines such as Google and Bing. You can turn that off when you launch or
-          edit your avatar; its link keeps working either way. A search engine can take a
-          while to drop a page after it is hidden. Conversations are never public pages
-          and never appear there.
+          <strong>In search engines.</strong> Your avatar&apos;s page, with its name,
+          photo, bio, topics and website, can appear in search engines like Google and
+          Bing. You can turn that off when you launch or edit your avatar; its link keeps
+          working either way. A search engine can take a while to drop a page after it is
+          hidden. Conversations are never public pages and never appear there.
         </li>
         <li>
           <strong>When you confirmed the avatar is of you</strong>, or of something you
@@ -148,7 +147,7 @@ export default function PrivacyPage() {
         Write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from the address
         you signed in with, and your account, your avatar and every conversation attached
         to your account will be removed. You can pause your avatar yourself at any time;
-        there is no self-service delete button yet. That is a gap, not a policy.
+        there is no delete button yet. We plan to add one.
       </p>
 
       <h2>Changes</h2>

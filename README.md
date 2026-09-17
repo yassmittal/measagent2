@@ -1,8 +1,8 @@
 # meAsAgent
 
 AI avatars of real people. Anyone who signs in with Google can launch an avatar
-of themselves; visitors browse the reviewed ones and talk to any of them — text
-chat, spoken replies, and hold-to-speak voice input.
+of themselves, and it is listed straight away; visitors browse them and talk to
+any of them over text chat, spoken replies, and hold-to-speak voice input.
 
 Deployed at **meAsAgent.vercel.app**.
 
@@ -16,7 +16,7 @@ it running.
 
 ```
 web/       Next.js 16 + React 19, deployed to Vercel
-admin/     Next.js 16 admin portal that reviews avatars, deployed on its own
+admin/     Next.js 16 admin portal that unlists avatars, deployed on its own
 api/       Fastify 5 on Bun, deployed anywhere that runs Bun
 shared/    TypeScript types imported by all three, no build or publish step
 scripts/   project-local MongoDB, the dev stack, voice and admin helpers
@@ -29,7 +29,7 @@ browser.
 
 | Page | What it is |
 |---|---|
-| `/` | the directory — every reviewed, live avatar |
+| `/` | the directory: every listed, live avatar |
 | `/<handle>` | talk to one avatar |
 | `/launch` | launch your own avatar, or edit and pause it |
 | `/privacy`, `/terms` | the legal pages |
@@ -173,7 +173,7 @@ serializer, not just validation, so they are always current.
 
 | Route | Does |
 |---|---|
-| `GET /v1/avatars` | the directory: reviewed, live avatars |
+| `GET /v1/avatars` | the directory: listed, live avatars, newest first |
 | `GET /v1/avatars/:handle` | one avatar's public profile, listed or not |
 | `GET`/`POST`/`PATCH /v1/me/avatar` | read, launch, or edit and pause your own avatar |
 | `POST /v1/chats` | send a message to an avatar; responds with an SSE stream for the turn |
@@ -193,7 +193,7 @@ serializer, not just validation, so they are always current.
 | `POST /v1/weekly-summary/unsubscribe?token=` | stop the weekly email without signing in |
 | `POST /v1/chat/completions` | the OpenAI-compatible endpoint the voice service calls |
 | `POST /v1/admin/sessions` | admin sign-in, rate limited |
-| `GET /v1/admin/avatars?listing=` | the review queue |
+| `GET /v1/admin/avatars?listing=` | avatars by listing state, for moderation |
 | `PATCH /v1/admin/avatars/:avatarId` | list or decline an avatar |
 | `GET /health` | liveness |
 

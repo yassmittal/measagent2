@@ -8,13 +8,13 @@ import type { ContentSection } from './content-types';
 export const HOME_INTRODUCTION: ContentSection = {
   heading: `What is ${PRODUCT_NAME}?`,
   paragraphs: [
-    `${PRODUCT_NAME} hosts AI avatars of real people and of the things they build. Each avatar answers as the person who launched it, from notes they wrote themselves, at its own link. Talk to one by typing or by holding a button to speak — no account needed.`,
-    'Busy founders, creators and teachers cannot answer everyone. Their avatar answers for them, remembers the visitors who sign in, and they read every conversation and get a weekly email about who needs them personally. Every avatar says it is an AI whenever it is asked.',
+    `${PRODUCT_NAME} lets you make an AI version of yourself, or of something you run. It answers people for you, using notes you write, at its own link. Anyone can talk to it by typing or by holding a button to speak. No account needed.`,
+    'Busy founders, creators and teachers can’t reply to everyone. Their avatar replies for them and remembers people who sign in. They can read every chat, and each week they get an email about who wants to hear from them directly. Every avatar says it’s an AI if you ask.',
   ],
   steps: [
-    'Sign in with Google — your avatar takes its name and photo from that account, so it can only be of you or of something you run.',
+    'Sign in with Google. Your avatar uses the name and photo from that account, so it can only be you or something you run.',
     'Write a short bio and three notes: about you, how you talk, and what to avoid.',
-    'Share your link. The avatar is live straight away and joins this directory once it has been reviewed.',
+    'Share your link. Your avatar goes live right away and shows up on this page too.',
   ],
 };
 

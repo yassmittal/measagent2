@@ -11,7 +11,11 @@
 
 export type AvatarAvailability = 'live' | 'paused';
 
-/** Launching is self-serve; appearing in the public directory is not. */
+/**
+ * Whether the public directory shows an avatar. New avatars are `listed`;
+ * `declined` is an admin taking one down. `pending` is left over from when
+ * listing waited for review, and an owner's next edit lists it.
+ */
 export type AvatarListing = 'pending' | 'listed' | 'declined';
 
 /**

@@ -43,7 +43,7 @@ export function GET(): Response {
     '',
     '## Pages',
     '',
-    `- [Avatars](${SITE_URL}): the directory of reviewed avatars`,
+    `- [Avatars](${SITE_URL}): every avatar people have launched`,
     ...contentPages.map(
       (page) =>
         `- [${page.metaTitle}](${toAbsoluteUrl(page.path)}): ${page.metaDescription}`,

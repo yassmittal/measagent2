@@ -117,17 +117,6 @@ a {
   }
 }
 
-.page-centered {
-  height: 100%;
-  display: grid;
-  place-items: center;
-  padding: var(--sp-6);
-}
-
-.page-quiet {
-  color: var(--text-muted);
-}
-
 @keyframes migration-sending-pulse {
   0%,
   to {

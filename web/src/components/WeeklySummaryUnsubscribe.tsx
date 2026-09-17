@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { unsubscribeFromWeeklySummary } from '@/lib/weekly-summary-client';
+import { BusyButtonLabel } from './BusyButtonLabel';
 
 type UnsubscribeState = 'ready' | 'sending' | 'done' | 'failed';
 
@@ -51,7 +52,9 @@ export function WeeklySummaryUnsubscribe({ token }: { token: string | null }) {
             onClick={unsubscribe}
             disabled={state === 'sending'}
           >
-            {state === 'sending' ? 'Stopping…' : 'Stop these emails'}
+            <BusyButtonLabel isBusy={state === 'sending'}>
+              {state === 'sending' ? 'Stopping…' : 'Stop these emails'}
+            </BusyButtonLabel>
           </button>
           {error !== null ? <p className="owner-visitors-error">{error}</p> : null}
         </>

@@ -2,9 +2,9 @@ import type { AvatarListing } from '@measagent/shared/avatars';
 import Link from 'next/link';
 
 const LISTING_LABELS: Record<AvatarListing, string> = {
-  pending: 'Pending',
   listed: 'Listed',
-  declined: 'Declined',
+  declined: 'Unlisted',
+  pending: 'Pending',
 };
 
 export function ListingTabs({ activeListing }: { activeListing: AvatarListing }) {

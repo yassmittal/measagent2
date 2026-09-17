@@ -30,10 +30,9 @@ export function AvatarProfileDetails() {
         <a
           href={avatar.websiteUrl}
           className="avatar-profile-website"
-          // `me` ties the page to the owner's own site. The owner wrote the
-          // link, and it has only been reviewed once the avatar is listed, so
-          // it passes no ranking credit until the page itself is in search.
-          rel={avatar.isSearchIndexable ? 'me noopener' : 'me nofollow ugc noopener'}
+          // `me` ties the page to the owner's own site. Nobody checks the link
+          // before it goes live, so it passes no ranking credit.
+          rel="me nofollow ugc noopener"
           target="_blank"
         >
           {new URL(avatar.websiteUrl).host}

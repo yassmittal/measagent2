@@ -9,8 +9,8 @@ import { isAdminRequest } from '../../shared/identity.js';
  * `PATCH /v1/admin/avatars/:avatarId` — list or decline an avatar.
  *
  * Declining a listed avatar is how it is unlisted. Only the listing changes:
- * the avatar stays live at its link, because review decides what the front
- * page vouches for, not whether a person may have an avatar at all.
+ * the avatar stays live at its link, because the directory is what the front
+ * page shows, not whether a person may have an avatar at all.
  */
 export async function reviewAvatar(
   this: FastifyRequest['server'],

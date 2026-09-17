@@ -14,8 +14,12 @@ import {
 import Link from 'next/link';
 import { type FormEvent, useState } from 'react';
 import { launchAvatar, updateOwnAvatar } from '@/lib/avatar-client';
-import { SITE_URL } from '@/lib/product';
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/product';
 import { Avatar } from './Avatar';
+import { BusyButtonLabel } from './BusyButtonLabel';
+
+/** Which of the form's buttons started the save now running, so only that one spins. */
+type AvatarSaveAction = 'save' | 'toggle-availability';
 
 interface AvatarFormProps {
   owner: UserProfile;
@@ -49,11 +53,9 @@ function splitAskMeAboutTopics(askMeAboutText: string): string[] {
 const SITE_HOST = new URL(SITE_URL).host;
 
 const LISTING_EXPLANATIONS: Record<AvatarListing, string> = {
-  pending:
-    'Waiting for review before it appears in the directory. Its link works already.',
-  listed: 'Listed in the directory.',
-  declined:
-    'Not listed in the directory. Changing the bio, topics or website asks for another review.',
+  listed: 'It’s on the front page too.',
+  pending: 'Save once more to add it to the front page.',
+  declined: `We took it off the front page, but its link still works. If you think that’s a mistake, email ${CONTACT_EMAIL}.`,
 };
 
 export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
@@ -68,11 +70,20 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
     subject: avatar?.subject ?? 'person',
     isShownInSearch: !(avatar?.isHiddenFromSearch ?? false),
   }));
-  const [isSaving, setSaving] = useState(false);
+  const [runningSaveAction, setRunningSaveAction] = useState<AvatarSaveAction | null>(
+    null,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const isLaunched = avatar !== null;
+  const isSaving = runningSaveAction !== null;
+  const isSubmitting = runningSaveAction === 'save';
+  const submitLabel = isSubmitting
+    ? 'Saving…'
+    : isLaunched
+      ? 'Save changes'
+      : 'Launch avatar';
 
   const updateDraft = <Field extends keyof AvatarDraft>(
     field: Field,
@@ -82,17 +93,23 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
     setSavedMessage(null);
   };
 
-  const runSave = async (save: () => Promise<OwnAvatar>, successMessage: string) => {
-    setSaving(true);
+  const runSave = async (
+    saveAction: AvatarSaveAction,
+    save: () => Promise<OwnAvatar>,
+    successMessage: string,
+  ) => {
+    setRunningSaveAction(saveAction);
     setErrorMessage(null);
     setSavedMessage(null);
     try {
       onSaved(await save());
       setSavedMessage(successMessage);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'That did not save.');
+      setErrorMessage(
+        error instanceof Error ? error.message : 'That didn’t save. Try again.',
+      );
     } finally {
-      setSaving(false);
+      setRunningSaveAction(null);
     }
   };
 
@@ -106,11 +123,12 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
     };
 
     if (isLaunched) {
-      void runSave(() => updateOwnAvatar(avatarFields), 'Saved.');
+      void runSave('save', () => updateOwnAvatar(avatarFields), 'Saved.');
     } else {
       void runSave(
+        'save',
         () => launchAvatar({ handle, ...avatarFields, isOwnerAttested: true }),
-        'Launched.',
+        'Your avatar is live.',
       );
     }
   };
@@ -119,6 +137,7 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
     if (avatar === null) return;
     const isPausing = avatar.availability === 'live';
     void runSave(
+      'toggle-availability',
       () => updateOwnAvatar({ availability: isPausing ? 'paused' : 'live' }),
       isPausing ? 'Paused.' : 'Live again.',
     );
@@ -146,7 +165,7 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
           <p className="avatar-form-hint">
             {avatar.availability === 'live'
               ? LISTING_EXPLANATIONS[avatar.listing]
-              : 'Nobody can start or continue a conversation with it until you resume it.'}
+              : 'Nobody can chat with it until you turn it back on.'}
           </p>
           <button
             type="button"
@@ -154,7 +173,9 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
             onClick={toggleAvailability}
             disabled={isSaving}
           >
-            {avatar.availability === 'live' ? 'Pause avatar' : 'Resume avatar'}
+            <BusyButtonLabel isBusy={runningSaveAction === 'toggle-availability'}>
+              {avatar.availability === 'live' ? 'Pause avatar' : 'Turn avatar back on'}
+            </BusyButtonLabel>
           </button>
           <Link href="/launch/visitors" className="avatar-form-visitors">
             See who talks to your avatar
@@ -173,14 +194,14 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
                 updateDraft('handle', event.target.value.toLowerCase())
               }
               pattern={AVATAR_HANDLE_PATTERN}
-              title="3-30 lowercase letters, numbers or hyphens, not starting or ending with a hyphen."
+              title="3 to 30 lowercase letters, numbers or hyphens. It can’t start or end with a hyphen."
               autoComplete="off"
               spellCheck={false}
               required
             />
           </span>
           <span className="avatar-form-hint">
-            Your avatar's link. It cannot be changed later.
+            Your avatar’s link. You can’t change it later.
           </span>
         </label>
       )}
@@ -205,13 +226,13 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
             checked={draft.subject === 'project'}
             onChange={() => updateDraft('subject', 'project')}
           />
-          <span>Something I run — a product, project or brand</span>
+          <span>Something I run, like a product, project or brand</span>
         </label>
       </fieldset>
 
       <AvatarTextField
         label="Bio"
-        hint="Shown to visitors under your name. Changing it sends your avatar back to review."
+        hint="Shown under your name on your page."
         value={draft.bio}
         maxLength={AVATAR_TEXT_LIMITS.bio}
         onChange={(value) => updateDraft('bio', value)}
@@ -231,7 +252,7 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
         />
         <span className="avatar-form-hint">
           Optional. Up to {AVATAR_ASK_ME_ABOUT_MAX_TOPICS} short topics, separated by
-          commas, shown on your page. Changing them sends your avatar back to review.
+          commas. Shown on your page.
         </span>
       </label>
 
@@ -246,33 +267,31 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
           onChange={(event) => updateDraft('websiteUrl', event.target.value.trim())}
           placeholder="https://"
           pattern={AVATAR_WEBSITE_URL_PATTERN}
-          title="A full address starting with https://"
+          title="A full link starting with https://"
           maxLength={AVATAR_TEXT_LIMITS.websiteUrl}
           autoComplete="url"
           spellCheck={false}
         />
-        <span className="avatar-form-hint">
-          Optional. Linked from your page. Changing it sends your avatar back to review.
-        </span>
+        <span className="avatar-form-hint">Optional. Linked from your page.</span>
       </label>
 
       <AvatarTextField
         label="About you"
-        hint="What your avatar knows: your work, interests, what you are building. Only the model reads this."
+        hint="What your avatar knows: your work, your interests, what you’re building. Only the AI reads this."
         value={draft.aboutMe}
         maxLength={AVATAR_TEXT_LIMITS.aboutMe}
         onChange={(value) => updateDraft('aboutMe', value)}
       />
       <AvatarTextField
         label="How you talk"
-        hint="Direct or chatty, formal or dry — how your replies should sound."
+        hint="How your replies should sound. Short or chatty, formal or relaxed."
         value={draft.speakingStyle}
         maxLength={AVATAR_TEXT_LIMITS.speakingStyle}
         onChange={(value) => updateDraft('speakingStyle', value)}
       />
       <AvatarTextField
         label="Topics to avoid"
-        hint="Anything your avatar should decline to discuss."
+        hint="Anything your avatar shouldn’t talk about."
         value={draft.avoidTopics}
         maxLength={AVATAR_TEXT_LIMITS.avoidTopics}
         onChange={(value) => updateDraft('avoidTopics', value)}
@@ -286,9 +305,9 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
           onChange={(event) => updateDraft('isShownInSearch', event.target.checked)}
         />
         <span>
-          Show my avatar in search engines (Google, Bing) once it’s listed.
+          Show my avatar on Google and other search engines.
           <span className="avatar-form-toggle-hint">
-            Turning this off hides your page from search results. The link still works.
+            Turn this off to keep your page out of search results. The link still works.
           </span>
         </span>
       </label>
@@ -299,8 +318,8 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
           <span>
             {draft.subject === 'person'
               ? `This avatar is of me, ${owner.name}.`
-              : 'I run what this avatar speaks for, and I’m launching it from my own account. It is not an avatar of another person.'}{' '}
-            It will say it is an AI whenever it is asked.
+              : 'I run what this avatar speaks for, and I’m launching it from my own account. It isn’t another person.'}{' '}
+            It will say it’s an AI whenever someone asks.
           </span>
         </label>
       )}
@@ -309,7 +328,7 @@ export function AvatarForm({ owner, avatar, onSaved }: AvatarFormProps) {
 
       <div className="avatar-form-actions">
         <button type="submit" className="avatar-form-submit" disabled={isSaving}>
-          {isSaving ? 'Saving…' : isLaunched ? 'Save changes' : 'Launch avatar'}
+          <BusyButtonLabel isBusy={isSubmitting}>{submitLabel}</BusyButtonLabel>
         </button>
         {savedMessage !== null ? (
           <span className="avatar-form-saved" role="status">

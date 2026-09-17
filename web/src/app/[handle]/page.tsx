@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { StatusPage } from '@/components/StatusPage';
 import { StructuredData } from '@/components/StructuredData';
 import { ASK_DRAFT_PARAM, readAskDraft } from '@/lib/ask-draft';
 import { loadAvatarProfile } from '@/lib/avatar-profiles';
@@ -48,11 +49,14 @@ export default async function AvatarPage(props: PageProps<'/[handle]'>) {
   // the api would refuse on the first message.
   if (avatar.availability === 'paused') {
     return (
-      <main className="page-centered">
-        <p className="page-quiet">
-          {avatar.name} has paused their avatar. <Link href="/">See other avatars</Link>
-        </p>
-      </main>
+      <StatusPage
+        title={`${avatar.name} has paused their avatar`}
+        message="It can't chat right now. The other avatars can."
+      >
+        <Link href="/" className="status-page-action">
+          See other avatars
+        </Link>
+      </StatusPage>
     );
   }
 

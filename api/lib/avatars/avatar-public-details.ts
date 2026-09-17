@@ -22,8 +22,8 @@ export function isAvatarHiddenFromSearch(avatar: AvatarDoc): boolean {
  * nowhere else: the sitemap, the page's robots tag and the api response all
  * start from this answer.
  *
- * Only what the directory already vouches for — reviewed and live — and only
- * while the owner has not turned search off. A link still works either way.
+ * Only avatars the directory lists and that are live, and only while the owner
+ * has not turned search off. A link still works either way.
  */
 export function isAvatarSearchIndexable(avatar: AvatarDoc): boolean {
   return (
@@ -69,13 +69,5 @@ export function isAcceptableWebsiteUrl(url: string): boolean {
     // Credentials in a link shown to strangers are either a mistake or a trick.
     username === '' &&
     password === ''
-  );
-}
-
-/** Two topic lists are the same edit if they hold the same topics in the same order. */
-export function haveSameTopics(currentTopics: string[], nextTopics: string[]): boolean {
-  return (
-    currentTopics.length === nextTopics.length &&
-    currentTopics.every((topic, index) => topic === nextTopics[index])
   );
 }

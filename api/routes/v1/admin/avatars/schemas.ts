@@ -17,8 +17,8 @@ const schemas = Object.freeze({
     $id: 'list-avatars-for-review',
     tags,
     description:
-      'Every avatar with one listing state. Pending comes oldest first; listed ' +
-      'and declined come most recently reviewed first. Requires an admin token.',
+      'Every avatar with one listing state. Listed and pending come most recently ' +
+      'changed first; declined comes most recently unlisted first. Requires an admin token.',
     querystring: {
       type: 'object',
       required: ['listing'],

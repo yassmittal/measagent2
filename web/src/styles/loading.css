@@ -1,0 +1,110 @@
+/*
+ * Waiting and arriving: skeletons stand in for content that is on its way,
+ * the spinner marks a button whose action is running, and `content-reveal` is
+ * the one entrance every layer uses once the real content lands — so a page
+ * never snaps from grey shapes to text.
+ *
+ * Skeleton layouts start their reveal a beat late on purpose: a response that
+ * comes back quickly replaces them before they are ever seen.
+ */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes content-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sized per use through the custom properties `Skeleton` sets. */
+.skeleton {
+  display: block;
+  flex: none;
+  width: var(--skeleton-width, 100%);
+  max-width: 100%;
+  height: var(--skeleton-height, 14px);
+  border-radius: var(--skeleton-radius, var(--r-xs));
+  background: linear-gradient(
+      90deg,
+      var(--surface-sunken) 0%,
+      var(--n100) 45%,
+      var(--surface-sunken) 90%
+    )
+    0 0 / 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
+.spinner {
+  flex: none;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+.busy-button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+/* The chat while its conversation loads: the shapes of a short exchange. */
+.thread-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-top: var(--sp-4);
+  animation: content-reveal var(--t-slow) var(--ease) var(--skeleton-delay) backwards;
+}
+
+.thread-skeleton-user {
+  align-self: flex-end;
+  width: min(260px, 60%);
+}
+
+.thread-skeleton-reply {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(var(--measure), 85%);
+}
+
+.page-intro-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  animation: content-reveal var(--t-slow) var(--ease) var(--skeleton-delay) backwards;
+}
+
+/* Sits in the top corner of a card-shaped link, which must be positioned. */
+.link-pending-indicator {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  display: grid;
+  color: var(--text-subtle);
+  opacity: 0;
+  transition: opacity var(--t) var(--ease);
+  pointer-events: none;
+}
+
+.link-pending-indicator[data-pending] {
+  opacity: 1;
+}

@@ -6,12 +6,12 @@ import { listAvatarsForReview } from '@/lib/admin-api';
 import { readAdminSessionToken } from '@/lib/admin-session';
 import { signOutAction } from './actions';
 
-const LISTINGS: ReadonlyArray<AvatarListing> = ['pending', 'listed', 'declined'];
+const LISTINGS: ReadonlyArray<AvatarListing> = ['listed', 'declined', 'pending'];
 
 const EMPTY_LISTING_MESSAGES: Record<AvatarListing, string> = {
-  pending: 'Nothing is waiting for review.',
   listed: 'No avatar is listed yet.',
-  declined: 'No avatar has been declined.',
+  declined: 'No avatar has been unlisted.',
+  pending: 'Nothing is waiting. New avatars are listed straight away.',
 };
 
 export default async function ReviewPage(props: PageProps<'/'>) {
@@ -20,7 +20,7 @@ export default async function ReviewPage(props: PageProps<'/'>) {
 
   const requestedListing = (await props.searchParams).listing;
   const listing =
-    LISTINGS.find((candidate) => candidate === requestedListing) ?? 'pending';
+    LISTINGS.find((candidate) => candidate === requestedListing) ?? 'listed';
 
   const avatars = await listAvatarsForReview(token, listing);
   if (avatars === null) redirect('/login');
@@ -28,7 +28,7 @@ export default async function ReviewPage(props: PageProps<'/'>) {
   return (
     <main className="review-page">
       <header className="review-head">
-        <h1 className="review-title">Avatar review</h1>
+        <h1 className="review-title">Avatars</h1>
         <form action={signOutAction}>
           <button type="submit" className="button-quiet">
             Sign out

@@ -6,6 +6,7 @@ import {
   loadWeeklySummarySettings,
   updateWeeklySummarySettings,
 } from '@/lib/weekly-summary-client';
+import { Skeleton } from './Skeleton';
 
 /** The owner's weekly email switch, on the visitors page. */
 export function WeeklySummarySettings() {
@@ -39,7 +40,18 @@ export function WeeklySummarySettings() {
   if (settings === null) {
     return error !== null ? (
       <p className="weekly-summary-settings-note">{error}</p>
-    ) : null;
+    ) : (
+      // Holds the card's place, so the visitors below it do not jump when it loads.
+      <section
+        className="weekly-summary-settings"
+        role="status"
+        aria-label="Loading your email settings"
+      >
+        <Skeleton width={290} height={21} />
+        <Skeleton width="85%" height={13} />
+        <Skeleton width="60%" height={13} />
+      </section>
+    );
   }
 
   const toggle = async () => {

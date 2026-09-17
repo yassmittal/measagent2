@@ -7,8 +7,10 @@ export const PRODUCT_NAME = 'meAsAgent';
  */
 export const SITE_URL = 'https://measagent.vercel.app';
 
-export const PRODUCT_TAGLINE =
-  'Talk to AI avatars of real people and the things they build — or launch your own.';
+export const PRODUCT_TAGLINE = 'Make an AI you. It talks to people when you can’t.';
+
+/** Joins a page's title to the brand, in the tab and in shared links alike. */
+export const withProductName = (title: string): string => `${title} | ${PRODUCT_NAME}`;
 
 /**
  * Launching costs nothing today and may not always. This sentence is the only

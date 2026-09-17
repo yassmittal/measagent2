@@ -58,7 +58,6 @@ export function ReviewCard({ avatar }: { avatar: AvatarForReview }) {
 
       <dl className="review-card-fields">
         <ReviewField label="Bio" text={avatar.bio} />
-        {/* Public on the avatar's page, so a change to either sends it back here. */}
         <ReviewField label="Ask me about" text={avatar.askMeAbout.join(' · ')} />
         <ReviewField label="Website" text={avatar.websiteUrl ?? ''} />
         <ReviewField label="About" text={avatar.aboutMe} />

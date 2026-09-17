@@ -84,7 +84,13 @@
   place-items: center;
   background: var(--button-bg);
   color: var(--button-ink);
-  transition: background var(--t-fast) var(--ease);
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+
+.composer-send:active:not(:disabled) {
+  transform: scale(0.94);
 }
 
 .composer-send:hover:not(:disabled) {

@@ -8,7 +8,7 @@ const HOLD_LABEL = 'Hold to speak';
 
 function describe(voice: LiveVoiceSession, avatarName: string): string {
   if (voice.error !== null) return voice.error;
-  if (voice.isHolding) return 'Listening… release to send';
+  if (voice.isHolding) return 'Listening… let go to send';
   if (voice.status === 'connecting') return 'Opening the microphone…';
   if (voice.status === 'speaking') return `${avatarName} is speaking…`;
   return HOLD_LABEL;
@@ -36,7 +36,7 @@ export function PushToTalkBar({ voice, avatarName }: PushToTalkBarProps) {
     <button
       type="button"
       className={`ptt-bar${voice.isHolding ? ' is-listening' : ''}`}
-      aria-label={voice.isHolding ? 'Recording — release to send' : HOLD_LABEL}
+      aria-label={voice.isHolding ? 'Recording. Let go to send' : HOLD_LABEL}
       aria-pressed={voice.isHolding}
       title={HOLD_LABEL}
       // The pointer is captured on press so the release is still heard if the

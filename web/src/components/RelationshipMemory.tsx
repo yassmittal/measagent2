@@ -3,6 +3,7 @@
 import type { RelationshipResponse } from '@measagent/shared';
 import { useState } from 'react';
 import { formatAbsoluteDate } from '@/lib/format-date';
+import { BusyButtonLabel } from './BusyButtonLabel';
 
 interface RelationshipMemoryProps {
   avatarName: string;
@@ -74,8 +75,8 @@ export function RelationshipMemory({
           {relationship.memoryUpdatedAt !== null
             ? `Last updated ${formatAbsoluteDate(relationship.memoryUpdatedAt)}. `
             : null}
-          Forgetting clears these notes. Your conversations stay, but nothing you have
-          already said is read back in.
+          This clears these notes. Your chats stay, but the avatar won’t use anything you
+          already said.
         </p>
         <button
           type="button"
@@ -83,7 +84,9 @@ export function RelationshipMemory({
           onClick={forget}
           disabled={isForgetting || memory === null}
         >
-          {isForgetting ? 'Forgetting…' : `Make ${avatarName}'s avatar forget me`}
+          <BusyButtonLabel isBusy={isForgetting}>
+            {isForgetting ? 'Forgetting…' : `Make ${avatarName}'s avatar forget me`}
+          </BusyButtonLabel>
         </button>
         {error !== null ? <p className="settings-note">{error}</p> : null}
       </section>

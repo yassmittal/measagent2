@@ -8,10 +8,11 @@ import { toAvatarForReview } from '../../lib/avatars/avatar-for-review.js';
 import { isAdminRequest } from '../../shared/identity.js';
 
 /**
- * `GET /v1/admin/avatars?listing=` — one column of the review board.
+ * `GET /v1/admin/avatars?listing=` — one tab of the admin portal.
  *
- * Pending is a queue, so the longest-waiting avatar comes first; the other two
- * are history, so the most recent decision does.
+ * Avatars go live without review, so listed and pending come most recently
+ * changed first: that is what an admin needs to look at. Unlisted comes most
+ * recently taken down first.
  */
 export async function listAvatarsForReview(
   this: FastifyRequest['server'],
@@ -31,7 +32,7 @@ export async function listAvatarsForReview(
   const avatars = await findAvatarsWithOwners(
     db,
     { listing },
-    listing === 'pending' ? { updatedAt: 1 } : { listingReviewedAt: -1 }
+    listing === 'declined' ? { listingReviewedAt: -1 } : { updatedAt: -1 }
   );
 
   return { avatars: avatars.map(toAvatarForReview) };

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { PRODUCT_NAME } from '@/lib/product';
+import { PRODUCT_NAME, withProductName } from '@/lib/product';
 
 interface PageMetadataInput {
   /** The page's path, starting with `/`. Becomes the canonical URL. */
   path: string;
-  /** Without the brand — the root layout's title template appends it. */
+  /** Without the brand. The root layout's title template appends it. */
   title: string;
   /** The title already carries the brand, so the template must not add it again. */
   isTitleAbsolute?: boolean;
@@ -31,7 +31,7 @@ export function buildPageMetadata({
   openGraphType = 'website',
   isIndexable = true,
 }: PageMetadataInput): Metadata {
-  const socialTitle = isTitleAbsolute ? title : `${title} — ${PRODUCT_NAME}`;
+  const socialTitle = isTitleAbsolute ? title : withProductName(title);
 
   return {
     title: isTitleAbsolute ? { absolute: title } : title,

@@ -16,11 +16,18 @@
   overflow: hidden;
   background: var(--avatar-bg);
   box-shadow: var(--e1);
-  transition: box-shadow var(--t-fast) var(--ease);
+  transition:
+    box-shadow var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+  animation: content-reveal var(--t) var(--ease) backwards;
 }
 
 .profile-button:hover {
   box-shadow: var(--e3);
+}
+
+.profile-button:active {
+  transform: scale(0.94);
 }
 
 .profile-button img {
@@ -111,6 +118,17 @@
   margin: var(--sp-2) var(--sp-3);
 }
 
+@keyframes dialog-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes scrim-enter {
   0% {
     opacity: 0;
@@ -146,7 +164,7 @@
   flex-direction: column;
   gap: var(--sp-5);
   padding: var(--sp-6) var(--sp-6) 28px;
-  animation: menu-enter var(--t-slow) var(--ease) both;
+  animation: dialog-rise var(--t-slow) var(--ease) both;
 }
 
 .settings-head {

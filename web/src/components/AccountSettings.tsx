@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { formatAbsoluteDate } from '@/lib/format-date';
 import { forgetRelationship } from '@/lib/relationship-client';
+import { BusyButtonLabel } from './BusyButtonLabel';
 
 interface AccountSettingsProps {
   user: UserProfile;
@@ -47,10 +48,9 @@ export function AccountSettings({ user, onSignOut }: AccountSettingsProps) {
       <section className="settings-section">
         <h3 className="settings-section-title">Your data</h3>
         <p className="settings-note">
-          Your conversations are stored against this account so they are here next time,
-          and each avatar remembers what you tell it. The person behind an avatar can read
-          your conversations with it. What that means is in the{' '}
-          <Link href="/privacy">privacy notice</Link>.
+          Your chats are saved to this account so they’re here next time, and each avatar
+          remembers what you tell it. The person behind an avatar can read your chats with
+          it. More details are in the <Link href="/privacy">privacy notice</Link>.
         </p>
         {user.consentAcceptedAt !== null ? (
           <p className="settings-note">
@@ -64,7 +64,7 @@ export function AccountSettings({ user, onSignOut }: AccountSettingsProps) {
         <p className="settings-note">
           {forgetStep === 'forgotten'
             ? 'Done. No avatar remembers anything you have said so far.'
-            : 'Make every avatar forget what it remembers about you. Your conversations stay, but nothing you have already said is read back in.'}
+            : 'Make every avatar forget what it remembers about you. Your chats stay, but avatars won’t use anything you already said.'}
         </p>
         {forgetStep !== 'forgotten' ? (
           <button
@@ -73,11 +73,13 @@ export function AccountSettings({ user, onSignOut }: AccountSettingsProps) {
             onClick={forgetEverything}
             disabled={forgetStep === 'forgetting'}
           >
-            {forgetStep === 'confirming'
-              ? 'Yes, forget everything'
-              : forgetStep === 'forgetting'
-                ? 'Forgetting…'
-                : 'Forget everything'}
+            <BusyButtonLabel isBusy={forgetStep === 'forgetting'}>
+              {forgetStep === 'confirming'
+                ? 'Yes, forget everything'
+                : forgetStep === 'forgetting'
+                  ? 'Forgetting…'
+                  : 'Forget everything'}
+            </BusyButtonLabel>
           </button>
         ) : null}
         {forgetStep === 'failed' ? (

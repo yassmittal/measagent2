@@ -25,7 +25,7 @@ export function shouldIndexAvatarPage(avatar: AvatarProfile): boolean {
 
 /**
  * Room for the name inside a 60-character title, once "Talk to …'s AI avatar"
- * and the " — meAsAgent" template are around it. Longer names are cut rather
+ * and the " | meAsAgent" template are around it. Longer names are cut rather
  * than letting the search result cut the brand.
  */
 const MAX_TITLE_NAME_LENGTH = 28;

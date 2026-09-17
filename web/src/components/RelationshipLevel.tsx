@@ -59,8 +59,7 @@ export function RelationshipLevel() {
           data-visible={isTooltipVisible ? '' : undefined}
         >
           Your level goes up as you talk with {avatar.name}&apos;s avatar. It remembers
-          what you tell it from one conversation to the next — select the level to see
-          what it remembers.
+          what you tell it between chats. Click your level to see what it remembers.
         </span>
       </div>
 

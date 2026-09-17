@@ -8,9 +8,9 @@ import {
 /**
  * `GET /v1/avatars` — the public directory.
  *
- * Only reviewed avatars appear, and only while they are live: launching is
- * self-serve, but a list on the front page is something the product vouches
- * for. Newest approval first, so the directory changes as people are let in.
+ * Every listed avatar, while it is live. Avatars are listed the moment they
+ * launch and leave only when an admin unlists them. Newest first, so the front
+ * page changes as people join.
  */
 export async function listAvatarDirectory(
   this: FastifyRequest['server'],
@@ -25,7 +25,7 @@ export async function listAvatarDirectory(
   const listedAvatars = await findAvatarsWithOwners(
     db,
     { listing: 'listed', availability: 'live' },
-    { listingReviewedAt: -1 }
+    { createdAt: -1 }
   );
 
   return { avatars: listedAvatars.map(toAvatarProfile) };

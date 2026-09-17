@@ -21,8 +21,8 @@ const MONGO_DUPLICATE_KEY = 11000;
  *
  * Only an account can launch, because the only rule that keeps this an avatar
  * *of yourself* — or of something you run — is that its name and face come
- * from the Google account behind it. It is live at its link straight away and listed in the directory only
- * once it has been reviewed.
+ * from the Google account behind it. It is live at its link and listed in the
+ * directory straight away. An admin can still unlist it afterwards.
  */
 export async function launchAvatar(
   this: FastifyRequest['server'],
@@ -78,7 +78,7 @@ export async function launchAvatar(
     websiteUrl,
     isHiddenFromSearch: request.body.isHiddenFromSearch ?? false,
     availability: 'live',
-    listing: 'pending',
+    listing: 'listed',
     listingReviewedAt: null,
     ownerAttestedAt: now,
     createdAt: now,

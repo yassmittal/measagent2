@@ -38,7 +38,7 @@ export function AvatarDirectory({ avatars }: { avatars: AvatarProfile[] }) {
 
       {avatars.length === 0 ? (
         <p className="avatar-directory-empty">
-          No avatars are listed yet. Be the first to launch one.
+          No avatars yet. Be the first to launch one.
         </p>
       ) : (
         <section

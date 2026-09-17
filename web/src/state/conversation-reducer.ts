@@ -26,8 +26,8 @@ export interface ConversationState {
 }
 
 const VOICE_NOTICES: Record<VoiceUnavailableReason, string> = {
-  not_configured: 'Spoken replies are not switched on yet.',
-  synthesis_failed: 'The voice dropped out — the reply is all here.',
+  not_configured: 'Spoken replies aren’t turned on yet.',
+  synthesis_failed: 'The voice cut out, but the full reply is here.',
 };
 
 export const IDLE_TURN: TurnState = {

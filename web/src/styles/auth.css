@@ -28,6 +28,16 @@
   line-height: 25px;
 }
 
+.auth-button-slot {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.auth-button-slot > * {
+  grid-area: 1 / 1;
+}
+
 .auth-button-host {
   min-height: 44px;
   display: grid;

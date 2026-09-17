@@ -8,8 +8,8 @@ import {
 /**
  * `GET /v1/avatars/:handle` — what the avatar's page shows.
  *
- * Unlisted avatars are served too: an avatar is live at its link from the
- * moment it launches, and the directory is the only thing review gates. A
+ * Unlisted avatars are served too: an admin unlisting an avatar takes it off
+ * the directory, not off its own link. A
  * paused avatar is returned as paused rather than hidden, so its page can say
  * so instead of claiming the handle does not exist.
  */

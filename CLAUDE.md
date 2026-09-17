@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Guidance for Claude Code working in **meAsAgent** — AI avatars of real people.
-Anyone signed in can launch an avatar of themselves; visitors browse the
-reviewed ones and talk to any of them. `PLAN.md` is the build plan and the
+Anyone signed in can launch an avatar of themselves, and it is listed straight
+away; visitors browse them and talk to any of them. `PLAN.md` is the build plan and the
 source of truth for what each stage delivers, `README.md` is how to set the
 project up and run it, and this file is the day-to-day working guide.
 
@@ -13,7 +13,7 @@ is not owned yet — every URL in the code and metadata uses the Vercel domain.
 
 ```
 web/         Next.js 16 + React 19 frontend (Vercel)
-admin/       Next.js 16 admin portal — reviews avatars for the directory
+admin/       Next.js 16 admin portal, unlists avatars from the directory
 api/         Fastify 5 + Bun backend
 shared/      TypeScript types shared by web, admin and api, no publish step
 ```
@@ -66,8 +66,10 @@ streamed as `audio_delta` spans alongside the text, hold-to-speak voice input,
 Google sign-in with per-account conversations, and long-term memory with return
 reminders (`STAGE-5.md` has the reasoning). On top of that the product is
 **multi-person** (`MULTI-PERSON.md` has the reasoning): `/` is a directory of
-reviewed avatars, `/[handle]` is the chat with one avatar, `/launch` launches or
-edits your own, and `admin/` reviews what the directory lists. Owners **read
+listed avatars, `/[handle]` is the chat with one avatar, `/launch` launches or
+edits your own, and `admin/` unlists what should not be there. **There is no
+review step since 2026-09-17**: launching lists an avatar, an owner's edit never
+unlists it, and only an admin's decline does (`lib/avatars/own-avatar.ts`). Owners **read
 their visitors** at `/launch/visitors` and get a **weekly summary email**
 (`OWNER-VIEW.md` has the reasoning). Stage 6 (RAG) is
 specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
@@ -315,6 +317,10 @@ keywords, calendar, off-page playbook and measurement. Rules new work keeps:
 - **`SITE_URL` is lowercase and is the only place the host is written.** The
   domain move in `seo/OFF-PAGE.md` starts there.
 - The reference product this was modelled on is never named on a public page.
+- **Copy is plain and human.** Short sentences, everyday words, no em dashes in
+  anything a person reads. The same goes for what the model writes: persona
+  replies, memory notes and the weekly email share `PLAIN_WRITING_RULES`
+  (`api/lib/chat/plain-writing.ts`).
 - **`web/public/google2d0134d554a0af0d.html` verifies Search Console.** Never
   delete or rename it.
 

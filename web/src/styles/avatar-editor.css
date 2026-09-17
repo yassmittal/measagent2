@@ -205,7 +205,13 @@
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
-  transition: background var(--t-fast) var(--ease);
+  transition:
+    background var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+
+.avatar-form-submit:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .avatar-form-submit:hover {
@@ -348,4 +354,22 @@
 
 .launch-explainer-link:hover {
   color: var(--accent);
+}
+
+/* Arriving: the form and its stand-in share one layout, so neither shifts the page. */
+
+.avatar-form-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  animation: content-reveal var(--t-slow) var(--ease) var(--skeleton-delay) backwards;
+}
+
+.avatar-form {
+  animation: content-reveal var(--t-slow) var(--ease) backwards;
+}
+
+.avatar-form-saved,
+.avatar-editor-error {
+  animation: content-reveal var(--t) var(--ease) backwards;
 }

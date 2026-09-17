@@ -9,10 +9,11 @@ import { LiveTurn } from './LiveTurn';
 import { MessageRow } from './MessageRow';
 import { QueuedMessage } from './QueuedMessage';
 import { ThreadClaimedNotice } from './ThreadClaimedNotice';
+import { ThreadSkeleton } from './ThreadSkeleton';
 
 const PINNED_THRESHOLD_PX = 80;
 
-const EMPTY_THREAD_PROMPT = 'Say hello — this conversation picks up where you left off.';
+const EMPTY_THREAD_PROMPT = 'Say hi. This chat picks up where you left off.';
 
 interface ConversationThreadProps {
   messages: ThreadMessage[];
@@ -78,7 +79,14 @@ export function ConversationThread({
         <div className="thread-col">
           <ThreadClaimedNotice />
 
-          <div className="thread-items">
+          {isLoading && messages.length === 0 ? <ThreadSkeleton /> : null}
+
+          <div
+            // A fresh element once the conversation has loaded, so the rows that
+            // replace the skeleton fade in together instead of snapping into place.
+            key={isLoading ? 'loading' : 'loaded'}
+            className="thread-items"
+          >
             {messages.length === 0 && !isActive && !isLoading ? (
               <p className="thread-empty">{EMPTY_THREAD_PROMPT}</p>
             ) : null}
