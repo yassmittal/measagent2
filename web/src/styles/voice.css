@@ -22,7 +22,7 @@
     opacity var(--t-fast) var(--ease);
 }
 
-.ptt-bar:hover:not(:disabled) {
+.ptt-bar:hover:not(:disabled):not(.is-soon) {
   background: var(--fill-hover);
 }
 
@@ -49,6 +49,28 @@
 .ptt-bar:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* Hold-to-speak is switched off. The bar keeps its place in the composer but
+   reads as a note rather than a control: dashed edge, no shadow, nothing that
+   invites a press. */
+.ptt-bar.is-soon {
+  cursor: default;
+  border-style: dashed;
+  border-color: var(--n400);
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.ptt-bar-soon-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .wave {

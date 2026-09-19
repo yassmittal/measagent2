@@ -8,7 +8,7 @@ export const GUIDES: Record<GuideSlug, ArticleCopy> = {
     path: '/guides/make-an-ai-version-of-yourself',
     metaTitle: 'How to make an AI version of yourself',
     metaDescription:
-      'Make an AI clone of yourself that answers people by text or voice: what to decide, what to write, and three ways to build one, including a free one.',
+      'Make an AI clone of yourself that answers people in your own words: what to decide, what to write, and three ways to build one, including a free one.',
     eyebrow: 'Guide',
     heading: 'How to make an AI version of yourself that answers people',
     lede: 'An AI version of yourself is a chatbot that answers as you. People also call it an AI clone, a digital twin or an AI avatar. To make one, decide who it’s for, write down what it should know and how you talk, pick a tool that turns those notes into a chat, and share the link where people already try to reach you.',
@@ -48,7 +48,7 @@ export const GUIDES: Record<GuideSlug, ArticleCopy> = {
           'There are three main ways. Prices and features change often, so check each tool’s own site before you pick.',
         ],
         bulletPoints: [
-          `A ready-made avatar you launch in minutes, like ${PRODUCT_NAME}. Sign in, write the notes above, and share the link. People talk by text or voice, it remembers people who sign in, and you read every chat. It doesn’t learn from uploaded documents. ${PRODUCT_PRICING_NOTE}`,
+          `A ready-made avatar you launch in minutes, like ${PRODUCT_NAME}. Sign in, write the notes above, and share the link. People type to it and hear replies out loud, it remembers people who sign in, and you read every chat. It doesn’t learn from uploaded documents. ${PRODUCT_PRICING_NOTE}`,
           'A tool trained on your existing work, like Delphi. You connect your writing, talks or podcasts so answers come from them. More material and integrations usually cost more.',
           'A custom GPT or something you build yourself. Easy and cheap to start, but sharing, memory and reading chats are up to you.',
         ],

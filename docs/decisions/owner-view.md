@@ -1,47 +1,13 @@
 # The owner side — reading your visitors, and a weekly summary
 
-Built 2026-09-15. This file is the reasoning; `PLAN.md` §17 is the short record,
-`README.md` § *Owners and the weekly summary* is the overview, and `RUNBOOK.md`
+Built 2026-09-15. This file is the reasoning; `../ROADMAP.md` §17 is the short record,
+`../../README.md` § *Owners and the weekly summary* is the overview, and `../RUNBOOK.md`
 Flow 4 is how the email runs.
 
 Until now someone who launched an avatar got nothing back from it. Now they can
 open `/launch/visitors` and see who came, what the avatar remembers about each of
 them, and every conversation, and on Monday morning they get an email saying who
 talked to their avatar that week and who needs them personally.
-
----
-
-## What you have to do before it works
-
-1. **Set `OWNER_NOTICE_SHOWN_SINCE` when you deploy** (`api/shared/constants.ts`).
-   Anonymous conversations started before that moment are never shown to owners,
-   because nobody told those visitors (decision 3). It is currently
-   `2026-09-15T12:00:00Z`, which is right for your local database and wrong for
-   production: move it to the time the web deploy with the notice under the
-   composer goes live, and deploy `web/` before `api/`.
-2. **The weekly email is off until you give it a provider.** Nothing in `api/.env`
-   sets one, on purpose — your dev api runs the background passes against the real
-   database. To turn it on:
-   - create a Resend account and **verify a sending domain**. This is the real
-     blocker: you do not own `meAsAgent.com`, and nobody can send from a
-     `vercel.app` address. Until a domain is verified, Resend only delivers to the
-     address the Resend account was made with, which is enough to try it on
-     yourself;
-   - set `MA_RESEND_API_KEY`, `MA_EMAIL_FROM` (e.g. `meAsAgent <weekly@yourdomain>`),
-     `MA_WEB_BASE_URL` and `MA_API_PUBLIC_URL` on the api, and restart it
-     (`bun --watch` keeps the environment it started with). A key containing `$`
-     needs the base64 treatment `MA_ADMIN_PASSWORD_HASH` gets; Resend keys do not
-     contain one.
-3. **Open `/launch/visitors` once on each account that owns an avatar.** That page
-   is where the service learns your time zone. Until then the email goes out Monday
-   09:00 UTC (14:30 in India).
-4. **Your second account has not accepted the terms** since they were cleared at
-   Stage 5, so it cannot open its visitors page and gets no email until it does.
-5. **The three split `yash2` conversations are merged**, as agreed: your main
-   account now has one conversation with `yash2` (40 messages, titled "Hey yash",
-   started 07:29 UTC). The browser that remembered one of the deleted conversation
-   ids falls back to the latest one on its next load, the same way a sign-out does.
-   Your memory with `yash2` was untouched.
 
 ---
 
@@ -287,7 +253,7 @@ would have needed re-asking — that owners read conversations — happened at S
 ### 10. Admin stays out
 
 The portal shows nothing about emails. A summary's state lives on its document
-(`status`, `attempts`, `nextAttemptAt`, `lastError`) and in the log. `RUNBOOK.md`
+(`status`, `attempts`, `nextAttemptAt`, `lastError`) and in the log. `../RUNBOOK.md`
 says where to look.
 
 ---
@@ -477,8 +443,6 @@ four (the `yash2` merge).
 - **No email SDK** (decision 4).
 - **The unsubscribe page is `/launch/unsubscribe`**, not a top-level route, so no
   handle had to be reserved.
-- **`STAGE-5-EXPLAINED.md` does not exist**, though both the prompt and `STAGE-5.md`
-  refer to it. I worked from `STAGE-5.md`; the reference is left as it was.
 
 ## Still open
 

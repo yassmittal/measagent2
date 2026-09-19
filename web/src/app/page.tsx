@@ -17,7 +17,7 @@ export const metadata: Metadata = buildPageMetadata({
   title: HOME_TITLE,
   isTitleAbsolute: true,
   description:
-    'Make an AI version of yourself that answers people by text or voice, or talk to someone else’s. Takes a few minutes. Free while in early access.',
+    'Make an AI version of yourself that answers people in your own words, or chat with someone else’s. Takes a few minutes. Free while in early access.',
 });
 
 export default async function DirectoryPage() {

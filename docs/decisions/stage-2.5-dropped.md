@@ -2,7 +2,7 @@
 
 Written 2026-09-12. Kept so nobody re-derives this.
 
-`PLAN.md` §6.1 planned a Stage 2.5: swap Kokoro for ElevenLabs, stream synthesis
+`../ROADMAP.md` §6.1 planned a Stage 2.5: swap Kokoro for ElevenLabs, stream synthesis
 into the browser, and eventually clone Yash's voice. **It is not being built.**
 Voice cloning turned out not to be a requirement, and cloning was the only thing
 that justified a paid provider — what remained was streaming latency and a
@@ -40,7 +40,7 @@ cheapest available improvement to the voice you actually hear. It has **no**
 ElevenLabs handler, so matching the two modes through ElevenLabs would have
 meant writing one in a second repo.
 
-### 3. The replay endpoint in `PLAN.md` §13 does not exist
+### 3. The replay endpoint in `../ROADMAP.md` §13 does not exist
 
 `POST /v1/chats/:chatId/turns/:turnId/tts` is described there as shipped. It is
 not in `api/routes/v1/chats/index.ts` — only send and load are. Its CSS is
@@ -51,5 +51,5 @@ replay button is wanted, the styling is waiting and only the route is missing.
 
 `web/public/worklets/audio-playback.js` plays queued PCM frames and is already
 used by live voice. Any future streaming TTS should ask its provider for raw
-PCM and feed that worklet, rather than the `MediaSource` route `PLAN.md` §6.1
+PCM and feed that worklet, rather than the `MediaSource` route `../ROADMAP.md` §6.1
 assumed — no decoder, no `MediaSource`, and it works in Safari.

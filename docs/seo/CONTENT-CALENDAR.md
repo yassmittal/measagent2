@@ -6,7 +6,7 @@ said you can review. Each piece goes into `web/src/content/guides.ts` (or
 `FAQPage` markup, sitemap entry, footer link and `llms.txt` line with no new page
 code. Volumes are from `KEYWORDS.md` (US, 2026-09-16); "—" means too low to measure.
 
-Rules for every piece, from `CLAUDE.md` § SEO: answer the query in the first 100
+Rules for every piece, from `../../CLAUDE.md` § SEO: answer the query in the first 100
 words; every claim about meAsAgent true of the code that ships; every claim about
 another product linked to its source with the date checked; no invented numbers,
 quotes or customers; byline Yash Mittal.

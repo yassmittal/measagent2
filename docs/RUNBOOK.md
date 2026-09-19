@@ -1,7 +1,7 @@
 # RUNBOOK — running meAsAgent end to end
 
 How to start the whole thing, and how a conversation actually travels through it.
-`README.md` is setup and architecture; `CLAUDE.md` is conventions; this file is
+`../README.md` is setup and architecture; `../CLAUDE.md` is conventions; this file is
 "I have not touched this in three weeks, how do I run it and explain it".
 
 ---

@@ -77,10 +77,10 @@ export const PERSONA_PAGES: Record<PersonaSlug, ContentPageCopy> = {
     path: '/for/creators',
     metaTitle: 'An AI version of yourself for creators',
     metaDescription:
-      'Your audience asks more than you can answer. An AI version of you replies by text or voice, remembers fans who come back, and shows you what they asked.',
+      'Your audience asks more than you can answer. An AI version of you replies in your own words, remembers fans who come back, and shows you what they asked.',
     eyebrow: 'For creators',
     heading: 'An AI version of yourself for creators',
-    lede: `Your audience asks more questions than one person can answer. An AI avatar on ${PRODUCT_NAME} answers them as you, by text or voice. It remembers the people who sign in and come back, and you can read what they asked. ${PRODUCT_PRICING_NOTE}`,
+    lede: `Your audience asks more questions than one person can answer. An AI avatar on ${PRODUCT_NAME} answers them as you, in your own words. It remembers the people who sign in and come back, and you can read what they asked. ${PRODUCT_PRICING_NOTE}`,
     sections: [
       {
         heading: 'A link for the questions you can’t get to',

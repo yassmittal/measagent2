@@ -2,7 +2,7 @@
 
 AI avatars of real people: anyone signed in launches an avatar of themselves,
 and visitors talk to it. Written 2026-09-08 as a personal avatar of Yash; made
-multi-person on 2026-09-14 (§15, and `MULTI-PERSON.md` for the reasoning).
+multi-person on 2026-09-14 (§15, and `decisions/multi-person.md` for the reasoning).
 
 **Named `meAsAgent`.** Deployed at `meAsAgent.vercel.app`; `meAsAgent.com` is the
 eventual domain but is not owned yet, so every URL in code and metadata uses the
@@ -10,8 +10,8 @@ Vercel domain. The placeholder folder `ai-avatar/` has been renamed `meAsAgent/`
 
 **Status: Stages 1-5 are built, and the product is multi-person (§15).** Stage
 6 is still plan only. Stage 2.5 was
-investigated and dropped — `STAGE-2.5.md` says why.
-Day-to-day conventions live in `CLAUDE.md`; this file stays the staging plan.
+investigated and dropped — `decisions/stage-2.5-dropped.md` says why.
+Day-to-day conventions live in `../CLAUDE.md`; this file stays the staging plan.
 
 ---
 
@@ -403,7 +403,7 @@ no code dependency.
 - **Persona:** *superseded 2026-09-14.* This was "Yash — the avatar is of you".
   It is now whoever launched the avatar (§15), so Stage 6's corpus and any future
   voice clone are per avatar rather than one person's. Stage 2.5's voice cloning
-  was dropped (`STAGE-2.5.md`); every avatar shares the one voice.
+  was dropped (`decisions/stage-2.5-dropped.md`); every avatar shares the one voice.
 - **Repo:** single repo, `web/` + `api/` + `shared/`.
 
 ## 11. Resolved (2026-09-08)
@@ -561,7 +561,7 @@ that a gap rather than dressing it up.
 
 ## 15. What the multi-person change shipped
 
-Built 2026-09-14. `MULTI-PERSON.md` has every decision and what was rejected.
+Built 2026-09-14. `decisions/multi-person.md` has every decision and what was rejected.
 
 **Anyone signed in can launch one avatar of themselves.** `/launch` takes a
 handle, a public bio and three notes only the model reads (about me, how I talk,
@@ -601,7 +601,7 @@ longer the promise. The person behind an avatar is meant to read them (§16).
 
 ## 16. What Stage 5 actually shipped
 
-Built 2026-09-15. `STAGE-5.md` has every decision and what was rejected.
+Built 2026-09-15. `decisions/stage-5-memory.md` has every decision and what was rejected.
 
 **Memory per visitor per avatar, for signed-in visitors who accepted the terms.**
 Anonymous conversations are never remembered. After a conversation has been
@@ -642,7 +642,7 @@ the writer model.
 
 ## 17. What the owner view and weekly summary shipped
 
-Built 2026-09-15. `OWNER-VIEW.md` has every decision and what was rejected.
+Built 2026-09-15. `decisions/owner-view.md` has every decision and what was rejected.
 
 **Owners read their visitors.** `/launch/visitors` lists everyone who talked to
 the avatar, with what it remembers about them; one visitor's page shows their

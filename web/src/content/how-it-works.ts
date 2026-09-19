@@ -9,10 +9,10 @@ export const HOW_IT_WORKS_PAGE: ContentPageCopy = {
   path: '/how-it-works',
   metaTitle: 'How an AI avatar of yourself works',
   metaDescription:
-    'Make an AI avatar that answers people by text or voice, remembers them, and lets you read every chat. How meAsAgent works, step by step.',
+    'Make an AI avatar that answers people in your words, remembers them, and lets you read every chat. How meAsAgent works, step by step.',
   eyebrow: 'How it works',
   heading: 'How an AI avatar of yourself works',
-  lede: `An AI avatar on ${PRODUCT_NAME} answers people as you, at a link you share. People talk to it by text or voice. It remembers the ones who sign in. You can read every chat, and you get a weekly email about who wants to hear from you. ${PRODUCT_PRICING_NOTE}`,
+  lede: `An AI avatar on ${PRODUCT_NAME} answers people as you, at a link you share. People type to it and can hear its replies out loud. It remembers the ones who sign in. You can read every chat, and you get a weekly email about who wants to hear from you. ${PRODUCT_PRICING_NOTE}`,
   sections: [
     {
       heading: 'Launching one takes a few minutes',
@@ -30,7 +30,7 @@ export const HOW_IT_WORKS_PAGE: ContentPageCopy = {
     {
       heading: 'What visitors get',
       paragraphs: [
-        'Anyone with the link can talk to your avatar without an account. They can type, or hold a button to speak, and the avatar can read its replies out loud. Every avatar uses the same computer voice. It doesn’t copy yours.',
+        'Anyone with the link can talk to your avatar without an account. They type, and the avatar can read its replies out loud. Every avatar uses the same computer voice. It doesn’t copy yours. Speaking back to it is coming soon.',
         'People who sign in and accept the terms are remembered. When a chat ends, the avatar keeps a short note of what they said, what they care about and anything left open. Next time, it picks up from there. If something was left open and they come back after a while, it follows up once. Notes stay with one avatar. What someone tells one avatar never reaches another.',
         'Someone who signed in can see what an avatar remembers about them and make it forget. Chats without an account are never remembered.',
       ],
@@ -96,7 +96,7 @@ export const HOW_IT_WORKS_PAGE: ContentPageCopy = {
     {
       question: 'Can visitors talk to it by voice?',
       answer:
-        'Yes. People can hold a button to speak and hear the reply out loud. All avatars use the same computer voice. Your own voice isn’t copied.',
+        'They can hear it. Replies are read out loud, and all avatars use the same computer voice. Your own voice isn’t copied. Speaking to an avatar instead of typing is coming soon.',
     },
     {
       question: 'Do I need to upload documents or train it?',

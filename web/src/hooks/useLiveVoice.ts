@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { IS_LIVE_VOICE_ENABLED } from '@/lib/voice/availability';
 import {
   LiveVoiceClient,
   type LiveVoiceStatus,
@@ -129,6 +130,7 @@ export function useLiveVoice({
   );
 
   const connect = useCallback((): Promise<LiveVoiceClient | null> => {
+    if (!IS_LIVE_VOICE_ENABLED) return Promise.resolve(null);
     if (REALTIME_URL === null || threadId === null) return Promise.resolve(null);
     if (clientRef.current !== null) return Promise.resolve(clientRef.current);
 
@@ -173,7 +175,7 @@ export function useLiveVoice({
     status,
     spokenDraft,
     isHolding,
-    isAvailable: REALTIME_URL !== null && threadId !== null,
+    isAvailable: IS_LIVE_VOICE_ENABLED && REALTIME_URL !== null && threadId !== null,
     error,
     beginHold,
     endHold,

@@ -81,7 +81,7 @@ export const COMPARISONS: Record<ComparisonSlug, ComparisonCopy> = {
       },
       {
         feature: 'Voice',
-        ours: 'People can speak and hear replies out loud, in one computer voice shared by every avatar.',
+        ours: 'Replies are read out loud, in one computer voice shared by every avatar. Speaking back to an avatar is coming soon.',
         theirs: {
           text: '“Voice Calling + Chat” is listed on every plan, from Free up.',
           sourceUrl: DELPHI_PRICING_URL,

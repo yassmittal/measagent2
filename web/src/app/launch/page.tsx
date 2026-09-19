@@ -10,7 +10,7 @@ export const metadata: Metadata = buildPageMetadata({
   path: '/launch',
   title: 'Launch your AI avatar',
   description:
-    'Make an AI avatar of yourself, or of something you run, that anyone can talk to by text or voice. Takes a few minutes. Free while in early access.',
+    'Make an AI avatar of yourself, or of something you run, that anyone can chat with at your own link. Takes a few minutes. Free while in early access.',
 });
 
 export default function LaunchPage() {
@@ -25,9 +25,9 @@ export default function LaunchPage() {
           What launching gives you
         </h2>
         <p className="launch-explainer-text">
-          An AI that answers people as you, by text or voice, at your own link. It
-          remembers people who sign in. You can read every chat, and a weekly email tells
-          you who wants to hear from you. {PRODUCT_PRICING_NOTE}{' '}
+          An AI that answers people as you, at your own link. It remembers people who sign
+          in. You can read every chat, and a weekly email tells you who wants to hear from
+          you. {PRODUCT_PRICING_NOTE}{' '}
           <Link href="/how-it-works" className="launch-explainer-link">
             How it works
           </Link>

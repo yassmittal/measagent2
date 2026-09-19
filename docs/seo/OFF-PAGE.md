@@ -67,7 +67,7 @@ networks. Each is either a link scheme or worthless.
 ### Draft posts (edit to your voice)
 
 **Before posting any of these:** the weekly email is only real if Resend is set
-up on the production api (`OWNER-VIEW.md` — it needs a verified sending domain,
+up on the production api (`../decisions/owner-view.md` — it needs a verified sending domain,
 which `vercel.app` cannot be). If it is not sending in production, cut the email
 line from every draft *and* tell me, so the site copy that mentions it changes
 too.
@@ -185,7 +185,7 @@ Do it in one sitting, early in a week.
    domain. Admin: `MA_WEB_BASE_URL`.
 6. Google Cloud Console → OAuth client → add `https://measagent.com` to
    Authorised JavaScript origins.
-7. Update `CLAUDE.md`, `README.md` and `PLAN.md` where they name the Vercel domain.
+7. Update `../../CLAUDE.md`, `../../README.md` and `../ROADMAP.md` where they name the Vercel domain.
 
 **Redirects**
 8. In Vercel → Domains, set `measagent.vercel.app` to **redirect (308) to

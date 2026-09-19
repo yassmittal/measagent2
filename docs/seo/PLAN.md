@@ -42,7 +42,7 @@ Owner-facing and legal copy. I'll draft it in the build; nothing goes live unapp
    owner turns that off; the optional website link and *Ask me about* are public.
    **Terms**: an avatar is of you *or of something you run*, launched from your own
    account, and never of another person. `UPDATED_AT` moves. `CONSENT_TERMS_VERSION`
-   moves too (it records which wording was on screen), which, as CLAUDE.md says,
+   moves too (it records which wording was on screen), which, as `../../CLAUDE.md` says,
    re-asks nobody.
 
 ## Visual changes on existing screens (you approved them in principle; listed so none is a surprise)
@@ -94,19 +94,19 @@ Ranked by impact ÷ effort. "Verify" is what I'll show you before calling it don
 | X4 | `/compare/delphi`: a dated table (voice, voice cloning, content ingestion, visitor memory, owner reads conversations, weekly summary, who you can clone, price), every Delphi cell linked to their live page with the date checked | Delphi AI alternative | `app/compare/[slug]/page.tsx`, `web/src/content/comparisons.ts` (each claim carries `sourceUrl` + `checkedOn`), `ComparisonTable.tsx` | each Delphi claim re-fetched on build day |
 | X5 | `llms.txt` as a route handler from the same typed content (so it can't drift) | GEO | `app/llms.txt/route.ts` | `curl /llms.txt`; `llms` is not a valid handle anyway (the dot), reserved regardless |
 | X6 | **Share card** on `/launch` when an avatar exists: copy link, and preview the OG image | share loop | `AvatarShareCard.tsx`, `web/src/styles/avatar-share-card.css` | browser pass |
-| X7 | `seo/CONTENT-CALENDAR.md`: 12 weeks, **6 pieces** (2/month): keyword, intent, outline, internal links, CTA | long tail | `seo/` | — |
+| X7 | `CONTENT-CALENDAR.md`: 12 weeks, **6 pieces** (2/month): keyword, intent, outline, internal links, CTA | long tail | `docs/seo/` | — |
 
 ## Later — off-page, programmatic, domain
 
 | # | Item | Files |
 |---|---|---|
-| L1 | `seo/OFF-PAGE.md`: Search Console + Bing setup, sitemap submission, URL inspection; launch sequence (Product Hunt, Show HN, Indie Hackers, subreddits within their rules, X/LinkedIn, AI-tool directories) with angle, draft post and link earned; outreach to the listicle authors that AI answers cite; owners as the backlink engine | `seo/OFF-PAGE.md` |
-| L2 | `seo/MEASUREMENT.md`: KPIs per cluster, where each is read, today's baseline (0 indexed, Lighthouse above), 30/60/90-day targets | `seo/MEASUREMENT.md` |
+| L1 | `OFF-PAGE.md`: Search Console + Bing setup, sitemap submission, URL inspection; launch sequence (Product Hunt, Show HN, Indie Hackers, subreddits within their rules, X/LinkedIn, AI-tool directories) with angle, draft post and link earned; outreach to the listicle authors that AI answers cite; owners as the backlink engine | `OFF-PAGE.md` |
+| L2 | `MEASUREMENT.md`: KPIs per cluster, where each is read, today's baseline (0 indexed, Lighthouse above), 30/60/90-day targets | `MEASUREMENT.md` |
 | L3 | Domain migration runbook (301s via `vercel.json`/proxy, `SITE_URL` switch, Search Console change of address, re-submit sitemap, update OG caches, Resend domain) | in `OFF-PAGE.md` |
 | L4 | Sitemap index via `generateSitemaps` once avatars pass ~40k; directory pagination (`/?page=`) + an index on `listing` once past ~100 listed | `sitemap.ts`, api |
 | L5 | Later content: `/for/coaches`, `/for/investors`, `/guides/ai-clone-consent`, `/compare/ai-clone-tools` | content data |
-| L6 | Refresh `KEYWORDS.md` with openSEO volumes once connected, and re-rank X-items if the numbers disagree | `seo/KEYWORDS.md` |
-| L7 | Hand-off: `seo/SEO.md`, and an SEO section in `CLAUDE.md` (reserved-handle check, only indexable avatars in the sitemap, metadata + JSON-LD on every public page, no fake markup) | docs |
+| L6 | Refresh `KEYWORDS.md` with openSEO volumes once connected, and re-rank X-items if the numbers disagree | `KEYWORDS.md` |
+| L7 | Hand-off: `SEO.md`, and an SEO section in `../../CLAUDE.md` (reserved-handle check, only indexable avatars in the sitemap, metadata + JSON-LD on every public page, no fake markup) | docs |
 
 ## Build order
 
@@ -114,7 +114,7 @@ N1 → N2 → N3 → N4 → N5 → N6 → N7 → N8 → N9 → N12 → N13 → N
 → X1 → X2 → X3 → X4 → X5 → X6 → X7 → L1 → L2 → L7. Each step leaves `build`,
 `typecheck` and `lint` clean.
 
-## Verification at the end (from the brief §7)
+## Verification at the end
 
 - `web` build/typecheck/lint, `api` typecheck, `admin` build/typecheck/lint.
 - Local stack; `curl` `/`, a listed, a pending, a paused, a hidden and a thin

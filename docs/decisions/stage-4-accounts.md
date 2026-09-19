@@ -1,33 +1,7 @@
 # Stage 4 — Google sign-in, per-account conversations, consent
 
-Built 2026-09-12. This file is the reasoning; `PLAN.md` §14 is the short record
-and `README.md` § *Signing in* is how to run it.
-
----
-
-## What you have to do before it works
-
-Sign-in is the one part I could not finish for you, because it needs an account
-in a console I cannot reach.
-
-1. In the Google Cloud console, create an **OAuth 2.0 Client ID** of type
-   *Web application*.
-2. Add `http://localhost:3000` — and later your Vercel origin — to its
-   **Authorised JavaScript origins**. There is no redirect URI to add: Google
-   Identity Services hands the credential straight to the page.
-3. Put that client id in **both** places:
-   - `api/.env` → `MA_GOOGLE_CLIENT_ID`
-   - `web/.env.local` → `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
-4. `MA_SESSION_SECRET` is already generated in `api/.env`. For the deployed api,
-   generate another with `openssl rand -hex 32`.
-
-Until then the app runs exactly as before and the sign-in panel says
-"Sign-in is not switched on yet." Nothing else degrades.
-
-One other thing to look at: the privacy and terms pages use
-`yashmittalmm@gmail.com` as the contact address (`web/src/lib/persona.ts`,
-`CONTACT_EMAIL`). Change it if you would rather not have that address on a
-public page.
+Built 2026-09-12. This file is the reasoning; `../ROADMAP.md` §14 is the short record
+and `../../README.md` § *Signing in* is how to run it.
 
 ---
 
@@ -35,7 +9,7 @@ public page.
 
 ### 1. Sign-in is an offer, not a gate
 
-`PLAN.md` §11 said the only pre-chat screen would be the sign-in, and there is a
+`../ROADMAP.md` §11 said the only pre-chat screen would be the sign-in, and there is a
 `.auth-screen` layer in the stylesheet built for exactly that. You chose the
 other way, and I think it is the right one: a wall would have made the
 anonymous-claiming path — the thing §5 shaped the whole data model around —
@@ -199,14 +173,14 @@ untouched.
 
 - **`scripts/voice-talk.sh`** — it hand-wrote the old marker, so the new api
   would have refused it. It now asks the api for one.
-- **`README.md` API table** listed `POST /v1/chats/:chatId/turns/:turnId/tts`,
-  which does not exist in the code. Removed. `PLAN.md` §13 makes the same claim;
-  `STAGE-2.5.md` records it rather than quietly rewriting history.
-- **`STAGE-2.5.md`** trimmed to the four findings worth keeping.
+- **`../../README.md` API table** listed `POST /v1/chats/:chatId/turns/:turnId/tts`,
+  which does not exist in the code. Removed. `../ROADMAP.md` §13 makes the same claim;
+  `stage-2.5-dropped.md` records it rather than quietly rewriting history.
+- **`stage-2.5-dropped.md`** trimmed to the four findings worth keeping.
 
 ## Still open
 
-- **The "persona is Yash, and only Yash" line** in `CLAUDE.md` and `PLAN.md`
+- **The "persona is Yash, and only Yash" line** in `../../CLAUDE.md` and `../ROADMAP.md`
   §3.4/§10 contradicts the multi-person direction you set. I have not touched
   those lines, because changing them is a product decision rather than a
   documentation fix. Nothing in Stage 4 hardcodes a person — the copy all reads

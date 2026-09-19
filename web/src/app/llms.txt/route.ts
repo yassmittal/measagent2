@@ -37,7 +37,7 @@ export function GET(): Response {
     'Facts:',
     '- An avatar answers from a public bio and three notes its owner writes (about them, how they talk, topics to avoid). It does not learn from uploaded documents, and it does not clone anyone’s voice or make video.',
     '- An avatar’s name and photo come from the Google account that launched it; it can only be of that person or of something they run.',
-    '- Visitors talk by text or by holding a button to speak, without an account. Visitors who sign in and accept the terms are remembered between conversations.',
+    '- Visitors talk by typing, without an account, and replies can be read out loud. Speaking to an avatar is coming soon. Visitors who sign in and accept the terms are remembered between conversations.',
     '- The owner reads every conversation with their avatar and can get a weekly email about who talked to it and who asked for them personally.',
     '- Every avatar says it is an AI whenever it is asked.',
     '',

@@ -1,38 +1,7 @@
 # Multi-person — avatars of anyone, reviewed for the directory
 
-Built 2026-09-14. This file is the reasoning; `PLAN.md` §15 is the short record,
-`README.md` § *Avatars* and § *The admin portal* are how to run it.
-
----
-
-## What you have to do before it works
-
-1. **Give the admin portal a login.** Nothing in `api/.env` sets one, on purpose —
-   I was not going to choose your password.
-   ```bash
-   bun run admin:hash-password
-   ```
-   Put `MA_ADMIN_USERNAME=<anything>` and the printed `MA_ADMIN_PASSWORD_HASH=…`
-   line in `api/.env` exactly as printed, **restart** the api (`bun --watch` keeps
-   the environment it started with),
-   then `bun run dev:admin` and open http://localhost:3020.
-2. **Approve your own avatar.** `yash` is launched and live at `/yash`, but it is
-   `pending`, so `/` is empty until you list it in the portal. Its bio currently
-   reads "I am yash a frontend developer" — worth a better one before listing,
-   and since editing the bio sends it back to review, do that first.
-3. **Expect to be signed out once, and asked to accept the terms again.** Tokens
-   now carry a purpose claim (decision 7), so every token issued before today is
-   refused. And the privacy notice changed in a way that matters, so
-   `CONSENT_TERMS_VERSION` moved to `2026-09-14` and re-asks everyone — which is
-   what the notice itself promises.
-4. **Check Google's authorised origins.** In my browser Google's button failed with
-   "The given origin is not allowed for the given client ID" on
-   `http://localhost:3000`. You launched from yours, so it may be browser-specific,
-   but if sign-in fails locally that console setting is the first thing to look at.
-5. **Deploying `admin/`** is a second Vercel project (Root Directory `admin`, same
-   *Include source files outside the Root Directory* setting) with
-   `MA_API_BASE_URL` and `MA_WEB_BASE_URL`. See decision 6 for what to set on the
-   api if it sits behind a proxy.
+Built 2026-09-14. This file is the reasoning; `../ROADMAP.md` §15 is the short record,
+`../../README.md` § *Avatars* and § *The admin portal* are how to run it.
 
 ---
 
@@ -155,7 +124,7 @@ means changing that wording, bumping `CONSENT_TERMS_VERSION`, and — the hard p
 — telling *anonymous* visitors, who never see the consent card, before their
 first message.
 
-Stage 5's `relationships` is re-specified in `PLAN.md` §5 as per person **per
+Stage 5's `relationships` is re-specified in `../ROADMAP.md` §5 as per person **per
 avatar**. What a visitor tells one avatar must not reach another.
 
 ### 6. The admin portal is a separate app with one login and no browser token
@@ -357,7 +326,7 @@ your `yash` avatar and the 10 old threads, as it did before I started.
   that whoever runs the service can reach the database.
 - **`shared/` subpath exports.** `avatars.ts` is the first shared module with
   runtime values, and the web build could not follow the index's `.js`
-  specifiers; `CLAUDE.md` now says to add a subpath rather than export a value
+  specifiers; `../../CLAUDE.md` now says to add a subpath rather than export a value
   from the index.
 - **`SessionProvider` moved to the root layout**, so the directory, an avatar and
   the launch page share one session. `ConsentCard` is still rendered per page, so

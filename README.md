@@ -6,9 +6,11 @@ any of them over text chat, spoken replies, and hold-to-speak voice input.
 
 Deployed at **meAsAgent.vercel.app**.
 
-`PLAN.md` is the build plan and says what each stage delivers. `CLAUDE.md` is
-the working guide — conventions, folder roles, naming. This file is how you get
-it running.
+This file is how you get it running. `CLAUDE.md` is the working guide —
+conventions, folder roles, naming. Everything else is in [`docs/`](docs):
+the [runbook](docs/RUNBOOK.md), the [roadmap](docs/ROADMAP.md), the
+[design decisions](docs/decisions) behind each stage, and the
+[search work](docs/seo).
 
 ---
 
@@ -495,4 +497,4 @@ a long-lived voice gateway. Whatever origin it lands on must be listed in
 | **OV** ✅ | owners read their visitors; weekly summary email | Google | both |
 | **6** | RAG over each avatar owner's corpus, web search, feedback | Google | both |
 
-`PLAN.md` has the detail for each, including what Stage 1 deliberately left out.
+`docs/ROADMAP.md` has the detail for each, including what Stage 1 deliberately left out.

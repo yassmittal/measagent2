@@ -3,7 +3,7 @@
 Built 2026-09-16. This file is the reasoning. `PLAN.md` is the plan you
 approved, `RESEARCH.md` and `KEYWORDS.md` the evidence,
 `CONTENT-CALENDAR.md`, `OFF-PAGE.md` and `MEASUREMENT.md` what happens next, and
-`CLAUDE.md` § SEO the rules future work keeps.
+`../../CLAUDE.md` § SEO the rules future work keeps.
 
 Before this, Google had indexed nothing and the site had no robots.txt,
 sitemap, canonicals, share images or structured data. An avatar's page gave a
@@ -38,7 +38,7 @@ Seven pages explain the product in the words people search for.
    `https://measagent.vercel.app`.
 3. **Check the weekly email is actually sending in production.** The site copy
    describes it, as the privacy notice already did. It needs Resend and a
-   verified sending domain, which `vercel.app` cannot be (`OWNER-VIEW.md`). If it
+   verified sending domain, which `vercel.app` cannot be (`../decisions/owner-view.md`). If it
    is not sending, tell me and I'll soften those lines. The draft posts in
    `OFF-PAGE.md` say the same.
 4. **Tell the owners of `tileville`, `ravenhouse` and `secorra` to open
@@ -50,9 +50,8 @@ Seven pages explain the product in the words people search for.
    that file** — Google re-checks it, and the property is lost without it. Still
    to do there: submit the sitemap and request indexing (`OFF-PAGE.md` §1), and
    add the site to Bing (import it from Search Console).
-6. **Your profiles are in.** GitHub, X, LinkedIn and yashmittal.xyz (from
-   `os-personal/memory/things-to-remember.md`) are the `sameAs` of the founder and
-   article author in structured data, and the guide and comparison bylines link
+6. **The owner profiles are in.** GitHub, X, LinkedIn and yashmittal.xyz are the
+   `sameAs` of the founder and article author in structured data, and the guide and comparison bylines link
    to yashmittal.xyz. The Organization gets no `sameAs` until the product has
    profiles of its own — pointing it at a person's accounts would mislabel them.
 
@@ -83,7 +82,7 @@ attestation wording and whether an avatar's page is a `ProfilePage` about a
 `Person` or an `Organization`. Existing avatars read as `person` with no
 migration (`readAvatarPublicDetails` supplies the default). It is still launched
 from the owner's own Google account and is never of another person.
-`CLAUDE.md`'s rule now says so.
+`../../CLAUDE.md`'s rule now says so.
 
 **Rejected:** inferring it from the name, which would guess wrong exactly when it
 matters.
@@ -278,7 +277,7 @@ My first pass at the new CSS failed contrast in nine places; all are fixed.
 
 **Not verified:**
 - **The launch and edit form in a signed-in browser.** Google sign-in can't
-  complete from my browser (`MULTI-PERSON.md` notes the origin error). The form
+  complete from my browser (`../decisions/multi-person.md` notes the origin error). The form
   compiles, its fields map to the api bodies checked above, and the api side is
   covered. The share card was never seen rendered. **Launch or edit once
   yourself before deploying.**
@@ -304,8 +303,8 @@ My first pass at the new CSS failed contrast in nine places; all are fixed.
   screen; it re-asks nobody.
 - **Portrait alt text:** the avatar panel's image carries "Portrait of {name}"
   itself, instead of an `aria-label` on its wrapper. It is announced the same way.
-- **`README.md`:** two rule lines updated.
-- **`seo/KEYWORDS.md`** gained measured volumes after the plan. They moved "ai
+- **`../../README.md`:** two rule lines updated.
+- **`KEYWORDS.md`** gained measured volumes after the plan. They moved "ai
   digital twin" from "not worth it" to a planned explainer (calendar week 3).
 
 ## Still open
@@ -317,7 +316,7 @@ My first pass at the new CSS failed contrast in nine places; all are fixed.
   stay as landing pages. No more of them until Search Console shows impressions.
 - **Sitemap scale:** one file is right until tens of thousands of avatars. Then
   split with `generateSitemaps`, which the entry functions are already shaped for.
-  The directory still doesn't paginate (`MULTI-PERSON.md`).
+  The directory still doesn't paginate (`../decisions/multi-person.md`).
 - **Avatar page LCP on phones** (decision 7).
 - **A CSP**, once there is a way to test voice end to end after each change.
 - **The domain move**: `OFF-PAGE.md` §5 is the runbook. `SITE_URL` is the one

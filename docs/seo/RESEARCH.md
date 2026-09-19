@@ -1,8 +1,7 @@
 # SEO research — meAsAgent
 
-Taken 2026-09-16 against `https://measagent.vercel.app`. Phases 1–3 of
-`SEO-PROMPT.md`: the audit, the market, and AI search. Keywords are in
-`KEYWORDS.md`. Nothing has been changed in the code yet.
+Taken 2026-09-16 against `https://measagent.vercel.app`: the audit, the market,
+and AI search. Keywords are in `KEYWORDS.md`. Nothing has been changed in the code yet.
 
 **Data limits, stated once:** no paid keyword tool, Search Console or Bing data
 was available (the `openseo` MCP is installed but needs your sign-in). PageSpeed
@@ -173,9 +172,9 @@ $99/month and Steno at $500+/month (Steno's own page, so not independent).
 5. **Founders, investors and teachers** are barely targeted. Everyone fights over
    coaches.
 
-**Note:** `private.md` records that you didn't want the reference project mentioned
-anywhere. It appears in this internal file only because the brief asked. I won't
-name it on any public page, comparison or llms.txt.
+**Note:** the reference project this was modelled on is not to be named anywhere
+public. It appears in this internal file only because the research needed it, and
+never on a page, comparison or llms.txt.
 
 ---
 
@@ -222,10 +221,10 @@ disclose that it's AI."
 
 ---
 
-## 4. Where the docs and the brief disagree with the code
+## 4. Where the docs disagree with the code
 
-- `DEMO.md` doesn't exist. The product story was taken from `README.md`,
-  `PLAN.md` §0/§15–17 and the brief.
+- The product story was taken from `../../README.md` and `../ROADMAP.md`
+  §0/§15–17.
 - The brief says the indexable surface includes `/<handle>` with the title "Talk to
   {name}". Confirmed. Unlisted, declined and pending avatars are indexable the same
   way today, because `AvatarProfile` has no `listing` (confirmed in

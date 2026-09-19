@@ -8,7 +8,7 @@ import type { ContentSection } from './content-types';
 export const HOME_INTRODUCTION: ContentSection = {
   heading: `What is ${PRODUCT_NAME}?`,
   paragraphs: [
-    `${PRODUCT_NAME} lets you make an AI version of yourself, or of something you run. It answers people for you, using notes you write, at its own link. Anyone can talk to it by typing or by holding a button to speak. No account needed.`,
+    `${PRODUCT_NAME} lets you make an AI version of yourself, or of something you run. It answers people for you, using notes you write, at its own link. Anyone can type to it and hear its replies out loud. No account needed.`,
     'Busy founders, creators and teachers can’t reply to everyone. Their avatar replies for them and remembers people who sign in. They can read every chat, and each week they get an email about who wants to hear from them directly. Every avatar says it’s an AI if you ask.',
   ],
   steps: [

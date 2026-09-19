@@ -2,9 +2,10 @@
 
 Guidance for Claude Code working in **meAsAgent** — AI avatars of real people.
 Anyone signed in can launch an avatar of themselves, and it is listed straight
-away; visitors browse them and talk to any of them. `PLAN.md` is the build plan and the
-source of truth for what each stage delivers, `README.md` is how to set the
-project up and run it, and this file is the day-to-day working guide.
+away; visitors browse them and talk to any of them. `docs/ROADMAP.md` is the build
+plan and the source of truth for what each stage delivers, `README.md` is how to
+set the project up and run it, `docs/README.md` indexes the rest, and this file
+is the day-to-day working guide.
 
 Deployed at **meAsAgent.vercel.app**. `meAsAgent.com` is the eventual domain but
 is not owned yet — every URL in the code and metadata uses the Vercel domain.
@@ -64,19 +65,27 @@ mongoexport --uri "mongodb://127.0.0.1:27018/measagent" --collection messages --
 Stages 1-5 are done: the chat shell with working text chat, spoken replies
 streamed as `audio_delta` spans alongside the text, hold-to-speak voice input,
 Google sign-in with per-account conversations, and long-term memory with return
-reminders (`STAGE-5.md` has the reasoning). On top of that the product is
-**multi-person** (`MULTI-PERSON.md` has the reasoning): `/` is a directory of
+reminders (`docs/decisions/stage-5-memory.md` has the reasoning). On top of that the product is
+**multi-person** (`docs/decisions/multi-person.md` has the reasoning): `/` is a directory of
 listed avatars, `/[handle]` is the chat with one avatar, `/launch` launches or
 edits your own, and `admin/` unlists what should not be there. **There is no
 review step since 2026-09-17**: launching lists an avatar, an owner's edit never
 unlists it, and only an admin's decline does (`lib/avatars/own-avatar.ts`). Owners **read
 their visitors** at `/launch/visitors` and get a **weekly summary email**
-(`OWNER-VIEW.md` has the reasoning). Stage 6 (RAG) is
-specified in `PLAN.md §1`. Stage 2.5 was investigated and dropped —
-`STAGE-2.5.md` says why, and records three things about voice that are wrong in
+(`docs/decisions/owner-view.md` has the reasoning). Stage 6 (RAG) is
+specified in `docs/ROADMAP.md` §1. Stage 2.5 was investigated and dropped —
+`docs/decisions/stage-2.5-dropped.md` says why, and records three things about voice that are wrong in
 older docs.
 
-Voice input (Stage 3) is **hold-to-speak over a live voice session**, and it is
+Voice input (Stage 3) is **switched off since 2026-09-19** and the push-to-talk
+bar says "coming soon" instead. The speech-to-speech service it needs has
+nowhere to run beside the deployed api, so on the live site the button could
+only fail. `IS_LIVE_VOICE_ENABLED` in `web/src/lib/voice/availability.ts` is the
+whole switch, and the copy on the content pages says replies are read out loud
+but speaking back is coming. Spoken replies (Stage 2) are unaffected. What
+follows describes the pipeline that flag turns back on.
+
+Voice input is **hold-to-speak over a live voice session**, and it is
 a third pipeline: the standalone speech-to-speech service owns the microphone,
 voice-activity detection, transcription and synthesis, and calls
 `POST /v1/chat/completions` as its language model. This api owns the persona,
@@ -289,7 +298,7 @@ the line under the composer and the privacy notice say so.
 
 ## SEO
 
-`seo/SEO.md` has the reasoning, `seo/PLAN.md` the plan, and `seo/` the research,
+`docs/seo/SEO.md` has the reasoning, `docs/seo/PLAN.md` the plan, and `docs/seo/` the research,
 keywords, calendar, off-page playbook and measurement. Rules new work keeps:
 
 - **A new top-level route is a handle taken from someone.** Add its segment to
@@ -315,7 +324,7 @@ keywords, calendar, off-page playbook and measurement. Rules new work keeps:
   product carry `sourceUrl` and `checkedOn` (`content/comparisons.ts`).
 - **"Free" is said only through `PRODUCT_PRICING_NOTE`** (`lib/product.ts`).
 - **`SITE_URL` is lowercase and is the only place the host is written.** The
-  domain move in `seo/OFF-PAGE.md` starts there.
+  domain move in `docs/seo/OFF-PAGE.md` starts there.
 - The reference product this was modelled on is never named on a public page.
 - **Copy is plain and human.** Short sentences, everyday words, no em dashes in
   anything a person reads. The same goes for what the model writes: persona
