@@ -96,9 +96,18 @@ already did. Otherwise an approved avatar could be turned into a link to
 anything. Changing the subject or the search setting does not reset review: they
 change how the page is described, not what it says.
 
-The website link carries `rel="me"`, plus `nofollow ugc` until the page itself is
-indexable. An owner-written link passes no ranking credit before a reviewer has
-seen it.
+The website link carries `rel="me nofollow ugc"`, always. (This paragraph used to
+say `nofollow ugc` applied only until the page was indexable; the code has always
+sent it, and since 2026-09-17 there is no review step at all, so an owner-written
+link must never pass ranking credit.)
+
+**Open, for Yash (2026-09-28):** with no review, a new avatar is indexed and enters
+the sitemap the moment it is launched if its bio is 60 characters or it has one
+topic. Google's advice for open sign-up platforms is to `noindex` content from new
+users until they have a track record. Proposed, not built: keep a new avatar
+`noindex` and out of the sitemap for its first N days (or until it has had real
+conversations), and raise the thin-page bar (a 23-word avatar page is indexed today).
+See `AUDIT-2026-09-28.md`.
 
 ### 4. Copy lives as data, and every surface reads the same data
 
@@ -125,11 +134,20 @@ reading the docs.
 
 ### 6. AI crawlers allowed, CCBot blocked, `llms.txt` shipped
 
-GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot
-and Google-Extended may crawl. Conversations are never public pages, so they see
-what any visitor sees. CCBot collects only for training datasets and sends nobody
-back, so it is blocked. Each AI group repeats the private disallows, because a
-crawler obeys only the most specific group that names it.
+The search and answer crawlers (OAI-SearchBot, ChatGPT-User, Claude-SearchBot,
+Claude-User, PerplexityBot, Perplexity-User, Meta-WebIndexer) and the training
+crawlers of the same vendors (GPTBot, ClaudeBot, Google-Extended) may crawl.
+Conversations are never public pages, so they see what any visitor sees. Each named
+group repeats the private disallows, because under RFC 9309 a crawler obeys only
+the most specific group that names it. `Google-Extended` governs Gemini app and
+Vertex AI only, not AI Overviews or AI Mode.
+
+**CCBot stays blocked, for a corrected reason (2026-09-28).** The old reason ("sends
+nobody back") is equally true of GPTBot and ClaudeBot, which are allowed. The real
+reason is privacy: every `/<handle>` page is a profile of a real person, and Common
+Crawl is a public archive redistributed to anyone. Letting CCBot read only the
+product pages (`/`, `/how-it-works`, `/for/`, `/guides/`, `/compare/`) is proposed
+to Yash, not done.
 
 ### 7. Things I measured and deliberately did not change
 
@@ -140,9 +158,14 @@ crawler obeys only the most specific group that names it.
   field data doesn't exist yet to say it matters.
 - **`next/image` for Google photos.** `Avatar.tsx` already explains why its wrapper
   would break the sizing rule, and the photo is 96px.
-- **A Content-Security-Policy.** The cross-origin api, the realtime voice socket
-  and the worklets make a wrong policy a silent voice outage. The three headers
-  that shipped can't break anything.
+- ~~A Content-Security-Policy~~ **Reversed 2026-09-28.** Live voice is off, so the
+  risk that deferred it is gone. `web/next.config.ts` now ships a static-compatible
+  CSP as **Report-Only**: api origin and (when set) the voice socket origin derived
+  from their env vars, `media-src blob:` for spoken replies, the Google sign-in
+  hosts, COOP `same-origin-allow-popups`, and `X-Robots-Tag: noindex` on the owner
+  pages. Switch it to enforced after these live checks show no reports in the
+  console: a spoken reply plays, Google sign-in completes, the directory and an
+  avatar page load.
 
 ---
 
@@ -318,6 +341,6 @@ My first pass at the new CSS failed contrast in nine places; all are fixed.
   split with `generateSitemaps`, which the entry functions are already shaped for.
   The directory still doesn't paginate (`../decisions/multi-person.md`).
 - **Avatar page LCP on phones** (decision 7).
-- **A CSP**, once there is a way to test voice end to end after each change.
+- **Enforce the CSP** after the live checks above (it ships Report-Only).
 - **The domain move**: `OFF-PAGE.md` §5 is the runbook. `SITE_URL` is the one
   line of code that changes.

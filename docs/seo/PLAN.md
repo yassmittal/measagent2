@@ -141,3 +141,9 @@ N1 → N2 → N3 → N4 → N5 → N6 → N7 → N8 → N9 → N12 → N13 → N
    "Something I run" (or I set it through the admin review screen if you want that
    power there; not planned by default).
 5. **Go-ahead** to build.
+
+## Update 2026-09-28
+
+Shipped: CSP (Report-Only) and header additions, robots.ts corrections, doc corrections
+(`AUDIT-2026-09-28.md`). Proposed to Yash, not built: an index probation for new avatars,
+CCBot allowed on product pages only, an admin control for an avatar's subject.

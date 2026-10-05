@@ -40,10 +40,13 @@ run: no account was connected, nothing was submitted or posted.
   (Post Inspector: <https://www.linkedin.com/post-inspector/>) and WhatsApp.
 - Robots: Search Console → Settings → robots.txt report.
 
-**Expect:** Google does not show FAQ rich results for most sites (limited to
-authoritative government and health sites since 2023). The markup still
-describes the page for other engines and AI answers; do not read "no FAQ rich
-result" as a bug.
+**Expect (updated 2026-09-28):** Google stopped showing FAQ rich results for
+every site on 2026-05-07 and removed the docs on 2026-06-15, so the Rich Results
+Test no longer reports FAQ. Skip the FAQ checks above; the FAQ markup stays only
+because it mirrors visible questions. Also check **Search Console → Settings →
+Search generative AI** reads "Include" (since 2026-08-31 it gates AI Overviews and
+AI Mode), and read the **Generative AI** performance report and Bing's **AI
+Performance** report monthly.
 
 ---
 
@@ -188,19 +191,19 @@ Do it in one sitting, early in a week.
 7. Update `../../CLAUDE.md`, `../../README.md` and `../ROADMAP.md` where they name the Vercel domain.
 
 **Redirects**
-8. In Vercel → Domains, set `measagent.vercel.app` to **redirect (308) to
+8. In Vercel → Domains, set `measagent.vercel.app` to **redirect (301) to
    measagent.com**, preserving the path. If the dashboard will not redirect the
    project's own `vercel.app` domain, do it in code instead: a `proxy.ts` (read the
    Next 16 proxy guide in `node_modules/next/dist/docs/` first) that answers any
-   request whose host is `measagent.vercel.app` with a 308 to the same path on the
+   request whose host is `measagent.vercel.app` with a 301 to the same path on the
    new domain. Check `curl -sI
-   https://measagent.vercel.app/how-it-works` → `308` with
+   https://measagent.vercel.app/how-it-works` → `301` with
    `location: https://measagent.com/how-it-works`, and the same for an avatar
    handle and `/sitemap.xml`.
 
 **After**
 9. Search Console (old property) → **Settings → Change of address** → choose the
-   new property. (It requires the 301/308s in step 8 to be live.)
+   new property. (It requires the 301s in step 8 to be live, and both properties verified in the same Google account. Search Console's Change of Address check names 301 specifically, so use 301, not 308: seo-2026 research B-83.)
 10. Submit `https://measagent.com/sitemap.xml` in both Google and Bing.
 11. Re-scrape share previews for your main links (LinkedIn Post Inspector, X
     posts will refresh on their own).

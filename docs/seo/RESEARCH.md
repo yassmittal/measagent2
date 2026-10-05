@@ -251,3 +251,12 @@ llms.txt, comparison page), twinlylab.com (home, robots, sitemap, `/shivam`),
 mindbank.ai, superme.ai, viven.ai, tavus.io, sensay.io, personal.ai, fab.bio,
 avatar.andrewng.org. Google autocomplete via `suggestqueries.google.com` (see
 `KEYWORDS.md`). Web search results linked inline above.
+
+## Update 2026-09-28
+
+The cross-site research (`seo-2026/RESEARCH.md`) corrects three points here: FAQ blocks
+don't make a page "the cited answer" (Google: no special markup needed; FAQ rich results
+ended 2026-05-07); "AI clone" answers cite HeyGen, Synthesia, Personify, 2wai and
+listicles, and meAsAgent appeared in 5 of 42 logged-out answers on 2026-09-28; and the
+brand collides with "MezAgent" as well as the *Me-Agent* paper. See
+`AUDIT-2026-09-28.md`.

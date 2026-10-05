@@ -332,6 +332,12 @@ keywords, calendar, off-page playbook and measurement. Rules new work keeps:
   (`api/lib/chat/plain-writing.ts`).
 - **`web/public/google2d0134d554a0af0d.html` verifies Search Console.** Never
   delete or rename it.
+- **`web/next.config.ts` sends a Content-Security-Policy, Report-Only for now.** No
+  nonce (it would make every static page dynamic). The api and voice origins are
+  derived from `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_SPEECH_TO_SPEECH_URL`, so
+  turning voice back on needs only that variable set. A new third-party script, frame,
+  image host or fetch must be added there. Enforce it once a live spoken reply and a
+  live sign-in show no reports.
 
 ## Deploying
 
